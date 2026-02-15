@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import PhotoUpload from '@/components/PhotoUpload';
+import Map, { type MapPhoto } from '@/components/Map';
 import type { PhotoMetadata } from '@/lib/exif';
 
 export default function TestUploadPage() {
@@ -34,6 +35,18 @@ export default function TestUploadPage() {
     setSuccess('');
   };
 
+  // GPS 정보가 있는 사진만 지도에 표시
+  const mapPhotos: MapPhoto[] = uploadedPhotos
+    .filter(photo => photo.metadata.gps)
+    .map((photo, index) => ({
+      id: `photo-${index}`,
+      url: photo.url,
+      latitude: photo.metadata.gps!.latitude,
+      longitude: photo.metadata.gps!.longitude,
+      title: `사진 ${uploadedPhotos.length - index}`,
+      takenAt: photo.uploadedAt.toLocaleString('ko-KR'),
+    }));
+
   return (
     <div className="min-h-screen bg-gray-100 py-8">
       <div className="container mx-auto px-4">
@@ -62,6 +75,26 @@ export default function TestUploadPage() {
             onUploadComplete={handleUploadComplete}
             onUploadError={handleUploadError}
           />
+
+          {/* 지도 */}
+          {uploadedPhotos.length > 0 && (
+            <div className="mt-8">
+              <h2 className="text-2xl font-bold mb-4">🗺️ 사진 위치 지도</h2>
+              <div className="bg-white rounded-lg shadow-md p-4">
+                <Map photos={mapPhotos} height="500px" />
+                {mapPhotos.length === 0 && uploadedPhotos.length > 0 && (
+                  <p className="text-center text-gray-500 mt-4">
+                    GPS 정보가 있는 사진이 없습니다
+                  </p>
+                )}
+                {mapPhotos.length > 0 && (
+                  <p className="text-sm text-gray-600 mt-4 text-center">
+                    📍 {mapPhotos.length}개 위치 표시 중
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* 업로드된 사진 목록 */}
           {uploadedPhotos.length > 0 && (

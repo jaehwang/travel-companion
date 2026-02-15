@@ -84,15 +84,20 @@ export default function PhotoUpload({ onUploadComplete, onUploadError }: PhotoUp
 
       setUploadProgress(100);
 
-      // Public URL 생성
-      const { data: { publicUrl } } = supabase.storage
+      // Signed URL 생성 (1년 유효)
+      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
         .from('trip-photos')
-        .getPublicUrl(filePath);
+        .createSignedUrl(filePath, 31536000); // 1년 = 365 * 24 * 60 * 60
 
-      console.log('✅ 업로드 완료:', publicUrl);
+      if (signedUrlError) {
+        throw signedUrlError;
+      }
+
+      const photoUrl = signedUrlData.signedUrl;
+      console.log('✅ 업로드 완료:', photoUrl);
 
       // 업로드 완료 콜백
-      onUploadComplete?.(publicUrl, metadata);
+      onUploadComplete?.(photoUrl, metadata);
 
       // 상태 초기화
       resetForm();
