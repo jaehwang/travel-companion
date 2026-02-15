@@ -30,18 +30,8 @@ export async function extractGPSFromPhoto(file: File): Promise<PhotoLocation | n
       lastModified: new Date(file.lastModified).toISOString()
     });
 
-    // 전체 EXIF 데이터 읽기 (pick 옵션 제거)
-    const exifData = await exifr.parse(file, {
-      gps: true,
-      exif: true,
-      ifd0: true,
-      tiff: true,
-      xmp: false,
-      icc: false,
-      iptc: false,
-      jfif: false,
-      ihdr: false
-    });
+    // 전체 EXIF 데이터 읽기
+    const exifData = await exifr.parse(file);
 
     console.log('📊 추출된 EXIF 데이터:', exifData);
 
@@ -98,13 +88,7 @@ export async function extractGPSFromPhotos(files: File[]): Promise<Array<{
 export async function extractPhotoMetadata(file: File): Promise<PhotoMetadata> {
   try {
     // EXIF 데이터 파싱
-    const exif = await exifr.parse(file, {
-      gps: true,
-      exif: true,
-      ifd0: true, // 기본 정보 (카메라 제조사 등)
-      ifd1: false,
-      interop: false,
-    });
+    const exif = await exifr.parse(file);
 
     // GPS 좌표 추출
     const gps = await extractGPSFromPhoto(file);
