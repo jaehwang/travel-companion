@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, ChangeEvent } from 'react';
+import imageCompression from 'browser-image-compression';
 import { supabase } from '@/lib/supabase';
 import { extractPhotoMetadata, isValidGPS, type PhotoMetadata } from '@/lib/exif';
 
@@ -65,15 +66,40 @@ export default function PhotoUpload({ onUploadComplete, onUploadError }: PhotoUp
     setUploadProgress(0);
 
     try {
+      // 이미지 압축 옵션
+      const options = {
+        maxSizeMB: 1, // 최대 1MB
+        maxWidthOrHeight: 1920, // 최대 1920px
+        useWebWorker: true,
+        initialQuality: 0.85, // 품질 85%
+      };
+
+      console.log('🔄 이미지 압축 시작...', {
+        원본크기: (selectedFile.size / 1024 / 1024).toFixed(2) + 'MB',
+        원본이름: selectedFile.name
+      });
+
+      setUploadProgress(30);
+
+      // 이미지 압축
+      const compressedFile = await imageCompression(selectedFile, options);
+
+      console.log('✅ 이미지 압축 완료!', {
+        압축크기: (compressedFile.size / 1024 / 1024).toFixed(2) + 'MB',
+        압축률: ((1 - compressedFile.size / selectedFile.size) * 100).toFixed(1) + '%'
+      });
+
+      setUploadProgress(50);
+
       // 파일명 생성 (타임스탬프 + 원본 파일명)
       const timestamp = Date.now();
       const fileName = `${timestamp}_${selectedFile.name}`;
       const filePath = `photos/${fileName}`;
 
-      // Supabase Storage에 업로드
+      // Supabase Storage에 압축된 이미지 업로드
       const { data, error } = await supabase.storage
         .from('trip-photos')
-        .upload(filePath, selectedFile, {
+        .upload(filePath, compressedFile, {
           cacheControl: '3600',
           upsert: false
         });
