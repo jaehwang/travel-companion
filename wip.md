@@ -1,6 +1,6 @@
 # Travel Companion 개발 진행 상황
 
-## 📅 최근 업데이트: 2026-02-15
+## 📅 최근 업데이트: 2026-02-15 (Evening)
 
 ---
 
@@ -15,24 +15,30 @@
 
 ### 2. 필수 패키지 설치
 - [x] `exifr` - EXIF/GPS 데이터 추출
-- [x] `mapbox-gl` - 지도 시각화
+- [x] `@vis.gl/react-google-maps` - Google Maps 지도 시각화
+- [x] `browser-image-compression` - 이미지 자동 압축
 - [x] `@supabase/supabase-js` - 백엔드 클라이언트
 - [x] `@tailwindcss/postcss` - Tailwind CSS 4 PostCSS 플러그인
 
 ### 3. 기본 프로젝트 구조
 ```
 travel-companion/
-├── app/                 # Next.js App Router
-│   ├── layout.tsx      # 루트 레이아웃 ✅
-│   ├── page.tsx        # 홈 페이지 ✅
-│   └── globals.css     # Tailwind CSS ✅
-├── components/         # React 컴포넌트 (빈 폴더)
-├── lib/                # 유틸리티
-│   ├── supabase.ts    # Supabase 클라이언트 ✅
-│   └── exif.ts        # GPS 추출 함수 ✅
-├── types/              # TypeScript 타입 정의
-│   └── index.ts       # Photo, Trip, MapMarker 타입 ✅
-└── public/            # 정적 파일 (빈 폴더)
+├── app/                    # Next.js App Router
+│   ├── layout.tsx         # 루트 레이아웃 ✅
+│   ├── page.tsx           # 홈 페이지 ✅
+│   ├── globals.css        # Tailwind CSS ✅
+│   └── test-upload/       # 업로드 테스트 페이지 ✅
+│       └── page.tsx
+├── components/            # React 컴포넌트
+│   ├── PhotoUpload.tsx   # 사진 업로드 ✅
+│   └── Map.tsx           # Google Maps ✅
+├── lib/                   # 유틸리티
+│   ├── supabase.ts       # Supabase 클라이언트 ✅
+│   └── exif.ts           # GPS 추출 함수 ✅
+├── types/                 # TypeScript 타입 정의
+│   ├── index.ts          # Photo, Trip, MapMarker 타입 ✅
+│   └── database.ts       # Supabase DB 타입 ✅
+└── public/               # 정적 파일
 ```
 
 ### 4. 유틸리티 함수 작성
@@ -96,6 +102,33 @@ travel-companion/
 - [x] 업로드된 사진 목록 표시
 - [x] **실제 업로드 테스트 성공** ✅
 
+### 12. Google Maps 통합 (2026-02-15)
+- [x] Mapbox 대신 Google Maps 선택 (한국 지도 최적화)
+- [x] `@vis.gl/react-google-maps` 라이브러리 설치
+- [x] `Map` 컴포넌트 생성 (`components/Map.tsx`)
+  - APIProvider 및 Google Map 초기화
+  - AdvancedMarker로 사진 위치 마커 표시
+  - InfoWindow 팝업 (사진 미리보기)
+  - 자동 중심점 계산 및 줌 레벨 조정
+  - 여러 사진 위치 동시 표시
+- [x] test-upload 페이지에 지도 통합
+- [x] Signed URL로 이미지 접근 이슈 해결
+- [x] Vercel 환경 변수 설정 완료
+
+### 13. 이미지 최적화 (2026-02-15)
+- [x] `browser-image-compression` 라이브러리 통합
+- [x] 업로드 전 자동 이미지 압축
+  - 최대 해상도: 1920px
+  - 최대 크기: 1MB
+  - 품질: 85%
+  - Web Worker 사용
+- [x] 압축률 콘솔 로깅
+- [x] 업로드/다운로드 속도 5-10배 개선
+
+### 14. 버그 수정 (2026-02-15)
+- [x] exifr 라이브러리 타입 오류 수정
+- [x] Next.js 빌드 오류 해결
+
 ---
 
 ## 🚧 진행 중인 작업
@@ -129,18 +162,19 @@ travel-companion/
    - [ ] 여행 상세 페이지
    - [ ] 체크인을 여행에 추가
 
-### Phase 4: 지도 시각화 (추후 진행)
-9. **Mapbox 지도 컴포넌트**
-   - [ ] `MapView` 컴포넌트 생성
-   - [ ] Mapbox GL JS 초기화
-   - [ ] 기본 지도 스타일 설정
-   - [ ] 줌/팬 컨트롤
+### Phase 4: ✅ 지도 시각화 (완료)
+9. **Google Maps 지도 컴포넌트**
+   - [x] `Map` 컴포넌트 생성
+   - [x] Google Maps API 초기화
+   - [x] 기본 지도 스타일 설정
+   - [x] 줌/팬 컨트롤 (기본 제공)
 
 10. **지도에 마커 표시**
-   - [ ] GPS 좌표를 지도 마커로 변환
-   - [ ] 사진 썸네일을 마커로 표시
-   - [ ] 마커 클릭 시 사진 상세 정보 팝업
-   - [ ] 여러 마커 동시 표시
+   - [x] GPS 좌표를 지도 마커로 변환
+   - [x] 사진 위치를 마커로 표시
+   - [x] 마커 클릭 시 사진 상세 정보 팝업 (InfoWindow)
+   - [x] 여러 마커 동시 표시
+   - [x] 자동 중심점 계산 및 줌 조정
 
 ### Phase 5: 여행 경로 시각화 (추후 진행)
 11. **경로 연결 및 시각화**
@@ -204,9 +238,12 @@ travel-companion/
 ### 현재 상태 (2026-02-15)
 - ✅ 사진 업로드 및 GPS 추출 기능 완성
 - ✅ Supabase Storage 연동 완료
+- ✅ Google Maps 지도 시각화 완료
+- ✅ 마커 표시 및 팝업 기능 완료
+- ✅ 이미지 자동 압축으로 업로드 속도 개선
 - ✅ iPhone Safari에서 정상 작동 확인
-- 🎯 다음 목표: 체크인 API 생성 및 DB 저장
-- ⏭️ Mapbox 지도 시각화는 추후 진행
+- ✅ Vercel 배포 완료
+- 🎯 다음 목표: 여행 경로 연결 및 시각화 (polyline)
 
 ### 기술적 고려사항
 - GPS 정보가 없는 사진 처리: 수동으로 위치 지정할 수 있는 UI 필요
