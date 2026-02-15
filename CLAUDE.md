@@ -1,4 +1,4 @@
-# Project: Porter (여행 기록 공유 앱)
+# Project: Travel Companion (여행 기록 공유 앱)
 
 ## 프로젝트 개요
 사진의 위치 정보(EXIF GPS)와 지도를 활용하여 여행 경로와 추억을 시각화하고 공유하는 모바일/웹 애플리케이션
