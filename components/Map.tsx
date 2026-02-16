@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { APIProvider, Map as GoogleMap, AdvancedMarker, InfoWindow } from '@vis.gl/react-google-maps';
+import { APIProvider, Map as GoogleMap, AdvancedMarker, InfoWindow, useMap, useMapsLibrary } from '@vis.gl/react-google-maps';
 
 export interface MapPhoto {
   id: string;
@@ -17,6 +17,55 @@ interface MapProps {
   height?: string;
   defaultCenter?: { lat: number; lng: number };
   defaultZoom?: number;
+  showPath?: boolean;
+}
+
+// Polyline 컴포넌트 (경로 연결)
+function TravelPath({ photos }: { photos: MapPhoto[] }) {
+  const map = useMap();
+  const maps = useMapsLibrary('maps');
+  const [polyline, setPolyline] = useState<google.maps.Polyline | null>(null);
+
+  useEffect(() => {
+    if (!map || !maps || photos.length < 2) {
+      if (polyline) {
+        polyline.setMap(null);
+        setPolyline(null);
+      }
+      return;
+    }
+
+    // 시간순으로 정렬 (takenAt이 있는 경우)
+    const sortedPhotos = [...photos].sort((a, b) => {
+      if (!a.takenAt || !b.takenAt) return 0;
+      return new Date(a.takenAt).getTime() - new Date(b.takenAt).getTime();
+    });
+
+    // 경로 좌표 생성
+    const path = sortedPhotos.map(photo => ({
+      lat: photo.latitude,
+      lng: photo.longitude,
+    }));
+
+    // 새 Polyline 생성
+    const newPolyline = new maps.Polyline({
+      path,
+      geodesic: true,
+      strokeColor: '#4285F4',
+      strokeOpacity: 0.8,
+      strokeWeight: 3,
+      map,
+    });
+
+    setPolyline(newPolyline);
+
+    // 클린업
+    return () => {
+      newPolyline.setMap(null);
+    };
+  }, [map, maps, photos]);
+
+  return null;
 }
 
 export default function Map({
@@ -24,11 +73,13 @@ export default function Map({
   height = '500px',
   defaultCenter = { lat: 37.5665, lng: 126.9780 }, // 서울 기본 좌표
   defaultZoom = 10,
+  showPath = true,
 }: MapProps) {
   const [selectedPhoto, setSelectedPhoto] = useState<MapPhoto | null>(null);
   const [mapCenter, setMapCenter] = useState(defaultCenter);
   const [mapZoom, setMapZoom] = useState(defaultZoom);
   const [error, setError] = useState<string>('');
+  const [map, setMap] = useState<google.maps.Map | null>(null);
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
@@ -100,15 +151,14 @@ export default function Map({
   }
 
   return (
-    <div className="relative" style={{ height }}>
+    <div className="relative" style={{ height, pointerEvents: 'auto', touchAction: 'pan-x pan-y' }}>
       <APIProvider apiKey={apiKey}>
         <GoogleMap
-          center={mapCenter}
-          zoom={mapZoom}
-          mapId="travel-companion-map"
-          className="w-full h-full rounded-lg"
+          defaultCenter={mapCenter}
+          defaultZoom={mapZoom}
+          mapId="f61fd161984b7ef0b0aaa09b"
           gestureHandling="greedy"
-          disableDefaultUI={false}
+          style={{ width: '100%', height: '100%' }}
         >
           {/* 마커 표시 */}
           {photos.map((photo) => (
@@ -116,11 +166,8 @@ export default function Map({
               key={photo.id}
               position={{ lat: photo.latitude, lng: photo.longitude }}
               onClick={() => setSelectedPhoto(photo)}
-            >
-              <div className="w-8 h-8 bg-red-500 rounded-full border-2 border-white shadow-lg flex items-center justify-center cursor-pointer hover:scale-110 transition-transform">
-                <span className="text-white text-sm">📸</span>
-              </div>
-            </AdvancedMarker>
+              title={photo.title || 'Photo'}
+            />
           ))}
 
           {/* InfoWindow (팝업) */}
@@ -130,17 +177,19 @@ export default function Map({
               onCloseClick={() => setSelectedPhoto(null)}
             >
               <div style={{ minWidth: '200px', maxWidth: '300px' }}>
-                <img
-                  src={selectedPhoto.url}
-                  alt={selectedPhoto.title || 'Photo'}
-                  className="w-full h-40 object-cover rounded mb-2"
-                  crossOrigin="anonymous"
-                  referrerPolicy="no-referrer"
-                  onError={(e) => {
-                    console.error('Image load error:', selectedPhoto.url);
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
+                {selectedPhoto.url && (
+                  <img
+                    src={selectedPhoto.url}
+                    alt={selectedPhoto.title || 'Photo'}
+                    className="w-full h-40 object-cover rounded mb-2"
+                    crossOrigin="anonymous"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      console.error('Image load error:', selectedPhoto.url);
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                )}
                 {selectedPhoto.title && (
                   <p className="font-semibold mb-1">{selectedPhoto.title}</p>
                 )}
@@ -150,17 +199,22 @@ export default function Map({
                 <p className="text-xs text-gray-500">
                   📍 {selectedPhoto.latitude.toFixed(6)}, {selectedPhoto.longitude.toFixed(6)}
                 </p>
-                <a
-                  href={selectedPhoto.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-blue-600 hover:underline mt-2 block"
-                >
-                  원본 보기 →
-                </a>
+                {selectedPhoto.url && (
+                  <a
+                    href={selectedPhoto.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-600 hover:underline mt-2 block"
+                  >
+                    원본 보기 →
+                  </a>
+                )}
               </div>
             </InfoWindow>
           )}
+
+          {/* 경로 연결 */}
+          {showPath && <TravelPath photos={photos} />}
         </GoogleMap>
       </APIProvider>
 

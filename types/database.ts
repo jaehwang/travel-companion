@@ -1,5 +1,32 @@
 // Database Types for Supabase
 
+// Checkin categories
+export const CHECKIN_CATEGORIES = {
+  RESTAURANT: 'restaurant',
+  ATTRACTION: 'attraction',
+  ACCOMMODATION: 'accommodation',
+  CAFE: 'cafe',
+  SHOPPING: 'shopping',
+  NATURE: 'nature',
+  ACTIVITY: 'activity',
+  TRANSPORTATION: 'transportation',
+  OTHER: 'other',
+} as const;
+
+export type CheckinCategory = typeof CHECKIN_CATEGORIES[keyof typeof CHECKIN_CATEGORIES];
+
+export const CHECKIN_CATEGORY_LABELS: Record<CheckinCategory, string> = {
+  restaurant: '음식점',
+  attraction: '관광지',
+  accommodation: '숙소',
+  cafe: '카페',
+  shopping: '쇼핑',
+  nature: '자연',
+  activity: '액티비티',
+  transportation: '교통',
+  other: '기타',
+};
+
 export interface Trip {
   id: string;
   title: string;
@@ -18,6 +45,7 @@ export interface Checkin {
   location_name?: string;
   latitude: number;
   longitude: number;
+  category?: string;
   photo_url?: string;
   photo_metadata?: {
     exif?: Record<string, any>;
@@ -45,6 +73,7 @@ export interface CheckinInsert {
   location_name?: string;
   latitude: number;
   longitude: number;
+  category?: string;
   photo_url?: string;
   photo_metadata?: {
     exif?: Record<string, any>;
