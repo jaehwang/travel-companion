@@ -81,10 +81,10 @@ export function LocationPicker({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start md:items-center justify-center overflow-y-auto md:p-4">
+      <div className="bg-white w-full md:w-auto md:rounded-lg md:max-w-4xl md:min-w-[600px] flex flex-col md:shadow-xl md:my-4">
         {/* 헤더 */}
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-gray-200 shrink-0">
           <div className="flex items-center justify-between mb-3">
             <div>
               <h2 className="text-xl font-bold text-gray-900">위치 선택</h2>
@@ -121,7 +121,7 @@ export function LocationPicker({
         </div>
 
         {/* 지도 */}
-        <div className="relative w-full" style={{ height: '400px' }}>
+        <div className="relative w-full h-[400px] md:h-[500px] shrink-0">
           <APIProvider apiKey={apiKey}>
             <GoogleMap
               defaultCenter={selectedLocation || defaultCenter}
@@ -177,7 +177,7 @@ export function LocationPicker({
 
         {/* 선택된 좌표 표시 */}
         {selectedLocation && (
-          <div className="p-3 bg-blue-50 border-t border-blue-200">
+          <div className="p-3 bg-blue-50 border-t border-blue-200 shrink-0">
             <p className="text-sm text-blue-800">
               선택된 위치: {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}
             </p>

@@ -110,7 +110,7 @@ export default function CheckinPage() {
     latitude: checkin.latitude,
     longitude: checkin.longitude,
     title: checkin.location_name,
-    takenAt: new Date(checkin.checked_in_at).toLocaleString('ko-KR'),
+    takenAt: checkin.checked_in_at, // ISO string 그대로 전달
   }));
 
   if (loading) {

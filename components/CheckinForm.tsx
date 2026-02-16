@@ -223,8 +223,13 @@ export function CheckinForm({ tripId, onSuccess, onCancel }: CheckinFormProps) {
         )}
 
         {locationError && (
-          <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-sm text-red-800">{locationError.message}</p>
+          <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+            <p className="text-sm text-yellow-800">{locationError.message}</p>
+            {locationError.code === 1 && (
+              <p className="text-xs text-yellow-700 mt-1">
+                💡 &quot;지도에서 선택&quot; 버튼으로 위치를 선택할 수 있습니다.
+              </p>
+            )}
           </div>
         )}
       </div>

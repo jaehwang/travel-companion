@@ -194,7 +194,9 @@ export default function Map({
                   <p className="font-semibold mb-1">{selectedPhoto.title}</p>
                 )}
                 {selectedPhoto.takenAt && (
-                  <p className="text-xs text-gray-600 mb-1">{selectedPhoto.takenAt}</p>
+                  <p className="text-xs text-gray-600 mb-1">
+                    {new Date(selectedPhoto.takenAt).toLocaleString('ko-KR')}
+                  </p>
                 )}
                 <p className="text-xs text-gray-500">
                   📍 {selectedPhoto.latitude.toFixed(6)}, {selectedPhoto.longitude.toFixed(6)}
