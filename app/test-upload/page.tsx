@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import PhotoUpload from '@/components/PhotoUpload';
 import Map, { type MapPhoto } from '@/components/Map';
 import type { PhotoMetadata } from '@/lib/exif';
@@ -13,6 +13,18 @@ export default function TestUploadPage() {
   }>>([]);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
+  const [isMapExpanded, setIsMapExpanded] = useState(false);
+
+  useEffect(() => {
+    if (!isMapExpanded) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isMapExpanded]);
 
   const handleUploadComplete = (photoUrl: string, metadata: PhotoMetadata) => {
     setUploadedPhotos(prev => [
@@ -47,127 +59,193 @@ export default function TestUploadPage() {
       takenAt: photo.uploadedAt.toLocaleString('ko-KR'),
     }));
 
+  const hasUploads = uploadedPhotos.length > 0;
+  const hasGpsPhotos = mapPhotos.length > 0;
+
   return (
-    <div className="min-h-screen bg-gray-100 py-8">
-      <div className="container mx-auto px-4">
-        <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl font-bold text-center mb-2">
-            📸 사진 업로드 테스트
-          </h1>
-          <p className="text-center text-gray-600 mb-8">
-            사진을 업로드하고 GPS 정보를 확인하세요
+    <div className="min-h-screen bg-gray-100 py-6 sm:py-10">
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
+        <header className="text-center">
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">📸 사진 업로드 테스트</h1>
+          <p className="mt-2 text-base text-gray-600">
+            사진을 업로드하면 GPS 정보와 지도가 자동으로 연동됩니다.
           </p>
+        </header>
 
-          {/* 에러/성공 메시지 */}
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
-              {error}
-            </div>
-          )}
-          {success && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
-              {success}
-            </div>
-          )}
-
-          {/* 업로드 컴포넌트 */}
-          <PhotoUpload
-            onUploadComplete={handleUploadComplete}
-            onUploadError={handleUploadError}
-          />
-
-          {/* 지도 */}
-          {uploadedPhotos.length > 0 && (
-            <div className="mt-8">
-              <h2 className="text-2xl font-bold mb-4">🗺️ 사진 위치 지도</h2>
-              <div className="bg-white rounded-lg shadow-md p-4">
-                <Map photos={mapPhotos} height="500px" />
-                {mapPhotos.length === 0 && uploadedPhotos.length > 0 && (
-                  <p className="text-center text-gray-500 mt-4">
-                    GPS 정보가 있는 사진이 없습니다
-                  </p>
-                )}
-                {mapPhotos.length > 0 && (
-                  <p className="text-sm text-gray-600 mt-4 text-center">
-                    📍 {mapPhotos.length}개 위치 표시 중
-                  </p>
-                )}
+        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,420px)_1fr]">
+          <section className="rounded-2xl bg-white p-5 shadow-sm">
+            {/* 에러/성공 메시지 */}
+            {error && (
+              <div className="mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
               </div>
-            </div>
-          )}
+            )}
+            {success && (
+              <div className="mb-4 rounded-xl border border-green-100 bg-green-50 px-4 py-3 text-sm text-emerald-700">
+                {success}
+              </div>
+            )}
 
-          {/* 업로드된 사진 목록 */}
-          {uploadedPhotos.length > 0 && (
-            <div className="mt-8">
-              <h2 className="text-2xl font-bold mb-4">📂 업로드된 사진 ({uploadedPhotos.length})</h2>
-              <div className="space-y-4">
+            <PhotoUpload
+              onUploadComplete={handleUploadComplete}
+              onUploadError={handleUploadError}
+            />
+          </section>
+
+          {hasUploads && (
+            <section className="rounded-2xl bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">📂 업로드된 사진</h2>
+                  <p className="text-sm text-gray-500">총 {uploadedPhotos.length}장</p>
+                </div>
+                <span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-600">
+                  최신순
+                </span>
+              </div>
+
+              <div className="mt-4 space-y-4">
                 {uploadedPhotos.map((photo, index) => (
-                  <div
+                  <article
                     key={index}
-                    className="bg-white rounded-lg shadow-md p-6 flex gap-4"
+                    className="flex flex-col gap-4 rounded-xl border border-gray-100 p-4 shadow-sm transition hover:shadow-md sm:flex-row"
                   >
-                    {/* 썸네일 */}
-                    <div className="flex-shrink-0">
+                    <div className="w-full overflow-hidden rounded-lg bg-gray-50 sm:w-32 sm:flex-shrink-0">
                       <img
                         src={photo.url}
                         alt={`Uploaded ${index + 1}`}
-                        className="w-32 h-32 object-cover rounded-lg"
+                        className="h-40 w-full object-cover sm:h-32"
                       />
                     </div>
 
-                    {/* 메타데이터 */}
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-500 mb-2">
-                        업로드: {photo.uploadedAt.toLocaleString('ko-KR')}
-                      </p>
+                    <div className="flex flex-1 flex-col gap-3 text-sm text-gray-700">
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
+                        <p>업로드: {photo.uploadedAt.toLocaleString('ko-KR')}</p>
+                        {photo.metadata.takenAt && (
+                          <p>촬영: {photo.metadata.takenAt.toLocaleString('ko-KR')}</p>
+                        )}
+                      </div>
 
-                      {/* GPS 정보 */}
                       {photo.metadata.gps ? (
-                        <div className="mb-2 p-2 bg-green-50 rounded text-sm">
+                        <div className="rounded-lg bg-green-50 p-3 text-sm">
                           <p className="font-semibold text-green-800">✅ GPS 정보</p>
-                          <p>📍 {photo.metadata.gps.latitude.toFixed(6)}, {photo.metadata.gps.longitude.toFixed(6)}</p>
+                          <p className="text-gray-700">
+                            📍 {photo.metadata.gps.latitude.toFixed(6)}, {photo.metadata.gps.longitude.toFixed(6)}
+                          </p>
                           {photo.metadata.gps.altitude && (
-                            <p>⛰️ 고도: {photo.metadata.gps.altitude.toFixed(1)}m</p>
+                            <p className="text-gray-700">⛰️ {photo.metadata.gps.altitude.toFixed(1)}m</p>
                           )}
                         </div>
                       ) : (
-                        <div className="mb-2 p-2 bg-gray-50 rounded text-sm">
-                          <p className="text-gray-600">GPS 정보 없음</p>
+                        <div className="rounded-lg bg-gray-50 p-3 text-sm text-gray-600">
+                          GPS 정보 없음
                         </div>
                       )}
 
-                      {/* 기타 정보 */}
-                      <div className="text-sm text-gray-700 space-y-1">
+                      <div className="flex flex-wrap gap-3 text-xs text-gray-600">
                         {photo.metadata.width && photo.metadata.height && (
-                          <p>📐 {photo.metadata.width} x {photo.metadata.height}px</p>
+                          <span className="rounded-full bg-slate-100 px-3 py-1">
+                            📐 {photo.metadata.width}×{photo.metadata.height}px
+                          </span>
                         )}
                         {photo.metadata.fileSize && (
-                          <p>💾 {(photo.metadata.fileSize / 1024 / 1024).toFixed(2)}MB</p>
+                          <span className="rounded-full bg-slate-100 px-3 py-1">
+                            💾 {(photo.metadata.fileSize / 1024 / 1024).toFixed(2)}MB
+                          </span>
                         )}
                         {photo.metadata.cameraMake && (
-                          <p>📷 {photo.metadata.cameraMake} {photo.metadata.cameraModel}</p>
+                          <span className="rounded-full bg-slate-100 px-3 py-1">
+                            📷 {photo.metadata.cameraMake} {photo.metadata.cameraModel}
+                          </span>
                         )}
                       </div>
 
-                      {/* URL */}
-                      <div className="mt-2">
-                        <a
-                          href={photo.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-blue-600 hover:underline break-all"
-                        >
-                          {photo.url}
-                        </a>
-                      </div>
+                      <a
+                        href={photo.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="break-all text-xs font-medium text-blue-600 hover:underline"
+                      >
+                        {photo.url}
+                      </a>
                     </div>
-                  </div>
+                  </article>
                 ))}
               </div>
-            </div>
+            </section>
           )}
         </div>
+
+        {hasUploads && (
+          <section className="mt-8">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">🗺️ 사진 위치 지도</h2>
+              {hasGpsPhotos && (
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 rounded-full border border-gray-200 px-3 py-1 text-sm text-gray-700 transition hover:border-gray-300 md:hidden"
+                  onClick={() => setIsMapExpanded(true)}
+                >
+                  전체 화면으로 보기 ↗
+                </button>
+              )}
+            </div>
+            <div className="mt-3 rounded-2xl bg-white p-4 shadow-sm">
+              <div className="hidden md:block">
+                <Map photos={mapPhotos} height="420px" />
+              </div>
+
+              <div className="md:hidden">
+                <div className="relative overflow-hidden rounded-2xl">
+                  <Map photos={mapPhotos} height="320px" />
+                  {hasGpsPhotos && (
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+                  )}
+                  {hasGpsPhotos && (
+                    <button
+                      type="button"
+                      className="absolute bottom-4 right-4 rounded-full bg-white/90 px-4 py-2 text-sm font-semibold text-gray-900 shadow-lg backdrop-blur"
+                      onClick={() => setIsMapExpanded(true)}
+                    >
+                      전체 지도 보기
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {!hasGpsPhotos && (
+                <p className="mt-4 text-center text-sm text-gray-500">
+                  GPS 정보가 있는 사진이 없습니다. 위치 정보가 포함된 사진을 업로드해 보세요.
+                </p>
+              )}
+              {hasGpsPhotos && (
+                <p className="mt-4 text-center text-sm text-gray-600">📍 {mapPhotos.length}개 위치 표시 중</p>
+              )}
+            </div>
+          </section>
+        )}
       </div>
+
+      {isMapExpanded && hasGpsPhotos && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-black/80 backdrop-blur">
+          <div className="flex items-center justify-between px-4 py-3 text-white">
+            <div>
+              <p className="text-sm uppercase tracking-wide text-white/70">전체 지도</p>
+              <p className="text-lg font-semibold">{mapPhotos.length}개 위치</p>
+            </div>
+            <button
+              type="button"
+              className="rounded-full border border-white/40 px-4 py-2 text-sm font-medium text-white"
+              onClick={() => setIsMapExpanded(false)}
+            >
+              닫기
+            </button>
+          </div>
+          <div className="flex-1 bg-white">
+            <Map photos={mapPhotos} height="100%" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
