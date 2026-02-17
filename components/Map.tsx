@@ -220,14 +220,6 @@ export default function Map({
         </GoogleMap>
       </APIProvider>
 
-      {/* 사진이 없을 때 오버레이 */}
-      {photos.length === 0 && (
-        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg pointer-events-none">
-          <p className="text-white text-lg font-medium">
-            GPS 정보가 있는 사진을 업로드하세요
-          </p>
-        </div>
-      )}
     </div>
   );
 }

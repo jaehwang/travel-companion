@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { APIProvider, Map as GoogleMap, AdvancedMarker, useMap, useMapsLibrary } from '@vis.gl/react-google-maps';
 
 interface LocationPickerProps {
@@ -80,9 +81,12 @@ export function LocationPicker({
     );
   }
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start md:items-center justify-center overflow-y-auto md:p-4">
-      <div className="bg-white w-full md:w-auto md:rounded-lg md:max-w-4xl md:min-w-[600px] flex flex-col md:shadow-xl md:my-4">
+  return createPortal(
+    <div
+      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, backgroundColor: 'white' }}
+      className="md:bg-black/60 flex flex-col md:items-center md:justify-center md:p-4"
+    >
+      <div className="bg-white flex flex-col w-full h-full md:h-auto md:w-auto md:rounded-lg md:max-w-4xl md:min-w-[600px] md:shadow-xl">
         {/* 헤더 */}
         <div className="p-4 border-b border-gray-200 shrink-0">
           <div className="flex items-center justify-between mb-3">
@@ -121,7 +125,7 @@ export function LocationPicker({
         </div>
 
         {/* 지도 */}
-        <div className="relative w-full h-[400px] md:h-[500px] shrink-0">
+        <div className="relative w-full flex-1 md:flex-none md:h-[500px] min-h-[300px]">
           <APIProvider apiKey={apiKey}>
             <GoogleMap
               defaultCenter={selectedLocation || defaultCenter}
@@ -130,31 +134,15 @@ export function LocationPicker({
               gestureHandling="greedy"
               style={{ width: '100%', height: '100%' }}
               onClick={(e: any) => {
-                console.log('CLICK EVENT:', e);
-
-                // latLng 추출 (여러 형식 지원)
                 let lat: number | undefined;
                 let lng: number | undefined;
-
                 if (e.detail?.latLng) {
-                  lat = typeof e.detail.latLng.lat === 'function'
-                    ? e.detail.latLng.lat()
-                    : e.detail.latLng.lat;
-                  lng = typeof e.detail.latLng.lng === 'function'
-                    ? e.detail.latLng.lng()
-                    : e.detail.latLng.lng;
+                  lat = typeof e.detail.latLng.lat === 'function' ? e.detail.latLng.lat() : e.detail.latLng.lat;
+                  lng = typeof e.detail.latLng.lng === 'function' ? e.detail.latLng.lng() : e.detail.latLng.lng;
                 }
-
-                if (lat !== undefined && lng !== undefined) {
-                  console.log('Setting location:', lat, lng);
-                  handleMapClick(lat, lng);
-                } else {
-                  console.log('Could not extract lat/lng from event');
-                }
+                if (lat !== undefined && lng !== undefined) handleMapClick(lat, lng);
               }}
             >
-
-              {/* 선택된 위치 마커 */}
               {selectedLocation && (
                 <AdvancedMarker
                   position={selectedLocation}
@@ -163,30 +151,28 @@ export function LocationPicker({
                     const newLat = event.latLng?.lat();
                     const newLng = event.latLng?.lng();
                     if (newLat !== undefined && newLng !== undefined) {
-                      setSelectedLocation({
-                        lat: newLat,
-                        lng: newLng,
-                      });
+                      setSelectedLocation({ lat: newLat, lng: newLng });
                     }
                   }}
                 />
               )}
             </GoogleMap>
           </APIProvider>
-        </div>
 
-        {/* 선택된 좌표 표시 */}
-        {selectedLocation && (
-          <div className="p-3 bg-blue-50 border-t border-blue-200 shrink-0">
-            <p className="text-sm text-blue-800">
-              선택된 위치: {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}
-            </p>
-            <p className="text-xs text-blue-600 mt-1">
-              💡 마커를 드래그하여 위치를 미세 조정할 수 있습니다
-            </p>
-          </div>
-        )}
+          {/* 선택된 좌표 - 지도 위 오버레이 (지도 크기 유지) */}
+          {selectedLocation && (
+            <div className="absolute bottom-0 left-0 right-0 p-3 bg-white/90 border-t border-blue-200 pointer-events-none">
+              <p className="text-sm text-blue-800">
+                📍 {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}
+              </p>
+              <p className="text-xs text-blue-600 mt-0.5">
+                💡 마커를 드래그하여 미세 조정 가능
+              </p>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

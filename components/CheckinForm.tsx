@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useGeolocation } from '@/hooks/useGeolocation';
-import { LocationPicker } from '@/components/LocationPicker';
 import PhotoUpload from '@/components/PhotoUpload';
 import { CHECKIN_CATEGORIES, CHECKIN_CATEGORY_LABELS } from '@/types/database';
 import type { Checkin } from '@/types/database';
@@ -12,9 +11,13 @@ interface CheckinFormProps {
   tripId: string;
   onSuccess?: (checkin: Checkin) => void;
   onCancel?: () => void;
+  onOpenLocationPicker?: (
+    initial: { latitude: number; longitude: number } | null,
+    onSelect: (lat: number, lng: number) => void
+  ) => void;
 }
 
-export function CheckinForm({ tripId, onSuccess, onCancel }: CheckinFormProps) {
+export function CheckinForm({ tripId, onSuccess, onCancel, onOpenLocationPicker }: CheckinFormProps) {
   const [locationName, setLocationName] = useState('');
   const [category, setCategory] = useState('');
   const [message, setMessage] = useState('');
@@ -24,7 +27,6 @@ export function CheckinForm({ tripId, onSuccess, onCancel }: CheckinFormProps) {
   } | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string>('');
   const [photoMetadata, setPhotoMetadata] = useState<PhotoMetadata | null>(null);
-  const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -103,7 +105,6 @@ export function CheckinForm({ tripId, onSuccess, onCancel }: CheckinFormProps) {
   };
 
   return (
-    <>
     <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-lg shadow">
       <h2 className="text-xl font-bold text-gray-900">새 체크인</h2>
 
@@ -207,8 +208,12 @@ export function CheckinForm({ tripId, onSuccess, onCancel }: CheckinFormProps) {
           </button>
           <button
             type="button"
-            onClick={() => setShowLocationPicker(true)}
-            className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+            onClick={() => onOpenLocationPicker?.(selectedLocation, (lat, lng) => {
+              setSelectedLocation({ latitude: lat, longitude: lng });
+              setError(null);
+            })}
+            disabled={!onOpenLocationPicker}
+            className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-gray-400"
           >
             🗺️ 지도에서 선택
           </button>
@@ -262,19 +267,5 @@ export function CheckinForm({ tripId, onSuccess, onCancel }: CheckinFormProps) {
         )}
       </div>
     </form>
-
-      {/* LocationPicker 모달 */}
-      {showLocationPicker && (
-        <LocationPicker
-          initialLocation={selectedLocation || undefined}
-          onLocationSelect={(latitude, longitude) => {
-            setSelectedLocation({ latitude, longitude });
-            setShowLocationPicker(false);
-            setError(null);
-          }}
-          onClose={() => setShowLocationPicker(false)}
-        />
-      )}
-    </>
   );
 }

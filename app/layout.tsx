@@ -15,6 +15,7 @@ export default function RootLayout({
     <html lang="ko" suppressHydrationWarning>
       <body className="antialiased">
         {children}
+        <div id="modal-root" />
       </body>
     </html>
   );

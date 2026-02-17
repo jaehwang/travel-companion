@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CheckinForm } from '@/components/CheckinForm';
 import { CheckinListItem } from '@/components/CheckinListItem';
+import { LocationPicker } from '@/components/LocationPicker';
 import Map, { MapPhoto } from '@/components/Map';
 import type { Trip, Checkin } from '@/types/database';
 
@@ -13,6 +14,9 @@ export default function CheckinPage() {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const locationPickerInitial = useRef<{ latitude: number; longitude: number } | null>(null);
+  const locationPickerCallback = useRef<((lat: number, lng: number) => void) | null>(null);
 
   // 여행 목록 로드
   useEffect(() => {
@@ -186,6 +190,11 @@ export default function CheckinPage() {
                   tripId={selectedTripId}
                   onSuccess={handleCheckinSuccess}
                   onCancel={() => setShowForm(false)}
+                  onOpenLocationPicker={(initial, onSelect) => {
+                    locationPickerInitial.current = initial;
+                    locationPickerCallback.current = onSelect;
+                    setShowLocationPicker(true);
+                  }}
                 />
               </div>
             )}
@@ -194,6 +203,11 @@ export default function CheckinPage() {
             <div className="mb-6">
               <h2 className="text-xl font-bold text-gray-900 mb-3">지도</h2>
               <Map photos={mapPhotos} height="400px" />
+              {mapPhotos.length === 0 && (
+                <p className="mt-2 text-center text-sm text-gray-500">
+                  체크인을 추가하면 지도에 위치가 표시됩니다
+                </p>
+              )}
             </div>
 
             {/* 체크인 목록 */}
@@ -235,6 +249,16 @@ export default function CheckinPage() {
           </div>
         )}
       </div>
+      {showLocationPicker && (
+        <LocationPicker
+          initialLocation={locationPickerInitial.current || undefined}
+          onLocationSelect={(lat, lng) => {
+            locationPickerCallback.current?.(lat, lng);
+            setShowLocationPicker(false);
+          }}
+          onClose={() => setShowLocationPicker(false)}
+        />
+      )}
     </div>
   );
 }
