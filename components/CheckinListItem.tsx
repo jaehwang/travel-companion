@@ -5,9 +5,11 @@ import type { Checkin } from '@/types/database';
 
 interface CheckinListItemProps {
   checkin: Checkin;
+  onEdit?: (checkin: Checkin) => void;
+  onDelete?: (checkinId: string) => void;
 }
 
-export function CheckinListItem({ checkin }: CheckinListItemProps) {
+export function CheckinListItem({ checkin, onEdit, onDelete }: CheckinListItemProps) {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('ko-KR', {
@@ -42,6 +44,12 @@ export function CheckinListItem({ checkin }: CheckinListItemProps) {
     return colors[category] || 'bg-gray-100 text-gray-700';
   };
 
+  const handleDelete = () => {
+    if (window.confirm('이 체크인을 삭제하시겠습니까?')) {
+      onDelete?.(checkin.id);
+    }
+  };
+
   const categoryLabel = getCategoryLabel(checkin.category);
   const categoryColor = getCategoryColor(checkin.category);
 
@@ -58,6 +66,26 @@ export function CheckinListItem({ checkin }: CheckinListItemProps) {
             </span>
           )}
         </div>
+        {(onEdit || onDelete) && (
+          <div className="flex gap-2 ml-2 shrink-0">
+            {onEdit && (
+              <button
+                onClick={() => onEdit(checkin)}
+                className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+              >
+                수정
+              </button>
+            )}
+            {onDelete && (
+              <button
+                onClick={handleDelete}
+                className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200"
+              >
+                삭제
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {checkin.message && (

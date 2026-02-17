@@ -1,14 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import PhotoUpload from '@/components/PhotoUpload';
-import { CHECKIN_CATEGORIES, CHECKIN_CATEGORY_LABELS } from '@/types/database';
+import { CHECKIN_CATEGORY_LABELS } from '@/types/database';
 import type { Checkin } from '@/types/database';
 import type { PhotoMetadata } from '@/lib/exif';
 
 interface CheckinFormProps {
   tripId: string;
+  editingCheckin?: Checkin;
   onSuccess?: (checkin: Checkin) => void;
   onCancel?: () => void;
   onOpenLocationPicker?: (
@@ -17,7 +18,7 @@ interface CheckinFormProps {
   ) => void;
 }
 
-export function CheckinForm({ tripId, onSuccess, onCancel, onOpenLocationPicker }: CheckinFormProps) {
+export function CheckinForm({ tripId, editingCheckin, onSuccess, onCancel, onOpenLocationPicker }: CheckinFormProps) {
   const [locationName, setLocationName] = useState('');
   const [category, setCategory] = useState('');
   const [message, setMessage] = useState('');
@@ -31,6 +32,29 @@ export function CheckinForm({ tripId, onSuccess, onCancel, onOpenLocationPicker 
   const [error, setError] = useState<string | null>(null);
 
   const { getCurrentPosition, loading: gettingLocation, error: locationError } = useGeolocation();
+
+  // 수정 모드: editingCheckin이 바뀌면 폼 초기화
+  useEffect(() => {
+    if (editingCheckin) {
+      setLocationName(editingCheckin.location_name || '');
+      setCategory(editingCheckin.category || '');
+      setMessage(editingCheckin.message || '');
+      setSelectedLocation({
+        latitude: editingCheckin.latitude,
+        longitude: editingCheckin.longitude,
+      });
+      setPhotoUrl(editingCheckin.photo_url || '');
+      setPhotoMetadata(null);
+    } else {
+      setLocationName('');
+      setCategory('');
+      setMessage('');
+      setSelectedLocation(null);
+      setPhotoUrl('');
+      setPhotoMetadata(null);
+    }
+    setError(null);
+  }, [editingCheckin]);
 
   const handleUseCurrentLocation = async () => {
     try {
@@ -62,51 +86,67 @@ export function CheckinForm({ tripId, onSuccess, onCancel, onOpenLocationPicker 
     setError(null);
 
     try {
-      const response = await fetch('/api/checkins', {
-        method: 'POST',
+      const isEditMode = !!editingCheckin;
+      const url = isEditMode ? `/api/checkins/${editingCheckin!.id}` : '/api/checkins';
+      const method = isEditMode ? 'PATCH' : 'POST';
+
+      const body: Record<string, unknown> = {
+        location_name: locationName.trim(),
+        message: message.trim() || undefined,
+        category: category || undefined,
+        latitude: selectedLocation.latitude,
+        longitude: selectedLocation.longitude,
+        photo_url: photoUrl || undefined,
+        photo_metadata: photoMetadata || undefined,
+      };
+
+      if (!isEditMode) {
+        body.trip_id = tripId;
+      }
+
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          trip_id: tripId,
-          location_name: locationName.trim(),
-          message: message.trim() || undefined,
-          category: category || undefined,
-          latitude: selectedLocation.latitude,
-          longitude: selectedLocation.longitude,
-          photo_url: photoUrl || undefined,
-          photo_metadata: photoMetadata || undefined,
-        }),
+        body: JSON.stringify(body),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to create checkin');
+        throw new Error(data.error || (isEditMode ? 'Failed to update checkin' : 'Failed to create checkin'));
       }
 
-      // 성공 시 폼 리셋
-      setLocationName('');
-      setCategory('');
-      setMessage('');
-      setSelectedLocation(null);
-      setPhotoUrl('');
-      setPhotoMetadata(null);
+      // 성공 시 폼 리셋 (새 체크인 모드만)
+      if (!isEditMode) {
+        setLocationName('');
+        setCategory('');
+        setMessage('');
+        setSelectedLocation(null);
+        setPhotoUrl('');
+        setPhotoMetadata(null);
+      }
 
       if (onSuccess) {
         onSuccess(data.checkin);
       }
     } catch (err) {
-      console.error('Failed to create checkin:', err);
-      setError(err instanceof Error ? err.message : '체크인 생성에 실패했습니다.');
+      const isEditMode = !!editingCheckin;
+      console.error(isEditMode ? 'Failed to update checkin:' : 'Failed to create checkin:', err);
+      setError(err instanceof Error ? err.message : (isEditMode ? '체크인 수정에 실패했습니다.' : '체크인 생성에 실패했습니다.'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const isEditMode = !!editingCheckin;
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-lg shadow">
-      <h2 className="text-xl font-bold text-gray-900">새 체크인</h2>
+      <h2 className="text-xl font-bold text-gray-900">
+        {isEditMode ? '체크인 수정' : '새 체크인'}
+      </h2>
 
       {/* 장소 이름 */}
       <div>
@@ -253,7 +293,7 @@ export function CheckinForm({ tripId, onSuccess, onCancel, onOpenLocationPicker 
           disabled={isSubmitting || !selectedLocation}
           className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium"
         >
-          {isSubmitting ? '등록 중...' : '체크인 등록'}
+          {isSubmitting ? (isEditMode ? '수정 중...' : '등록 중...') : (isEditMode ? '수정 완료' : '체크인 등록')}
         </button>
         {onCancel && (
           <button
