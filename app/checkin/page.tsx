@@ -419,28 +419,65 @@ export default function CheckinPage() {
               )}
             </div>
 
-            {/* 체크인 목록 */}
+            {/* 체크인 타임라인 */}
             <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-3">
-                체크인 목록 ({checkins.length})
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                기록 <span className="text-base font-normal text-gray-400">{checkins.length}곳</span>
               </h2>
 
               {checkins.length > 0 ? (
-                <div className="space-y-4">
-                  {checkins.map((checkin) => (
-                    <CheckinListItem
-                      key={checkin.id}
-                      checkin={checkin}
-                      onEdit={handleEditCheckin}
-                      onDelete={handleDeleteCheckin}
-                    />
-                  ))}
+                <div>
+                  <div>
+                    {checkins.map((checkin, index) => {
+                      const currentDate = new Date(checkin.checked_in_at).toDateString();
+                      const prevDate = index > 0
+                        ? new Date(checkins[index - 1].checked_in_at).toDateString()
+                        : null;
+                      const showDateHeader = currentDate !== prevDate;
+
+                      const formatDateHeader = (dateStr: string) => {
+                        const d = new Date(dateStr);
+                        const today = new Date();
+                        const yesterday = new Date(today);
+                        yesterday.setDate(today.getDate() - 1);
+                        if (d.toDateString() === today.toDateString()) return '오늘';
+                        if (d.toDateString() === yesterday.toDateString()) return '어제';
+                        return new Intl.DateTimeFormat('ko-KR', {
+                          year: 'numeric', month: 'long', day: 'numeric',
+                        }).format(d);
+                      };
+
+                      const isLast = index === checkins.length - 1;
+
+                      return (
+                        <div key={checkin.id}>
+                          {showDateHeader && (
+                            <div className={`flex items-center gap-2 mb-4 ${index > 0 ? 'mt-2' : ''}`}>
+                              <span className="text-xs font-semibold text-gray-500 whitespace-nowrap">
+                                {formatDateHeader(checkin.checked_in_at)}
+                              </span>
+                              <div className="flex-1 h-px bg-gray-200" />
+                            </div>
+                          )}
+                          <CheckinListItem
+                            checkin={checkin}
+                            onEdit={handleEditCheckin}
+                            onDelete={handleDeleteCheckin}
+                          />
+                          {!isLast && (
+                            <hr className="my-6 border-gray-200" />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               ) : (
-                <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
-                  <p className="text-gray-500 text-lg mb-2">아직 체크인이 없습니다</p>
+                <div className="text-center py-16">
+                  <p className="text-4xl mb-3">🗺️</p>
+                  <p className="text-gray-500 font-medium mb-1">아직 체크인이 없습니다</p>
                   <p className="text-gray-400 text-sm">
-                    위의 &quot;새 체크인 추가&quot; 버튼을 눌러 첫 체크인을 만들어보세요!
+                    위의 버튼을 눌러 첫 체크인을 기록해보세요!
                   </p>
                 </div>
               )}
