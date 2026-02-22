@@ -77,8 +77,6 @@ export default function Map({
   showPath = true,
 }: MapProps) {
   const [selectedPhoto, setSelectedPhoto] = useState<MapPhoto | null>(null);
-  const [mapCenter, setMapCenter] = useState(defaultCenter);
-  const [mapZoom, setMapZoom] = useState(defaultZoom);
   const [error, setError] = useState<string>('');
   const [map, setMap] = useState<google.maps.Map | null>(null);
 
@@ -142,8 +140,8 @@ export default function Map({
     <div className="relative" style={{ height, pointerEvents: 'auto', touchAction: 'pan-x pan-y' }}>
       <APIProvider apiKey={apiKey}>
         <GoogleMap
-          defaultCenter={mapCenter}
-          defaultZoom={mapZoom}
+          defaultCenter={defaultCenter}
+          defaultZoom={defaultZoom}
           mapId="f61fd161984b7ef0b0aaa09b"
           gestureHandling="greedy"
           style={{ width: '100%', height: '100%' }}

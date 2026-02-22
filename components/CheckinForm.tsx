@@ -18,6 +18,15 @@ interface CheckinFormProps {
   ) => void;
 }
 
+interface PlacePrediction {
+  place_id: string;
+  description: string;
+  structured_formatting: {
+    main_text: string;
+    secondary_text: string;
+  };
+}
+
 export function CheckinForm({ tripId, editingCheckin, onSuccess, onCancel, onOpenLocationPicker }: CheckinFormProps) {
   const [locationName, setLocationName] = useState('');
   const [category, setCategory] = useState('');
@@ -30,6 +39,12 @@ export function CheckinForm({ tripId, editingCheckin, onSuccess, onCancel, onOpe
   const [photoMetadata, setPhotoMetadata] = useState<PhotoMetadata | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 장소 검색 모드
+  const [showLocationSearch, setShowLocationSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [predictions, setPredictions] = useState<PlacePrediction[]>([]);
+  const [searchingPlaces, setSearchingPlaces] = useState(false);
 
   const { getCurrentPosition, loading: gettingLocation, error: locationError } = useGeolocation();
 
@@ -53,19 +68,75 @@ export function CheckinForm({ tripId, editingCheckin, onSuccess, onCancel, onOpe
       setPhotoUrl('');
       setPhotoMetadata(null);
     }
+    setShowLocationSearch(false);
+    setSearchQuery('');
+    setPredictions([]);
     setError(null);
   }, [editingCheckin]);
 
-  const handleUseCurrentLocation = async () => {
+  // 장소 검색 쿼리가 변경되면 자동완성 검색
+  useEffect(() => {
+    if (!showLocationSearch || !searchQuery || searchQuery.trim().length < 2) {
+      setPredictions([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setSearchingPlaces(true);
+      try {
+        const response = await fetch(
+          `/api/places/autocomplete?input=${encodeURIComponent(searchQuery)}`
+        );
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to search places');
+        }
+
+        setPredictions(data.predictions || []);
+      } catch (err) {
+        console.error('Failed to search places:', err);
+        setPredictions([]);
+      } finally {
+        setSearchingPlaces(false);
+      }
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, showLocationSearch]);
+
+  const handleOpenLocationSearch = () => {
+    setShowLocationSearch(true);
+    setSearchQuery('');
+    setPredictions([]);
+  };
+
+  const handleSelectPlace = async (prediction: PlacePrediction) => {
+    setSearchingPlaces(true);
     try {
-      const position = await getCurrentPosition();
+      const response = await fetch(
+        `/api/places/details?place_id=${prediction.place_id}`
+      );
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to get place details');
+      }
+
+      // 좌표만 설정하고 장소 이름은 유지
       setSelectedLocation({
-        latitude: position.latitude,
-        longitude: position.longitude,
+        latitude: data.place.latitude,
+        longitude: data.place.longitude,
       });
+      setShowLocationSearch(false);
+      setSearchQuery('');
+      setPredictions([]);
       setError(null);
     } catch (err) {
-      console.error('Failed to get current location:', err);
+      console.error('Failed to get place details:', err);
+      setError('장소 정보를 가져오는데 실패했습니다.');
+    } finally {
+      setSearchingPlaces(false);
     }
   };
 
@@ -148,17 +219,17 @@ export function CheckinForm({ tripId, editingCheckin, onSuccess, onCancel, onOpe
         {isEditMode ? '체크인 수정' : '새 체크인'}
       </h2>
 
-      {/* 장소 이름 */}
+      {/* 제목 */}
       <div>
         <label htmlFor="location-name" className="block text-sm font-medium text-gray-700 mb-1">
-          장소 이름 *
+          제목 *
         </label>
         <input
           id="location-name"
           type="text"
           value={locationName}
           onChange={(e) => setLocationName(e.target.value)}
-          placeholder="예: 에펠탑, 스타벅스 강남점"
+          placeholder="예: 에펠탑, 맛있는 파스타 먹은 곳"
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           required
         />
@@ -237,37 +308,110 @@ export function CheckinForm({ tripId, editingCheckin, onSuccess, onCancel, onOpe
         <label className="block text-sm font-medium text-gray-700 mb-2">
           위치 *
         </label>
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={handleUseCurrentLocation}
-            disabled={gettingLocation}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            {gettingLocation ? '위치 가져오는 중...' : '📍 현재 위치'}
-          </button>
-          <button
-            type="button"
-            onClick={() => onOpenLocationPicker?.(selectedLocation, (lat, lng) => {
-              setSelectedLocation({ latitude: lat, longitude: lng });
-              setError(null);
-            })}
-            disabled={!onOpenLocationPicker}
-            className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-gray-400"
-          >
-            🗺️ 지도에서 선택
-          </button>
-        </div>
 
-        {selectedLocation && (
+        {/* 장소 검색 모드 */}
+        {showLocationSearch ? (
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-blue-900">장소 검색</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLocationSearch(false);
+                  setSearchQuery('');
+                  setPredictions([]);
+                }}
+                className="text-sm text-blue-600 hover:text-blue-800"
+              >
+                ✕ 닫기
+              </button>
+            </div>
+
+            {/* 검색 입력 */}
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="장소 이름을 입력하세요"
+                className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                autoFocus
+              />
+              {searchingPlaces && (
+                <div className="absolute right-3 top-2.5 text-blue-400">
+                  <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+              )}
+            </div>
+
+            {/* 검색 결과 */}
+            {predictions.length > 0 && (
+              <div className="mt-2 bg-white border border-blue-200 rounded-md max-h-60 overflow-auto">
+                {predictions.map((prediction) => (
+                  <button
+                    key={prediction.place_id}
+                    type="button"
+                    onClick={() => handleSelectPlace(prediction)}
+                    className="w-full text-left px-3 py-3 hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0"
+                  >
+                    <p className="font-medium text-gray-900">
+                      {prediction.structured_formatting.main_text}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {prediction.structured_formatting.secondary_text}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          /* 위치 선택 버튼 */
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={handleOpenLocationSearch}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              📍 장소 입력
+            </button>
+            <button
+              type="button"
+              onClick={() => onOpenLocationPicker?.(selectedLocation, (lat, lng) => {
+                setSelectedLocation({ latitude: lat, longitude: lng });
+                setError(null);
+              })}
+              disabled={!onOpenLocationPicker}
+              className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-gray-400"
+            >
+              🗺️ 지도에서 선택
+            </button>
+          </div>
+        )}
+
+        {selectedLocation && !showLocationSearch && (
           <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-md">
             <p className="text-sm text-green-800">
-              ✅ 위치 선택됨: {selectedLocation.latitude.toFixed(6)}, {selectedLocation.longitude.toFixed(6)}
+              ✅ 위치 선택됨:{' '}
+              <a
+                href={`https://www.google.com/maps?q=${selectedLocation.latitude},${selectedLocation.longitude}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline font-medium"
+              >
+                {locationName || '지도에서 보기'}
+              </a>
+            </p>
+            <p className="text-xs text-green-700 mt-1">
+              📍 {selectedLocation.latitude.toFixed(6)}, {selectedLocation.longitude.toFixed(6)}
             </p>
           </div>
         )}
 
-        {locationError && (
+        {locationError && !showLocationSearch && (
           <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
             <p className="text-sm text-yellow-800">{locationError.message}</p>
             {locationError.code === 1 && (
