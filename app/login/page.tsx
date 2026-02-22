@@ -18,9 +18,9 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="bg-white p-10 rounded-2xl shadow-sm text-center max-w-sm w-full">
         <div className="mb-6">
-          <span className="text-5xl">🗺️</span>
+          <img src="/icon.png" alt="Travel Companion" className="w-16 h-16 mx-auto rounded-xl" />
         </div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Travel Companion</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Travel Companion</h1>
         <p className="text-gray-500 text-sm mb-8">여행의 순간을 기록하세요</p>
         <button
           onClick={handleGoogleLogin}

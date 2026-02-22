@@ -288,7 +288,7 @@ export default function CheckinPage() {
                 <img
                   src={user.user_metadata.avatar_url}
                   alt={user.user_metadata.name || ''}
-                  className="w-8 h-8 rounded-full"
+                  className="user-avatar"
                   referrerPolicy="no-referrer"
                 />
               )}
