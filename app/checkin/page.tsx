@@ -249,6 +249,7 @@ export default function CheckinPage() {
       longitude: checkin.longitude,
       title: checkin.location_name,
       takenAt: checkin.checked_in_at,
+      message: checkin.message,
     }))
     .sort((a, b) => new Date(a.takenAt!).getTime() - new Date(b.takenAt!).getTime());
 

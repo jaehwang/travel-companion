@@ -10,6 +10,7 @@ export interface MapPhoto {
   longitude: number;
   title?: string;
   takenAt?: string;
+  message?: string;
 }
 
 interface MapProps {
@@ -184,49 +185,124 @@ export default function Map({
           ))}
 
           {/* InfoWindow (팝업) */}
-          {selectedPhoto && (
-            <InfoWindow
-              position={{ lat: selectedPhoto.latitude, lng: selectedPhoto.longitude }}
-              onCloseClick={() => setSelectedPhoto(null)}
-            >
-              <div style={{ minWidth: '200px', maxWidth: '300px' }}>
-                {selectedPhoto.url && (
-                  <img
-                    src={selectedPhoto.url}
-                    alt={selectedPhoto.title || 'Photo'}
-                    className="w-full h-40 object-cover rounded mb-2"
-                    crossOrigin="anonymous"
-                    referrerPolicy="no-referrer"
-                    onError={(e) => {
-                      console.error('Image load error:', selectedPhoto.url);
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                )}
-                {selectedPhoto.title && (
-                  <p className="font-semibold mb-1">{selectedPhoto.title}</p>
-                )}
-                {selectedPhoto.takenAt && (
-                  <p className="text-xs text-gray-600 mb-1">
-                    {new Date(selectedPhoto.takenAt).toLocaleString('ko-KR')}
+          {selectedPhoto && (() => {
+            const selectedIndex = photos.findIndex(p => p.id === selectedPhoto.id);
+            const hasPrev = selectedIndex > 0;
+            const hasNext = selectedIndex < photos.length - 1;
+
+            const handlePrev = () => {
+              if (hasPrev) {
+                setSelectedPhoto(photos[selectedIndex - 1]);
+              }
+            };
+
+            const handleNext = () => {
+              if (hasNext) {
+                setSelectedPhoto(photos[selectedIndex + 1]);
+              }
+            };
+
+            return (
+              <InfoWindow
+                position={{ lat: selectedPhoto.latitude, lng: selectedPhoto.longitude }}
+                onCloseClick={() => setSelectedPhoto(null)}
+              >
+                <div style={{ minWidth: '200px', maxWidth: '300px' }}>
+                  {selectedPhoto.url && (
+                    <img
+                      src={selectedPhoto.url}
+                      alt={selectedPhoto.title || 'Photo'}
+                      className="w-full h-40 object-cover rounded mb-2"
+                      crossOrigin="anonymous"
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        console.error('Image load error:', selectedPhoto.url);
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  )}
+                  {selectedPhoto.title && (
+                    <p className="font-semibold mb-1">{selectedPhoto.title}</p>
+                  )}
+                  {selectedPhoto.message && (
+                    <p className="text-sm text-gray-700 mb-2">{selectedPhoto.message}</p>
+                  )}
+                  {selectedPhoto.takenAt && (
+                    <p className="text-xs text-gray-600 mb-1">
+                      {new Date(selectedPhoto.takenAt).toLocaleString('ko-KR')}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500 mb-2">
+                    📍 {selectedPhoto.latitude.toFixed(6)}, {selectedPhoto.longitude.toFixed(6)}
                   </p>
-                )}
-                <p className="text-xs text-gray-500">
-                  📍 {selectedPhoto.latitude.toFixed(6)}, {selectedPhoto.longitude.toFixed(6)}
-                </p>
-                {selectedPhoto.url && (
-                  <a
-                    href={selectedPhoto.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-blue-600 hover:underline mt-2 block"
-                  >
-                    원본 보기 →
-                  </a>
-                )}
-              </div>
-            </InfoWindow>
-          )}
+
+                  {/* 이전/다음 버튼 */}
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    gap: '8px',
+                    marginTop: '12px',
+                    paddingTop: '8px',
+                    borderTop: '1px solid #e5e7eb'
+                  }}>
+                    <button
+                      onClick={handlePrev}
+                      disabled={!hasPrev}
+                      style={{
+                        flex: 1,
+                        padding: '6px 12px',
+                        fontSize: '12px',
+                        fontWeight: '500',
+                        backgroundColor: hasPrev ? '#4285F4' : '#e5e7eb',
+                        color: hasPrev ? 'white' : '#9ca3af',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: hasPrev ? 'pointer' : 'not-allowed',
+                      }}
+                    >
+                      ← 이전
+                    </button>
+                    <span style={{
+                      fontSize: '12px',
+                      color: '#6b7280',
+                      alignSelf: 'center',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {selectedIndex + 1} / {photos.length}
+                    </span>
+                    <button
+                      onClick={handleNext}
+                      disabled={!hasNext}
+                      style={{
+                        flex: 1,
+                        padding: '6px 12px',
+                        fontSize: '12px',
+                        fontWeight: '500',
+                        backgroundColor: hasNext ? '#4285F4' : '#e5e7eb',
+                        color: hasNext ? 'white' : '#9ca3af',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: hasNext ? 'pointer' : 'not-allowed',
+                      }}
+                    >
+                      다음 →
+                    </button>
+                  </div>
+
+                  {selectedPhoto.url && (
+                    <a
+                      href={selectedPhoto.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-blue-600 hover:underline mt-2 block text-center"
+                    >
+                      원본 보기 →
+                    </a>
+                  )}
+                </div>
+              </InfoWindow>
+            );
+          })()}
 
           {/* 경로 연결 */}
           {showPath && <TravelPath photos={photos} />}
