@@ -1,21 +1,6 @@
 # Travel Companion - 앞으로 할 일
 
-## 1. 인증 기능 추가
-
-> 상세 계획: [docs/auth.md](./docs/auth.md)
-
-- [ ] Google Cloud Console OAuth 클라이언트 발급
-- [ ] Supabase Dashboard Google provider 활성화
-- [ ] DB 마이그레이션: trips.user_id 추가, RLS 활성화
-- [ ] `@supabase/ssr` 설치 및 Supabase 클라이언트 분리
-- [ ] `middleware.ts` 작성 (세션 갱신 + 인증 보호)
-- [ ] 로그인 페이지 + OAuth 콜백 라우트
-- [ ] API 라우트 인증 체크 추가
-- [ ] 헤더 UI: 사용자 아바타 + 로그아웃 버튼
-
----
-
-## 2. 아이디어 목록
+## 1. 아이디어 목록
 
 ### 체크인 날씨 저장
 - 체크인 시 현재 위치의 날씨 정보를 자동으로 함께 저장
