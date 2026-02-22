@@ -83,48 +83,35 @@ export default function Map({
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
+  // defaultCenter 변경 시 지도 이동 (photos가 없을 때만)
+  useEffect(() => {
+    if (photos.length === 0 && map) {
+      map.panTo(defaultCenter);
+      map.setZoom(defaultZoom);
+    }
+  }, [defaultCenter, defaultZoom, photos.length, map]);
+
   // 사진 위치에 맞게 지도 중심과 줌 자동 조정
   useEffect(() => {
-    if (photos.length === 0) return;
+    if (!map || photos.length === 0) return;
 
     if (photos.length === 1) {
       // 사진이 1개면 그 위치로 이동
-      setMapCenter({ lat: photos[0].latitude, lng: photos[0].longitude });
-      setMapZoom(13);
+      map.panTo({ lat: photos[0].latitude, lng: photos[0].longitude });
+      map.setZoom(13);
     } else {
-      // 여러 사진이면 모든 위치를 포함하는 중심점 계산
-      const bounds = {
-        north: Math.max(...photos.map(p => p.latitude)),
-        south: Math.min(...photos.map(p => p.latitude)),
-        east: Math.max(...photos.map(p => p.longitude)),
-        west: Math.min(...photos.map(p => p.longitude)),
-      };
+      // 여러 사진이면 모든 위치를 포함하는 영역으로 fitBounds
+      const bounds = new google.maps.LatLngBounds();
+      photos.forEach(photo => {
+        bounds.extend({ lat: photo.latitude, lng: photo.longitude });
+      });
+      map.fitBounds(bounds);
 
-      const center = {
-        lat: (bounds.north + bounds.south) / 2,
-        lng: (bounds.east + bounds.west) / 2,
-      };
-
-      setMapCenter(center);
-
-      // 범위에 따라 적절한 줌 레벨 계산 (간단한 방식)
-      const latDiff = bounds.north - bounds.south;
-      const lngDiff = bounds.east - bounds.west;
-      const maxDiff = Math.max(latDiff, lngDiff);
-
-      let zoom = 13;
-      if (maxDiff > 10) zoom = 5;
-      else if (maxDiff > 5) zoom = 6;
-      else if (maxDiff > 2) zoom = 7;
-      else if (maxDiff > 1) zoom = 8;
-      else if (maxDiff > 0.5) zoom = 9;
-      else if (maxDiff > 0.2) zoom = 10;
-      else if (maxDiff > 0.1) zoom = 11;
-      else if (maxDiff > 0.05) zoom = 12;
-
-      setMapZoom(zoom);
+      // 패딩 추가하여 마커가 가장자리에 붙지 않도록
+      const padding = { top: 50, right: 50, bottom: 50, left: 50 };
+      map.fitBounds(bounds, padding);
     }
-  }, [photos]);
+  }, [photos, map]);
 
   if (!apiKey || apiKey === 'your-google-maps-api-key') {
     return (
@@ -159,15 +146,41 @@ export default function Map({
           mapId="f61fd161984b7ef0b0aaa09b"
           gestureHandling="greedy"
           style={{ width: '100%', height: '100%' }}
+          onCameraChanged={(ev) => {
+            // 지도 인스턴스 저장
+            if (ev.map && !map) {
+              setMap(ev.map);
+            }
+          }}
         >
           {/* 마커 표시 */}
-          {photos.map((photo) => (
+          {photos.map((photo, index) => (
             <AdvancedMarker
               key={photo.id}
               position={{ lat: photo.latitude, lng: photo.longitude }}
               onClick={() => setSelectedPhoto(photo)}
               title={photo.title || 'Photo'}
-            />
+            >
+              <div
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  backgroundColor: '#4285F4',
+                  border: '2px solid white',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                }}
+              >
+                {index + 1}
+              </div>
+            </AdvancedMarker>
           ))}
 
           {/* InfoWindow (팝업) */}

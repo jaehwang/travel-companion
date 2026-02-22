@@ -5,6 +5,7 @@ import { CheckinForm } from '@/components/CheckinForm';
 import { CheckinListItem } from '@/components/CheckinListItem';
 import { LocationPicker } from '@/components/LocationPicker';
 import Map, { MapPhoto } from '@/components/Map';
+import { useGeolocation } from '@/hooks/useGeolocation';
 import type { Trip, Checkin } from '@/types/database';
 
 export default function CheckinPage() {
@@ -18,6 +19,8 @@ export default function CheckinPage() {
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const locationPickerInitial = useRef<{ latitude: number; longitude: number } | null>(null);
   const locationPickerCallback = useRef<((lat: number, lng: number) => void) | null>(null);
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>({ lat: 37.5665, lng: 126.9780 });
+  const { getCurrentPosition } = useGeolocation();
 
   // 여행 편집 상태
   const [editingTrip, setEditingTrip] = useState(false);
@@ -41,6 +44,25 @@ export default function CheckinPage() {
       setCheckins([]);
     }
   }, [selectedTripId]);
+
+  // 체크인 변경 시 지도 중심 업데이트
+  useEffect(() => {
+    if (checkins.length > 0) {
+      // 마지막 (가장 최근) 체크인 위치 사용
+      const lastCheckin = checkins[0]; // checkins는 최신순이므로 첫 번째가 마지막
+      setMapCenter({ lat: lastCheckin.latitude, lng: lastCheckin.longitude });
+    } else {
+      // 체크인이 없으면 현재 위치 사용
+      getCurrentPosition()
+        .then((pos) => {
+          setMapCenter({ lat: pos.latitude, lng: pos.longitude });
+        })
+        .catch((err) => {
+          console.log('Failed to get current position:', err);
+          // 에러 시 서울 유지 (기본값)
+        });
+    }
+  }, [checkins, getCurrentPosition]);
 
   const fetchTrips = async () => {
     try {
@@ -218,15 +240,17 @@ export default function CheckinPage() {
     }
   };
 
-  // Checkin을 MapPhoto 형식으로 변환
-  const mapPhotos: MapPhoto[] = checkins.map((checkin) => ({
-    id: checkin.id,
-    url: checkin.photo_url || '',
-    latitude: checkin.latitude,
-    longitude: checkin.longitude,
-    title: checkin.location_name,
-    takenAt: checkin.checked_in_at,
-  }));
+  // Checkin을 MapPhoto 형식으로 변환 (시간순 정렬)
+  const mapPhotos: MapPhoto[] = checkins
+    .map((checkin) => ({
+      id: checkin.id,
+      url: checkin.photo_url || '',
+      latitude: checkin.latitude,
+      longitude: checkin.longitude,
+      title: checkin.location_name,
+      takenAt: checkin.checked_in_at,
+    }))
+    .sort((a, b) => new Date(a.takenAt!).getTime() - new Date(b.takenAt!).getTime());
 
   if (loading) {
     return (
@@ -411,7 +435,7 @@ export default function CheckinPage() {
             {/* 지도 */}
             <div className="mb-6">
               <h2 className="text-xl font-bold text-gray-900 mb-3">지도</h2>
-              <Map photos={mapPhotos} height="400px" />
+              <Map photos={mapPhotos} height="400px" defaultCenter={mapCenter} />
               {mapPhotos.length === 0 && (
                 <p className="mt-2 text-center text-sm text-gray-500">
                   체크인을 추가하면 지도에 위치가 표시됩니다
