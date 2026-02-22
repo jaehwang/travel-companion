@@ -22,7 +22,7 @@ export function CheckinListItem({ checkin, onEdit, onDelete }: CheckinListItemPr
   };
 
   const mapsUrl = checkin.place_id
-    ? `https://www.google.com/maps/place/?q=place_id:${checkin.place_id}`
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(checkin.place || '')}&query_place_id=${checkin.place_id}`
     : `https://www.google.com/maps?q=${checkin.latitude},${checkin.longitude}`;
 
   const handleDelete = () => {
