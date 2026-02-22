@@ -51,6 +51,7 @@
 - Feature branch 사용
 - 주요 기능 완성 시 커밋
 - main 브랜치 push → Vercel 자동 배포
+- **커밋 전 반드시 `npm test` 를 실행하여 모든 테스트를 통과해야 한다**
 
 ### 코드 스타일
 - TypeScript strict mode

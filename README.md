@@ -57,6 +57,19 @@ travel-companion/
 └── types/            # TypeScript 타입 정의
 ```
 
+## 테스트
+
+```bash
+npm test                # 전체 테스트 1회 실행
+npm run test:watch      # 파일 변경 감지 후 자동 재실행
+npm run test:coverage   # 커버리지 리포트 포함 실행
+```
+
+테스트 파일 위치:
+- `lib/__tests__/` - 유틸리티 함수 단위 테스트
+- `app/api/**/__tests__/` - API 라우트 테스트
+- `components/__tests__/` - React 컴포넌트 테스트
+
 ## 개발 가이드
 
 자세한 개발 가이드라인은 [CLAUDE.md](./CLAUDE.md)를 참고하세요.
