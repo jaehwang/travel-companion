@@ -18,13 +18,27 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="bg-white p-10 rounded-2xl shadow-sm text-center max-w-sm w-full">
         <div className="mb-6">
-          <img src="/icon.png" alt="Travel Companion" className="w-16 h-16 mx-auto rounded-xl" />
+          <svg viewBox="0 0 100 100" className="w-[22rem] h-[22rem] max-w-full mx-auto" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" rx="22" fill="#EA580C"/>
+            {/* Route line */}
+            <path d="M20 40 L50 40 L78 65" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"/>
+            {/* Start point */}
+            <circle cx="20" cy="40" r="10" fill="white"/>
+            <circle cx="20" cy="40" r="5" fill="#EA580C"/>
+            {/* Mid point */}
+            <circle cx="50" cy="40" r="8" fill="white" opacity="0.85"/>
+            <circle cx="50" cy="40" r="4" fill="#EA580C"/>
+            {/* Destination map pin (teardrop) */}
+            <path d="M78 80 C71 72, 65 65, 65 57 A13 13 0 0 1 91 57 C91 65, 85 72, 78 80 Z" fill="white"/>
+            <circle cx="78" cy="56" r="5.5" fill="#EA580C"/>
+          </svg>
         </div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Travel Companion</h1>
         <p className="text-gray-500 text-sm mb-8">여행의 순간을 기록하세요</p>
         <button
           onClick={handleGoogleLogin}
-          className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-gray-700 shadow-sm"
+          className="inline-flex items-center bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-colors font-medium text-gray-700 shadow-sm"
+          style={{ padding: '16px 40px', gap: '20px' }}
         >
           <svg width="20" height="20" viewBox="0 0 48 48">
             <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.5l6.8-6.8C35.8 2.5 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.9 6.1C12.4 13.4 17.8 9.5 24 9.5z"/>
