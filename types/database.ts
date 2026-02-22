@@ -29,6 +29,7 @@ export const CHECKIN_CATEGORY_LABELS: Record<CheckinCategory, string> = {
 
 export interface Trip {
   id: string;
+  user_id?: string;
   title: string;
   description?: string;
   start_date?: string;
@@ -62,6 +63,7 @@ export interface Checkin {
 
 // Insert types (without auto-generated fields)
 export interface TripInsert {
+  user_id?: string;
   title: string;
   description?: string;
   start_date?: string;

@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import type { TripInsert } from '@/types/database';
 
 // GET /api/trips - 여행 목록 조회
 export async function GET() {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { data, error } = await supabase
       .from('trips')
       .select('*')
@@ -31,10 +37,15 @@ export async function GET() {
 // POST /api/trips - 새 여행 생성
 export async function POST(request: Request) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { title, description, start_date, end_date, is_public } = body;
 
-    // 유효성 검증
     if (!title || typeof title !== 'string' || title.trim().length === 0) {
       return NextResponse.json(
         { error: 'Title is required' },
@@ -48,6 +59,7 @@ export async function POST(request: Request) {
       start_date,
       end_date,
       is_public: is_public ?? false,
+      user_id: user.id,
     };
 
     const { data, error } = await supabase

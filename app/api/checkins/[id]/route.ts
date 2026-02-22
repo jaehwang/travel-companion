@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import type { CheckinInsert } from '@/types/database';
 
 // PATCH /api/checkins/[id] - 체크인 수정
@@ -8,6 +8,12 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await params;
     const body = await request.json();
     const {
@@ -23,7 +29,6 @@ export async function PATCH(
       checked_in_at,
     } = body;
 
-    // 좌표 유효성 검증 (전달된 경우에만)
     if (latitude !== undefined) {
       if (typeof latitude !== 'number' || latitude < -90 || latitude > 90) {
         return NextResponse.json(
@@ -83,6 +88,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await params;
 
     const { error } = await supabase

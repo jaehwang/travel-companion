@@ -20,13 +20,22 @@ function createQueryBuilder(resolvedValue: { data: any; error: any }) {
 }
 
 const mockFrom = jest.fn();
+const mockGetUser = jest.fn();
 
-jest.mock('@/lib/supabase', () => ({
-  supabase: { from: (...args: any[]) => mockFrom(...args) },
+jest.mock('@/lib/supabase/server', () => ({
+  createClient: jest.fn().mockResolvedValue({
+    auth: { getUser: (...args: any[]) => mockGetUser(...args) },
+    from: (...args: any[]) => mockFrom(...args),
+  }),
 }));
 
+const authedUser = { data: { user: { id: 'user-1' } }, error: null };
+
 describe('GET /api/checkins', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetUser.mockResolvedValue(authedUser);
+  });
 
   it('전체 체크인 목록을 반환한다', async () => {
     const checkins = [
@@ -50,10 +59,22 @@ describe('GET /api/checkins', () => {
 
     expect(res.status).toBe(500);
   });
+
+  it('비인증 요청 시 401을 반환한다', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: null }, error: null });
+
+    const req = new NextRequest('http://localhost:3000/api/checkins');
+    const res = await GET(req);
+
+    expect(res.status).toBe(401);
+  });
 });
 
 describe('POST /api/checkins', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetUser.mockResolvedValue(authedUser);
+  });
 
   const validBody = {
     trip_id: 'trip-uuid',
@@ -105,5 +126,17 @@ describe('POST /api/checkins', () => {
     const res = await POST(req);
 
     expect(res.status).toBe(400);
+  });
+
+  it('비인증 요청 시 401을 반환한다', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: null }, error: null });
+
+    const req = new NextRequest('http://localhost:3000/api/checkins', {
+      method: 'POST',
+      body: JSON.stringify(validBody),
+    });
+    const res = await POST(req);
+
+    expect(res.status).toBe(401);
   });
 });

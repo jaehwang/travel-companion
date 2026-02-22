@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import type { CheckinInsert } from '@/types/database';
 
 // GET /api/checkins?trip_id={id} - 체크인 목록 조회
 export async function GET(request: Request) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const tripId = searchParams.get('trip_id');
 
@@ -40,6 +46,12 @@ export async function GET(request: Request) {
 // POST /api/checkins - 체크인 생성
 export async function POST(request: Request) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const {
       trip_id,
@@ -55,7 +67,6 @@ export async function POST(request: Request) {
       checked_in_at,
     } = body;
 
-    // 필수 필드 유효성 검증
     if (!trip_id || typeof trip_id !== 'string') {
       return NextResponse.json(
         { error: 'trip_id is required' },
@@ -70,7 +81,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // GPS 좌표 유효성 검증
     if (latitude < -90 || latitude > 90) {
       return NextResponse.json(
         { error: 'latitude must be between -90 and 90' },

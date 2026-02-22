@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import type { TripInsert } from '@/types/database';
 
 // PATCH /api/trips/[id] - 여행 수정
@@ -8,11 +8,16 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await params;
     const body = await request.json();
     const { title, description, start_date, end_date, is_public } = body;
 
-    // 제목 유효성 검증 (전달된 경우)
     if (title !== undefined && (!title || typeof title !== 'string' || title.trim().length === 0)) {
       return NextResponse.json(
         { error: 'Title cannot be empty' },
@@ -57,6 +62,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await params;
 
     const { error } = await supabase
