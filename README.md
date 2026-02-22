@@ -82,6 +82,20 @@ Vercel을 통한 자동 배포:
 git push origin main
 ```
 
+## 검토 사항
+
+### 데이터 백업
+- Supabase 무료 플랜은 일 1회 자동 백업, 7일만 보관
+- 여행 기억 데이터는 대체 불가하므로 주기적 수동 백업 권장
+- Supabase Dashboard → Project Settings → Backups에서 수동 다운로드 가능
+- 또는 `pg_dump`로 DB 덤프 (PostgreSQL 클라이언트 설치 필요)
+- Supabase Storage 사진 파일은 DB 백업과 별도로 관리 필요
+
+### 테스트용 DB
+- 현재 단위 테스트는 Supabase를 mock으로 대체하므로 테스트 DB 불필요
+- 향후 통합 테스트(RLS 정책, 복잡한 쿼리 검증) 추가 시 별도 Supabase 프로젝트를 테스트 DB로 사용 고려
+- Supabase 무료 플랜으로 테스트용 프로젝트 추가 생성 가능
+
 ## 라이선스
 
 MIT
