@@ -155,7 +155,7 @@ export default function Map({
                 position={{ lat: selectedPhoto.latitude, lng: selectedPhoto.longitude }}
                 onCloseClick={() => setSelectedPhoto(null)}
               >
-                <div style={{ minWidth: '200px', maxWidth: '300px' }}>
+                <div style={{ minWidth: '200px', maxWidth: '300px', color: '#111827' }}>
                   {selectedPhoto.url && (
                     <img
                       src={selectedPhoto.url}
