@@ -21,7 +21,9 @@ export function CheckinListItem({ checkin, onEdit, onDelete }: CheckinListItemPr
     }).format(date);
   };
 
-  const mapsUrl = `https://www.google.com/maps?q=${checkin.latitude},${checkin.longitude}`;
+  const mapsUrl = checkin.place_id
+    ? `https://www.google.com/maps/place/?q=place_id:${checkin.place_id}`
+    : `https://www.google.com/maps?q=${checkin.latitude},${checkin.longitude}`;
 
   const handleDelete = () => {
     if (window.confirm('이 체크인을 삭제하시겠습니까?')) {
@@ -40,14 +42,14 @@ export function CheckinListItem({ checkin, onEdit, onDelete }: CheckinListItemPr
 
             {/* 장소명 */}
             <h3 className="text-base font-bold text-gray-900 mb-3 leading-snug">
-              {checkin.location_name || '이름 없는 장소'}
+              {checkin.title || '이름 없는 장소'}
             </h3>
 
             {/* 사진 */}
             {checkin.photo_url && (
               <img
                 src={checkin.photo_url}
-                alt={checkin.location_name || 'Checkin photo'}
+                alt={checkin.title || 'Checkin photo'}
                 className="w-full h-52 object-cover rounded-xl mb-3"
               />
             )}
@@ -68,7 +70,7 @@ export function CheckinListItem({ checkin, onEdit, onDelete }: CheckinListItemPr
                 className="text-xs text-gray-400 hover:text-gray-600 transition-colors no-underline"
                 style={{ textDecoration: 'none' }}
               >
-                📍 지도에서 보기
+                📍 {checkin.place || '지도에서 보기'}
               </a>
               {(onEdit || onDelete) && (
                 <div className="flex gap-3">

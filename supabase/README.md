@@ -26,7 +26,8 @@
 - `id`: 체크인 고유 ID (UUID)
 - `trip_id`: 여행 ID (외래키)
 - `message`: 메시지/메모
-- `location_name`: 장소명
+- `title`: 체크인 제목 (사용자 입력)
+- `place`: 장소 이름 (장소 검색으로 선택한 경우에만 저장)
 - `latitude`: 위도
 - `longitude`: 경도
 - `photo_url`: 사진 URL (Supabase Storage)

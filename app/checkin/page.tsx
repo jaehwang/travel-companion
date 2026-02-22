@@ -247,7 +247,7 @@ export default function CheckinPage() {
       url: checkin.photo_url || '',
       latitude: checkin.latitude,
       longitude: checkin.longitude,
-      title: checkin.location_name,
+      title: checkin.title,
       takenAt: checkin.checked_in_at,
       message: checkin.message,
     }))

@@ -42,7 +42,9 @@ export interface Checkin {
   id: string;
   trip_id: string;
   message?: string;
-  location_name?: string;
+  title?: string;
+  place?: string;
+  place_id?: string;
   latitude: number;
   longitude: number;
   category?: string;
@@ -70,7 +72,9 @@ export interface TripInsert {
 export interface CheckinInsert {
   trip_id: string;
   message?: string;
-  location_name?: string;
+  title?: string;
+  place?: string;
+  place_id?: string;
   latitude: number;
   longitude: number;
   category?: string;

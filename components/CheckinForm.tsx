@@ -28,7 +28,9 @@ interface PlacePrediction {
 }
 
 export function CheckinForm({ tripId, editingCheckin, onSuccess, onCancel, onOpenLocationPicker }: CheckinFormProps) {
-  const [locationName, setLocationName] = useState('');
+  const [title, setTitle] = useState('');
+  const [place, setPlace] = useState('');
+  const [placeId, setPlaceId] = useState('');
   const [category, setCategory] = useState('');
   const [message, setMessage] = useState('');
   const [selectedLocation, setSelectedLocation] = useState<{
@@ -51,7 +53,9 @@ export function CheckinForm({ tripId, editingCheckin, onSuccess, onCancel, onOpe
   // 수정 모드: editingCheckin이 바뀌면 폼 초기화
   useEffect(() => {
     if (editingCheckin) {
-      setLocationName(editingCheckin.location_name || '');
+      setTitle(editingCheckin.title || '');
+      setPlace(editingCheckin.place || '');
+      setPlaceId(editingCheckin.place_id || '');
       setCategory(editingCheckin.category || '');
       setMessage(editingCheckin.message || '');
       setSelectedLocation({
@@ -61,7 +65,9 @@ export function CheckinForm({ tripId, editingCheckin, onSuccess, onCancel, onOpe
       setPhotoUrl(editingCheckin.photo_url || '');
       setPhotoMetadata(null);
     } else {
-      setLocationName('');
+      setTitle('');
+      setPlace('');
+      setPlaceId('');
       setCategory('');
       setMessage('');
       setSelectedLocation(null);
@@ -123,11 +129,13 @@ export function CheckinForm({ tripId, editingCheckin, onSuccess, onCancel, onOpe
         throw new Error(data.error || 'Failed to get place details');
       }
 
-      // 좌표만 설정하고 장소 이름은 유지
+      // 좌표 설정 및 장소 이름 저장
       setSelectedLocation({
         latitude: data.place.latitude,
         longitude: data.place.longitude,
       });
+      setPlace(prediction.structured_formatting.main_text);
+      setPlaceId(prediction.place_id);
       setShowLocationSearch(false);
       setSearchQuery('');
       setPredictions([]);
@@ -148,8 +156,8 @@ export function CheckinForm({ tripId, editingCheckin, onSuccess, onCancel, onOpe
       return;
     }
 
-    if (!locationName.trim()) {
-      setError('장소 이름을 입력해주세요.');
+    if (!title.trim()) {
+      setError('제목을 입력해주세요.');
       return;
     }
 
@@ -162,7 +170,9 @@ export function CheckinForm({ tripId, editingCheckin, onSuccess, onCancel, onOpe
       const method = isEditMode ? 'PATCH' : 'POST';
 
       const body: Record<string, unknown> = {
-        location_name: locationName.trim(),
+        title: title.trim(),
+        place: place.trim() || undefined,
+        place_id: placeId || undefined,
         message: message.trim() || undefined,
         category: category || undefined,
         latitude: selectedLocation.latitude,
@@ -191,7 +201,9 @@ export function CheckinForm({ tripId, editingCheckin, onSuccess, onCancel, onOpe
 
       // 성공 시 폼 리셋 (새 체크인 모드만)
       if (!isEditMode) {
-        setLocationName('');
+        setTitle('');
+        setPlace('');
+        setPlaceId('');
         setCategory('');
         setMessage('');
         setSelectedLocation(null);
@@ -227,8 +239,8 @@ export function CheckinForm({ tripId, editingCheckin, onSuccess, onCancel, onOpe
         <input
           id="location-name"
           type="text"
-          value={locationName}
-          onChange={(e) => setLocationName(e.target.value)}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
           placeholder="예: 에펠탑, 맛있는 파스타 먹은 곳"
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           required
@@ -402,7 +414,7 @@ export function CheckinForm({ tripId, editingCheckin, onSuccess, onCancel, onOpe
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline font-medium"
               >
-                {locationName || '지도에서 보기'}
+                {place || title || '지도에서 보기'}
               </a>
             </p>
             <p className="text-xs text-green-700 mt-1">
