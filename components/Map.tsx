@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { APIProvider, Map as GoogleMap, AdvancedMarker, InfoWindow, useMap, useMapsLibrary } from '@vis.gl/react-google-maps';
+import { APIProvider, Map as GoogleMap, AdvancedMarker, InfoWindow } from '@vis.gl/react-google-maps';
 
 export interface MapPhoto {
   id: string;
@@ -18,55 +18,6 @@ interface MapProps {
   height?: string;
   defaultCenter?: { lat: number; lng: number };
   defaultZoom?: number;
-  showPath?: boolean;
-}
-
-// Polyline 컴포넌트 (경로 연결)
-function TravelPath({ photos }: { photos: MapPhoto[] }) {
-  const map = useMap();
-  const maps = useMapsLibrary('maps');
-  const [polyline, setPolyline] = useState<google.maps.Polyline | null>(null);
-
-  useEffect(() => {
-    if (!map || !maps || photos.length < 2) {
-      if (polyline) {
-        polyline.setMap(null);
-        setPolyline(null);
-      }
-      return;
-    }
-
-    // 시간순으로 정렬 (takenAt이 있는 경우)
-    const sortedPhotos = [...photos].sort((a, b) => {
-      if (!a.takenAt || !b.takenAt) return 0;
-      return new Date(a.takenAt).getTime() - new Date(b.takenAt).getTime();
-    });
-
-    // 경로 좌표 생성
-    const path = sortedPhotos.map(photo => ({
-      lat: photo.latitude,
-      lng: photo.longitude,
-    }));
-
-    // 새 Polyline 생성
-    const newPolyline = new maps.Polyline({
-      path,
-      geodesic: true,
-      strokeColor: '#4285F4',
-      strokeOpacity: 0.8,
-      strokeWeight: 3,
-      map,
-    });
-
-    setPolyline(newPolyline);
-
-    // 클린업
-    return () => {
-      newPolyline.setMap(null);
-    };
-  }, [map, maps, photos]);
-
-  return null;
 }
 
 export default function Map({
@@ -74,7 +25,6 @@ export default function Map({
   height = '500px',
   defaultCenter = { lat: 37.5665, lng: 126.9780 }, // 서울 기본 좌표
   defaultZoom = 10,
-  showPath = true,
 }: MapProps) {
   const [selectedPhoto, setSelectedPhoto] = useState<MapPhoto | null>(null);
   const [error, setError] = useState<string>('');
@@ -302,8 +252,6 @@ export default function Map({
             );
           })()}
 
-          {/* 경로 연결 */}
-          {showPath && <TravelPath photos={photos} />}
         </GoogleMap>
       </APIProvider>
 
