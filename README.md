@@ -85,9 +85,9 @@ git push origin main
 ## 검토 사항
 
 ### 데이터 백업
-- Supabase 무료 플랜은 일 1회 자동 백업, 7일만 보관
+- Supabase 무료 플랜은 자동 백업 지원 없음
 - 여행 기억 데이터는 대체 불가하므로 주기적 수동 백업 권장
-- Supabase Dashboard → Project Settings → Backups에서 수동 다운로드 가능
+- Supabase Dashboard → Project Settings → Backups에서 수동 다운로드 가능 (유료)
 - 또는 `pg_dump`로 DB 덤프 (PostgreSQL 클라이언트 설치 필요)
 - Supabase Storage 사진 파일은 DB 백업과 별도로 관리 필요
 
