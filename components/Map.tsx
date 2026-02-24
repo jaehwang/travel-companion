@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { APIProvider, Map as GoogleMap, AdvancedMarker, InfoWindow } from '@vis.gl/react-google-maps';
+import { APIProvider, Map as GoogleMap, AdvancedMarker, InfoWindow, useMap } from '@vis.gl/react-google-maps';
 
 export interface MapPhoto {
   id: string;
@@ -20,6 +20,40 @@ interface MapProps {
   defaultZoom?: number;
 }
 
+// 지도 중심/줌 자동 조정을 담당하는 내부 컴포넌트
+// useMap() 훅은 APIProvider 내부에서만 동작하므로 별도 컴포넌트로 분리
+function MapController({
+  photos,
+  defaultCenter,
+  defaultZoom,
+}: {
+  photos: MapPhoto[];
+  defaultCenter: { lat: number; lng: number };
+  defaultZoom: number;
+}) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!map) return;
+
+    if (photos.length === 0) {
+      map.panTo(defaultCenter);
+      map.setZoom(defaultZoom);
+    } else if (photos.length === 1) {
+      map.panTo({ lat: photos[0].latitude, lng: photos[0].longitude });
+      map.setZoom(13);
+    } else {
+      const bounds = new google.maps.LatLngBounds();
+      photos.forEach(photo => {
+        bounds.extend({ lat: photo.latitude, lng: photo.longitude });
+      });
+      map.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
+    }
+  }, [photos, map, defaultCenter, defaultZoom]);
+
+  return null;
+}
+
 export default function Map({
   photos,
   height = '500px',
@@ -27,40 +61,8 @@ export default function Map({
   defaultZoom = 10,
 }: MapProps) {
   const [selectedPhoto, setSelectedPhoto] = useState<MapPhoto | null>(null);
-  const [error, setError] = useState<string>('');
-  const [map, setMap] = useState<google.maps.Map | null>(null);
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-
-  // defaultCenter 변경 시 지도 이동 (photos가 없을 때만)
-  useEffect(() => {
-    if (photos.length === 0 && map) {
-      map.panTo(defaultCenter);
-      map.setZoom(defaultZoom);
-    }
-  }, [defaultCenter, defaultZoom, photos.length, map]);
-
-  // 사진 위치에 맞게 지도 중심과 줌 자동 조정
-  useEffect(() => {
-    if (!map || photos.length === 0) return;
-
-    if (photos.length === 1) {
-      // 사진이 1개면 그 위치로 이동
-      map.panTo({ lat: photos[0].latitude, lng: photos[0].longitude });
-      map.setZoom(13);
-    } else {
-      // 여러 사진이면 모든 위치를 포함하는 영역으로 fitBounds
-      const bounds = new google.maps.LatLngBounds();
-      photos.forEach(photo => {
-        bounds.extend({ lat: photo.latitude, lng: photo.longitude });
-      });
-      map.fitBounds(bounds);
-
-      // 패딩 추가하여 마커가 가장자리에 붙지 않도록
-      const padding = { top: 50, right: 50, bottom: 50, left: 50 };
-      map.fitBounds(bounds, padding);
-    }
-  }, [photos, map]);
 
   if (!apiKey || apiKey === 'your-google-maps-api-key') {
     return (
@@ -95,13 +97,12 @@ export default function Map({
           mapId="f61fd161984b7ef0b0aaa09b"
           gestureHandling="greedy"
           style={{ width: '100%', height: '100%' }}
-          onCameraChanged={(ev) => {
-            // 지도 인스턴스 저장
-            if (ev.map && !map) {
-              setMap(ev.map);
-            }
-          }}
         >
+          <MapController
+            photos={photos}
+            defaultCenter={defaultCenter}
+            defaultZoom={defaultZoom}
+          />
           {/* 마커 표시 */}
           {photos.map((photo, index) => (
             <AdvancedMarker
