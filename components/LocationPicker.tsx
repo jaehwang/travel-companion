@@ -13,6 +13,24 @@ interface LocationPickerProps {
   onClose?: () => void;
 }
 
+// initialLocation 없을 때 현재 위치로 지도 중심 이동
+function CenterOnCurrentLocation() {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!map) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        map.panTo({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      },
+      () => {}, // 실패 시 기본 중심(서울) 유지
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  }, [map]);
+
+  return null;
+}
+
 // 지도 클릭 이벤트를 처리하는 컴포넌트
 function MapClickHandler({
   onLocationClick
@@ -143,6 +161,7 @@ export function LocationPicker({
                 if (lat !== undefined && lng !== undefined) handleMapClick(lat, lng);
               }}
             >
+              {!initialLocation && <CenterOnCurrentLocation />}
               {selectedLocation && (
                 <AdvancedMarker
                   position={selectedLocation}

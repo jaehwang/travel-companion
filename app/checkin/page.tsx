@@ -456,24 +456,24 @@ export default function CheckinPage() {
               </div>
             )}
 
-            {/* 체크인 폼 */}
+            {/* 체크인 폼 (전체화면 모달) */}
             {showForm && (
-              <div className="mb-6">
-                <CheckinForm
-                  tripId={selectedTripId}
-                  editingCheckin={editingCheckin ?? undefined}
-                  onSuccess={handleCheckinSuccess}
-                  onCancel={() => {
-                    setShowForm(false);
-                    setEditingCheckin(null);
-                  }}
-                  onOpenLocationPicker={(initial, onSelect) => {
-                    locationPickerInitial.current = initial;
-                    locationPickerCallback.current = onSelect;
-                    setShowLocationPicker(true);
-                  }}
-                />
-              </div>
+              <CheckinForm
+                tripId={selectedTripId}
+                tripName={selectedTrip?.title}
+                userAvatarUrl={user?.user_metadata?.avatar_url}
+                editingCheckin={editingCheckin ?? undefined}
+                onSuccess={handleCheckinSuccess}
+                onCancel={() => {
+                  setShowForm(false);
+                  setEditingCheckin(null);
+                }}
+                onOpenLocationPicker={(initial, onSelect) => {
+                  locationPickerInitial.current = initial;
+                  locationPickerCallback.current = onSelect;
+                  setShowLocationPicker(true);
+                }}
+              />
             )}
 
             {/* 지도 */}
