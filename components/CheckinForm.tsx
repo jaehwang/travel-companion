@@ -82,6 +82,25 @@ export function CheckinForm({
   const [predictions, setPredictions] = useState<PlacePrediction[]>([]);
   const [searchingPlaces, setSearchingPlaces] = useState(false);
 
+  // 키보드 높이 추적 (Visual Viewport API)
+  const [toolbarBottom, setToolbarBottom] = useState(0);
+  const TOOLBAR_HEIGHT = 72;
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const handler = () => {
+      const kbHeight = Math.max(0, window.innerHeight - vv.height - (vv.offsetTop || 0));
+      setToolbarBottom(kbHeight);
+    };
+    vv.addEventListener('resize', handler);
+    vv.addEventListener('scroll', handler);
+    handler();
+    return () => {
+      vv.removeEventListener('resize', handler);
+      vv.removeEventListener('scroll', handler);
+    };
+  }, []);
 
   const isEditMode = !!editingCheckin;
   const canSubmit =
@@ -377,7 +396,7 @@ export function CheckinForm({
 
       {/* 메인 패널 */}
       {activePanel === 'main' && (
-        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px', paddingBottom: TOOLBAR_HEIGHT + 16 }}>
           <input
             type="text"
             value={title}
@@ -737,16 +756,21 @@ export function CheckinForm({
         </div>
       )}
 
-      {/* 하단 툴바 */}
+      {/* 하단 툴바 - 키보드 위로 올라오도록 fixed */}
       {activePanel === 'main' && (
         <div
           style={{
+            position: 'fixed',
+            bottom: toolbarBottom,
+            left: 0,
+            right: 0,
+            zIndex: 10000,
             borderTop: '1px solid #e5e7eb',
-            padding: '8px 12px',
+            padding: '10px 16px',
             display: 'flex',
             alignItems: 'center',
             gap: 4,
-            flexShrink: 0,
+            backgroundColor: 'white',
           }}
         >
           {/* 사진 */}
@@ -760,7 +784,7 @@ export function CheckinForm({
           />
           <label
             htmlFor="checkin-photo-input"
-            className="flex items-center justify-center w-11 h-11 rounded-full hover:bg-gray-100 cursor-pointer text-2xl"
+            className="flex items-center justify-center w-14 h-14 rounded-full hover:bg-gray-100 cursor-pointer text-3xl"
             style={{ color: photoPreviewUrl ? '#16a34a' : '#6b7280' }}
             title="사진 추가"
           >
@@ -774,7 +798,7 @@ export function CheckinForm({
               setSearchQuery('');
               setPredictions([]);
             }}
-            className="flex items-center justify-center w-11 h-11 rounded-full hover:bg-gray-100 text-2xl"
+            className="flex items-center justify-center w-14 h-14 rounded-full hover:bg-gray-100 text-3xl"
             style={{
               border: 'none',
               background: 'none',
@@ -797,7 +821,7 @@ export function CheckinForm({
               })
             }
             disabled={!onOpenLocationPicker}
-            className="flex items-center justify-center w-11 h-11 rounded-full hover:bg-gray-100 text-2xl"
+            className="flex items-center justify-center w-14 h-14 rounded-full hover:bg-gray-100 text-3xl"
             style={{
               border: 'none',
               background: 'none',
@@ -813,7 +837,7 @@ export function CheckinForm({
           {/* 카테고리 */}
           <button
             onClick={() => setActivePanel('category')}
-            className="flex items-center justify-center w-11 h-11 rounded-full hover:bg-gray-100 text-2xl"
+            className="flex items-center justify-center w-14 h-14 rounded-full hover:bg-gray-100 text-3xl"
             style={{
               border: 'none',
               background: 'none',
