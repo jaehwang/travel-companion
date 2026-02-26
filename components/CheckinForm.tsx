@@ -84,7 +84,7 @@ export default function CheckinForm({
 
   // 키보드 높이 추적 (Visual Viewport API)
   const [toolbarBottom, setToolbarBottom] = useState(0);
-  const TOOLBAR_HEIGHT = 72;
+  const TOOLBAR_HEIGHT = 96;
 
   useEffect(() => {
     const vv = window.visualViewport;
@@ -766,10 +766,10 @@ export default function CheckinForm({
             right: 0,
             zIndex: 10000,
             borderTop: '1px solid #e5e7eb',
-            padding: '10px 16px',
+            padding: '8px 16px',
             display: 'flex',
             alignItems: 'center',
-            gap: 4,
+            gap: 8,
             backgroundColor: 'white',
           }}
         >
@@ -784,7 +784,7 @@ export default function CheckinForm({
           />
           <label
             htmlFor="checkin-photo-input"
-            className="flex items-center justify-center w-14 h-14 rounded-full hover:bg-gray-100 cursor-pointer text-3xl"
+            className="flex items-center justify-center w-20 h-20 rounded-full hover:bg-gray-100 cursor-pointer text-5xl"
             style={{ color: photoPreviewUrl ? '#16a34a' : '#6b7280' }}
             title="사진 추가"
           >
@@ -798,7 +798,7 @@ export default function CheckinForm({
               setSearchQuery('');
               setPredictions([]);
             }}
-            className="flex items-center justify-center w-14 h-14 rounded-full hover:bg-gray-100 text-3xl"
+            className="flex items-center justify-center w-20 h-20 rounded-full hover:bg-gray-100 text-5xl"
             style={{
               border: 'none',
               background: 'none',
@@ -821,7 +821,7 @@ export default function CheckinForm({
               })
             }
             disabled={!onOpenLocationPicker}
-            className="flex items-center justify-center w-14 h-14 rounded-full hover:bg-gray-100 text-3xl"
+            className="flex items-center justify-center w-20 h-20 rounded-full hover:bg-gray-100 text-5xl"
             style={{
               border: 'none',
               background: 'none',
@@ -837,7 +837,7 @@ export default function CheckinForm({
           {/* 카테고리 */}
           <button
             onClick={() => setActivePanel('category')}
-            className="flex items-center justify-center w-14 h-14 rounded-full hover:bg-gray-100 text-3xl"
+            className="flex items-center justify-center w-20 h-20 rounded-full hover:bg-gray-100 text-5xl"
             style={{
               border: 'none',
               background: 'none',
