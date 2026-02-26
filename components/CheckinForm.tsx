@@ -45,7 +45,7 @@ interface CheckinFormProps {
   ) => void;
 }
 
-export function CheckinForm({
+export default function CheckinForm({
   tripId,
   tripName,
   userAvatarUrl,

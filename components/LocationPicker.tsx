@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { APIProvider, Map as GoogleMap, AdvancedMarker, useMap, useMapsLibrary } from '@vis.gl/react-google-maps';
+import MyLocationButton from '@/components/MyLocationButton';
 
 interface LocationPickerProps {
   initialLocation?: {
@@ -13,20 +14,23 @@ interface LocationPickerProps {
   onClose?: () => void;
 }
 
-// initialLocation 없을 때 현재 위치로 지도 중심 이동
-function CenterOnCurrentLocation() {
+// initialLocation 없을 때 현재 위치로 지도 중심 이동 + 마커 표시
+function CenterOnCurrentLocation({ onCenter }: { onCenter: (lat: number, lng: number) => void }) {
   const map = useMap();
 
   useEffect(() => {
     if (!map) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        map.panTo({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        map.panTo({ lat, lng });
+        onCenter(lat, lng);
       },
       () => {}, // 실패 시 기본 중심(서울) 유지
       { enableHighAccuracy: true, timeout: 8000 }
     );
-  }, [map]);
+  }, [map]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return null;
 }
@@ -161,7 +165,14 @@ export function LocationPicker({
                 if (lat !== undefined && lng !== undefined) handleMapClick(lat, lng);
               }}
             >
-              {!initialLocation && <CenterOnCurrentLocation />}
+              {!initialLocation && (
+                <CenterOnCurrentLocation
+                  onCenter={(lat, lng) => setSelectedLocation({ lat, lng })}
+                />
+              )}
+              <MyLocationButton
+                onLocationFound={(lat, lng) => setSelectedLocation({ lat, lng })}
+              />
               {selectedLocation && (
                 <AdvancedMarker
                   position={selectedLocation}

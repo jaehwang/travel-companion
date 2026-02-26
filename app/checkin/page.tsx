@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { CheckinForm } from '@/components/CheckinForm';
+import CheckinForm from '@/components/CheckinForm';
 import { CheckinListItem } from '@/components/CheckinListItem';
 import { LocationPicker } from '@/components/LocationPicker';
 import Map, { MapPhoto } from '@/components/Map';

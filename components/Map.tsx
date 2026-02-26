@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { APIProvider, Map as GoogleMap, AdvancedMarker, InfoWindow, useMap } from '@vis.gl/react-google-maps';
+import MyLocationButton from '@/components/MyLocationButton';
 
 export interface MapPhoto {
   id: string;
@@ -103,6 +104,7 @@ export default function Map({
             defaultCenter={defaultCenter}
             defaultZoom={defaultZoom}
           />
+          <MyLocationButton />
           {/* 마커 표시 */}
           {photos.map((photo, index) => (
             <AdvancedMarker
