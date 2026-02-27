@@ -284,11 +284,12 @@ export default function CheckinPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 헤더 */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <button
             onClick={() => setShowDrawer(true)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', color: '#111827' }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
+            className="text-gray-900 dark:text-gray-100"
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <line x1="3" y1="6" x2="21" y2="6" />
@@ -296,7 +297,7 @@ export default function CheckinPage() {
               <line x1="3" y1="18" x2="21" y2="18" />
             </svg>
           </button>
-          <span className="font-bold text-gray-900 flex-1 ml-3">
+          <span className="font-bold text-gray-900 dark:text-gray-100 flex-1 ml-3">
             {selectedTrip ? selectedTrip.title : 'Travel Companion'}
           </span>
           {user && (
