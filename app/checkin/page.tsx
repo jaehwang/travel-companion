@@ -28,6 +28,7 @@ export default function CheckinPage() {
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
+  const [showDrawer, setShowDrawer] = useState(false);
 
   // 여행 편집 상태
   const [editingTrip, setEditingTrip] = useState(false);
@@ -285,7 +286,19 @@ export default function CheckinPage() {
       {/* 헤더 */}
       <header className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <span className="font-bold text-gray-900">Travel Companion</span>
+          <button
+            onClick={() => setShowDrawer(true)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+          <span className="font-bold text-gray-900 flex-1 ml-3">
+            {selectedTrip ? selectedTrip.title : 'Travel Companion'}
+          </span>
           {user && (
             <div className="flex items-center gap-3">
               {user.user_metadata?.avatar_url && (
@@ -312,54 +325,6 @@ export default function CheckinPage() {
 
       <div className="max-w-7xl mx-auto px-4 py-8 pb-24">
         <div className="mb-6">
-
-          {/* 여행 선택 */}
-          <div className="flex gap-3 items-end">
-            <div className="flex-1">
-
-              {trips.length > 0 ? (
-                <select
-                  id="trip-select"
-                  value={selectedTripId}
-                  onChange={(e) => {
-                    setSelectedTripId(e.target.value);
-                    setEditingTrip(false);
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {trips.map((trip) => (
-                    <option key={trip.id} value={trip.id}>
-                      {trip.title}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <p className="text-gray-500 text-sm py-2">여행이 없습니다. 새 여행을 만들어주세요.</p>
-              )}
-            </div>
-            {selectedTripId && (
-              <>
-                <button
-                  onClick={handleOpenTripEdit}
-                  className="px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 whitespace-nowrap"
-                >
-                  수정
-                </button>
-                <button
-                  onClick={handleDeleteTrip}
-                  className="px-3 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 whitespace-nowrap"
-                >
-                  삭제
-                </button>
-              </>
-            )}
-            <button
-              onClick={handleCreateTrip}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 whitespace-nowrap"
-            >
-              + 새 여행
-            </button>
-          </div>
 
           {/* 여행 편집 폼 */}
           {editingTrip && selectedTrip && (
@@ -571,6 +536,61 @@ export default function CheckinPage() {
           </div>
         )}
       </div>
+      {/* 왼쪽 드로어 */}
+      {mounted && showDrawer && createPortal(
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }}>
+          {/* 배경 오버레이 */}
+          <div
+            style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)' }}
+            onClick={() => setShowDrawer(false)}
+          />
+          {/* 드로어 패널 */}
+          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: '80%', maxWidth: '320px', backgroundColor: 'white', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            {/* 새 여행 버튼 */}
+            <button
+              onClick={() => { handleCreateTrip(); setShowDrawer(false); }}
+              style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '18px 20px', borderBottom: '1px solid #e5e7eb', background: 'none', border: 'none', borderBottom: '1px solid #e5e7eb', cursor: 'pointer', fontSize: '15px', fontWeight: '600', color: '#111827', width: '100%', textAlign: 'left' }}
+            >
+              <span style={{ fontSize: '18px' }}>+</span> 새 여행 만들기
+            </button>
+
+            {/* 여행 목록 */}
+            <div style={{ padding: '12px 0' }}>
+              {trips.length === 0 ? (
+                <p style={{ padding: '12px 20px', color: '#9ca3af', fontSize: '14px' }}>여행이 없습니다</p>
+              ) : (
+                trips.map((trip) => (
+                  <div
+                    key={trip.id}
+                    style={{ display: 'flex', alignItems: 'center', padding: '10px 20px', backgroundColor: trip.id === selectedTripId ? '#f0fdf4' : 'transparent' }}
+                  >
+                    <button
+                      onClick={() => { setSelectedTripId(trip.id); setEditingTrip(false); setShowDrawer(false); }}
+                      style={{ flex: 1, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontSize: '15px', fontWeight: trip.id === selectedTripId ? '600' : '400', color: trip.id === selectedTripId ? '#16a34a' : '#111827' }}
+                    >
+                      {trip.title}
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setSelectedTripId(trip.id); handleOpenTripEdit(); setShowDrawer(false); }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px', color: '#9ca3af', fontSize: '13px' }}
+                    >
+                      수정
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setSelectedTripId(trip.id); handleDeleteTrip(); setShowDrawer(false); }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px', color: '#ef4444', fontSize: '13px' }}
+                    >
+                      삭제
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
       {/* 하단 고정 바 */}
       {mounted && selectedTripId && !showForm && createPortal(
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'white', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'center', alignItems: 'center', height: '64px', zIndex: 9999 }}>
