@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import CheckinForm from '@/components/CheckinForm';
 import { CheckinListItem } from '@/components/CheckinListItem';
 import { LocationPicker } from '@/components/LocationPicker';
@@ -24,6 +25,9 @@ export default function CheckinPage() {
   const locationPickerCallback = useRef<((lat: number, lng: number) => void) | null>(null);
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>({ lat: 37.5665, lng: 126.9780 });
   const { getCurrentPosition } = useGeolocation();
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   // 여행 편집 상태
   const [editingTrip, setEditingTrip] = useState(false);
@@ -306,7 +310,7 @@ export default function CheckinPage() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8 pb-24">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">체크인</h1>
 
@@ -439,20 +443,6 @@ export default function CheckinPage() {
 
         {selectedTripId && (
           <>
-            {/* 새 체크인 버튼 */}
-            {!showForm && (
-              <div className="mb-6">
-                <button
-                  onClick={() => {
-                    setEditingCheckin(null);
-                    setShowForm(true);
-                  }}
-                  className="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium text-lg"
-                >
-                  + 새 체크인 추가
-                </button>
-              </div>
-            )}
 
             {/* 체크인 폼 (전체화면 모달) */}
             {showForm && (
@@ -559,7 +549,7 @@ export default function CheckinPage() {
                   <p className="text-4xl mb-3">🗺️</p>
                   <p className="text-gray-500 font-medium mb-1">아직 체크인이 없습니다</p>
                   <p className="text-gray-400 text-sm">
-                    위의 버튼을 눌러 첫 체크인을 기록해보세요!
+                    아래 + 버튼을 눌러 첫 체크인을 기록해보세요!
                   </p>
                 </div>
               )}
@@ -582,6 +572,26 @@ export default function CheckinPage() {
           </div>
         )}
       </div>
+      {/* 하단 고정 바 */}
+      {mounted && selectedTripId && !showForm && createPortal(
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'white', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'center', alignItems: 'center', height: '64px', zIndex: 9999 }}>
+          <button
+            onClick={() => {
+              setEditingCheckin(null);
+              setShowForm(true);
+            }}
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#6b7280', padding: '8px 24px', background: 'none', border: 'none', cursor: 'pointer' }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke="currentColor" strokeWidth={1.8} />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v8M8 12h8" />
+            </svg>
+            <span style={{ fontSize: '12px', marginTop: '2px' }}>체크인</span>
+          </button>
+        </div>,
+        document.body
+      )}
+
       {showLocationPicker && (
         <LocationPicker
           initialLocation={locationPickerInitial.current || undefined}
