@@ -313,9 +313,7 @@ export default function CheckinPage() {
           {/* 여행 선택 */}
           <div className="flex gap-3 items-end">
             <div className="flex-1">
-              <label htmlFor="trip-select" className="block text-sm font-medium text-gray-700 mb-1">
-                여행 선택
-              </label>
+
               {trips.length > 0 ? (
                 <select
                   id="trip-select"
@@ -476,9 +474,25 @@ export default function CheckinPage() {
               />
             )}
 
+            {/* 여행 설명 및 날짜 */}
+            {(selectedTrip?.description || selectedTrip?.start_date) && (
+              <div className="mb-4 p-4 bg-gray-50 rounded-lg text-sm text-gray-700 space-y-1">
+                {selectedTrip.description && (
+                  <p>{selectedTrip.description}</p>
+                )}
+                {(selectedTrip.start_date || selectedTrip.end_date) && (
+                  <p className="text-gray-500">
+                    {selectedTrip.start_date}
+                    {selectedTrip.end_date && selectedTrip.end_date !== selectedTrip.start_date
+                      ? ` ~ ${selectedTrip.end_date}`
+                      : ''}
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* 지도 */}
             <div className="mb-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-3">지도</h2>
               <Map photos={mapPhotos} height="400px" defaultCenter={mapCenter} />
               {mapPhotos.length === 0 && (
                 <p className="mt-2 text-center text-sm text-gray-500">
