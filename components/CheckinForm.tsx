@@ -769,7 +769,8 @@ export default function CheckinForm({
             padding: '8px 16px',
             display: 'flex',
             alignItems: 'center',
-            gap: 8,
+            gap: 4,
+            minHeight: 80,
             backgroundColor: 'white',
           }}
         >
@@ -784,8 +785,7 @@ export default function CheckinForm({
           />
           <label
             htmlFor="checkin-photo-input"
-            className="flex items-center justify-center w-20 h-20 rounded-full hover:bg-gray-100 cursor-pointer text-5xl"
-            style={{ color: photoPreviewUrl ? '#16a34a' : '#6b7280' }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 64, height: 64, borderRadius: '50%', cursor: 'pointer', fontSize: 36, flexShrink: 0, color: photoPreviewUrl ? '#16a34a' : '#6b7280' }}
             title="사진 추가"
           >
             📷
@@ -798,13 +798,7 @@ export default function CheckinForm({
               setSearchQuery('');
               setPredictions([]);
             }}
-            className="flex items-center justify-center w-20 h-20 rounded-full hover:bg-gray-100 text-5xl"
-            style={{
-              border: 'none',
-              background: 'none',
-              cursor: 'pointer',
-              color: selectedLocation && place ? '#16a34a' : '#6b7280',
-            }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 64, height: 64, borderRadius: '50%', border: 'none', background: 'none', cursor: 'pointer', fontSize: 36, flexShrink: 0, color: selectedLocation && place ? '#16a34a' : '#6b7280' }}
             title="장소 검색"
           >
             📍
@@ -821,14 +815,7 @@ export default function CheckinForm({
               })
             }
             disabled={!onOpenLocationPicker}
-            className="flex items-center justify-center w-20 h-20 rounded-full hover:bg-gray-100 text-5xl"
-            style={{
-              border: 'none',
-              background: 'none',
-              cursor: onOpenLocationPicker ? 'pointer' : 'not-allowed',
-              color: selectedLocation && !place ? '#16a34a' : '#6b7280',
-              opacity: onOpenLocationPicker ? 1 : 0.4,
-            }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 64, height: 64, borderRadius: '50%', border: 'none', background: 'none', cursor: onOpenLocationPicker ? 'pointer' : 'not-allowed', fontSize: 36, flexShrink: 0, color: selectedLocation && !place ? '#16a34a' : '#6b7280', opacity: onOpenLocationPicker ? 1 : 0.4 }}
             title="지도에서 위치 선택"
           >
             🗺️
@@ -837,13 +824,7 @@ export default function CheckinForm({
           {/* 카테고리 */}
           <button
             onClick={() => setActivePanel('category')}
-            className="flex items-center justify-center w-20 h-20 rounded-full hover:bg-gray-100 text-5xl"
-            style={{
-              border: 'none',
-              background: 'none',
-              cursor: 'pointer',
-              color: category ? '#1d4ed8' : '#6b7280',
-            }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 64, height: 64, borderRadius: '50%', border: 'none', background: 'none', cursor: 'pointer', fontSize: 36, flexShrink: 0, color: category ? '#1d4ed8' : '#6b7280' }}
             title="카테고리 선택"
           >
             🏷️
