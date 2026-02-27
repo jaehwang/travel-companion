@@ -549,7 +549,7 @@ export default function CheckinPage() {
             {/* 새 여행 버튼 */}
             <button
               onClick={() => { handleCreateTrip(); setShowDrawer(false); }}
-              style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '18px 20px', borderBottom: '1px solid #e5e7eb', background: 'none', border: 'none', borderBottom: '1px solid #e5e7eb', cursor: 'pointer', fontSize: '15px', fontWeight: '600', color: '#111827', width: '100%', textAlign: 'left' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '18px 20px', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderBottom: '1px solid #e5e7eb', background: 'none', cursor: 'pointer', fontSize: '15px', fontWeight: '600', color: '#111827', width: '100%', textAlign: 'left' }}
             >
               <span style={{ fontSize: '18px' }}>+</span> 새 여행 만들기
             </button>
