@@ -312,7 +312,6 @@ export default function CheckinPage() {
 
       <div className="max-w-7xl mx-auto px-4 py-8 pb-24">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">체크인</h1>
 
           {/* 여행 선택 */}
           <div className="flex gap-3 items-end">
