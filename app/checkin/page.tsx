@@ -30,6 +30,7 @@ export default function CheckinPage() {
   const [editingCheckin, setEditingCheckin] = useState<Checkin | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const locationPickerInitial = useRef<{ latitude: number; longitude: number } | null>(null);
   const locationPickerCallback = useRef<((lat: number, lng: number) => void) | null>(null);
@@ -468,17 +469,30 @@ export default function CheckinPage() {
 
             {/* 체크인 타임라인 */}
             <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-4">
-                기록 <span className="text-base font-normal text-gray-400">{checkins.length}곳</span>
-              </h2>
+              <div className="flex items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-900 flex-1">
+                  기록 <span className="text-base font-normal text-gray-400">{checkins.length}곳</span>
+                </h2>
+                {checkins.length > 0 && (
+                  <button
+                    onClick={() => setSortOrder(o => o === 'desc' ? 'asc' : 'desc')}
+                    className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
+                  >
+                    {sortOrder === 'desc' ? '최신순 ↓' : '오래된순 ↑'}
+                  </button>
+                )}
+              </div>
 
               {checkins.length > 0 ? (
                 <div>
                   <div>
-                    {checkins.map((checkin, index) => {
+                    {[...checkins].sort((a, b) => {
+                      const diff = new Date(a.checked_in_at).getTime() - new Date(b.checked_in_at).getTime();
+                      return sortOrder === 'desc' ? -diff : diff;
+                    }).map((checkin, index, sorted) => {
                       const currentDate = new Date(checkin.checked_in_at).toDateString();
                       const prevDate = index > 0
-                        ? new Date(checkins[index - 1].checked_in_at).toDateString()
+                        ? new Date(sorted[index - 1].checked_in_at).toDateString()
                         : null;
                       const showDateHeader = currentDate !== prevDate;
 
@@ -494,7 +508,7 @@ export default function CheckinPage() {
                         }).format(d);
                       };
 
-                      const isLast = index === checkins.length - 1;
+                      const isLast = index === sorted.length - 1;
 
                       return (
                         <div key={checkin.id}>
