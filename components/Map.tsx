@@ -98,6 +98,7 @@ export default function Map({
           mapId="f61fd161984b7ef0b0aaa09b"
           gestureHandling="greedy"
           mapTypeControl={false}
+          streetViewControl={false}
           style={{ width: '100%', height: '100%' }}
         >
           <MapController
