@@ -50,7 +50,6 @@ function MapClickHandler({
       if (event.latLng) {
         const lat = event.latLng.lat();
         const lng = event.latLng.lng();
-        console.log('Map clicked at:', lat, lng);
         onLocationClick(lat, lng);
       }
     });

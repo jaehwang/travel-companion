@@ -169,7 +169,6 @@ export default function Map({
                       crossOrigin="anonymous"
                       referrerPolicy="no-referrer"
                       onError={(e) => {
-                        console.error('Image load error:', selectedPhoto.url);
                         e.currentTarget.style.display = 'none';
                       }}
                     />

@@ -1,280 +1,126 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import CheckinForm from '@/components/CheckinForm';
-import { CheckinListItem } from '@/components/CheckinListItem';
+import CheckinForm from '@/components/checkin-form/CheckinForm';
 import { LocationPicker } from '@/components/LocationPicker';
 import Map, { MapPhoto } from '@/components/Map';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { createClient } from '@/lib/supabase/client';
 import type { Trip, Checkin } from '@/types/database';
 import type { User } from '@supabase/supabase-js';
+import { useTrips } from './hooks/useTrips';
+import { useCheckins } from './hooks/useCheckins';
+import SideDrawer from './components/SideDrawer';
+import TripFormModal from './components/TripFormModal';
+import CheckinTimeline from './components/CheckinTimeline';
+import BottomBar from './components/BottomBar';
 
 function formatTripDate(dateStr: string | null | undefined): string | null {
   if (!dateStr) return null;
-  // start_date는 YYYY-MM-DD, checked_in_at은 ISO 타임스탬프
   const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(dateStr);
   const date = isDateOnly
     ? (() => { const [y, m, d] = dateStr.split('-').map(Number); return new Date(y, m - 1, d); })()
     : new Date(dateStr);
-  return new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' }).format(date);
+  return new Intl.DateTimeFormat('ko-KR', {
+    year: 'numeric', month: 'long', day: 'numeric', weekday: 'short',
+  }).format(date);
 }
 
 export default function CheckinPage() {
   const [user, setUser] = useState<User | null>(null);
-  const [trips, setTrips] = useState<Trip[]>([]);
-  const [selectedTripId, setSelectedTripId] = useState<string>('');
-  const [checkins, setCheckins] = useState<Checkin[]>([]);
+  const [selectedTripId, setSelectedTripId] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingCheckin, setEditingCheckin] = useState<Checkin | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [showLocationPicker, setShowLocationPicker] = useState(false);
-  const locationPickerInitial = useRef<{ latitude: number; longitude: number } | null>(null);
-  const locationPickerCallback = useRef<((lat: number, lng: number) => void) | null>(null);
-  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>({ lat: 37.5665, lng: 126.9780 });
-  const { getCurrentPosition } = useGeolocation();
-
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
   const [showDrawer, setShowDrawer] = useState(false);
-
-  // 여행 폼 상태
   const [showTripForm, setShowTripForm] = useState(false);
   const [tripFormMode, setTripFormMode] = useState<'create' | 'edit'>('create');
-  const [tripEditTitle, setTripEditTitle] = useState('');
-  const [tripEditDescription, setTripEditDescription] = useState('');
-  const [tripEditStartDate, setTripEditStartDate] = useState('');
-  const [tripEditEndDate, setTripEditEndDate] = useState('');
-  const [tripEditIsPublic, setTripEditIsPublic] = useState(false);
-  const [tripEditSubmitting, setTripEditSubmitting] = useState(false);
-  const [tripFormError, setTripFormError] = useState<string | null>(null);
+  const [editingTrip, setEditingTrip] = useState<Trip | undefined>();
+  const [mapCenter, setMapCenter] = useState({ lat: 37.5665, lng: 126.978 });
+  const [mounted, setMounted] = useState(false);
+  const locationPickerInitial = useRef<{ latitude: number; longitude: number } | null>(null);
+  const locationPickerCallback = useRef<((lat: number, lng: number) => void) | null>(null);
 
-  // 사용자 정보 로드
+  useEffect(() => { setMounted(true); }, []);
+
+  const { trips, loading, error: tripsError, createTrip, updateTrip, deleteTrip } = useTrips();
+  const { checkins, error: checkinsError, addCheckin, updateCheckin, deleteCheckin } = useCheckins(selectedTripId);
+  const { getCurrentPosition } = useGeolocation();
+
+  // 사용자 정보
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
   }, []);
 
-  // 여행 목록 로드
+  // 첫 번째 여행 자동 선택
   useEffect(() => {
-    fetchTrips();
-  }, []);
-
-  // 선택된 여행의 체크인 로드
-  useEffect(() => {
-    if (selectedTripId) {
-      fetchCheckins(selectedTripId);
-    } else {
-      setCheckins([]);
+    if (trips.length > 0 && !selectedTripId) {
+      setSelectedTripId(trips[0].id);
     }
-  }, [selectedTripId]);
+  }, [trips, selectedTripId]);
 
   // 체크인 변경 시 지도 중심 업데이트
   useEffect(() => {
     if (checkins.length > 0) {
-      // 마지막 (가장 최근) 체크인 위치 사용
-      const lastCheckin = checkins[0]; // checkins는 최신순이므로 첫 번째가 마지막
-      setMapCenter({ lat: lastCheckin.latitude, lng: lastCheckin.longitude });
+      const last = checkins[0];
+      setMapCenter({ lat: last.latitude, lng: last.longitude });
     } else {
-      // 체크인이 없으면 현재 위치 사용
       getCurrentPosition()
-        .then((pos) => {
-          setMapCenter({ lat: pos.latitude, lng: pos.longitude });
-        })
-        .catch((err) => {
-          console.log('Failed to get current position:', err);
-          // 에러 시 서울 유지 (기본값)
-        });
+        .then((pos) => setMapCenter({ lat: pos.latitude, lng: pos.longitude }))
+        .catch(() => {});
     }
   }, [checkins, getCurrentPosition]);
 
-  const fetchTrips = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/trips');
-      const data = await response.json();
+  const selectedTrip = trips.find((t) => t.id === selectedTripId);
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch trips');
-      }
-
-      setTrips(data.trips || []);
-
-      // 첫 번째 여행 자동 선택
-      if (data.trips && data.trips.length > 0) {
-        setSelectedTripId(data.trips[0].id);
-      }
-    } catch (err) {
-      console.error('Failed to fetch trips:', err);
-      setError(err instanceof Error ? err.message : '여행 목록을 불러오는데 실패했습니다.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchCheckins = async (tripId: string) => {
-    try {
-      const response = await fetch(`/api/checkins?trip_id=${tripId}`);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch checkins');
-      }
-
-      setCheckins(data.checkins || []);
-    } catch (err) {
-      console.error('Failed to fetch checkins:', err);
-      setError(err instanceof Error ? err.message : '체크인 목록을 불러오는데 실패했습니다.');
-    }
-  };
+  const mapPhotos: MapPhoto[] = checkins
+    .map((c) => ({
+      id: c.id,
+      url: c.photo_url || '',
+      latitude: c.latitude,
+      longitude: c.longitude,
+      title: c.title,
+      takenAt: c.checked_in_at,
+      message: c.message,
+    }))
+    .sort((a, b) => new Date(a.takenAt!).getTime() - new Date(b.takenAt!).getTime());
 
   const handleCheckinSuccess = (checkin: Checkin) => {
     if (editingCheckin) {
-      // 수정 모드: 목록에서 해당 항목 교체
-      setCheckins((prev) => prev.map((c) => (c.id === checkin.id ? checkin : c)));
+      updateCheckin(checkin);
     } else {
-      // 생성 모드: 목록 맨 앞에 추가
-      setCheckins((prev) => [checkin, ...prev]);
+      addCheckin(checkin);
     }
     setShowForm(false);
     setEditingCheckin(null);
   };
 
-  const handleEditCheckin = (checkin: Checkin) => {
-    setEditingCheckin(checkin);
-    setShowForm(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleDeleteCheckin = async (checkinId: string) => {
+  const handleDeleteCheckin = async (id: string) => {
     try {
-      const response = await fetch(`/api/checkins/${checkinId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to delete checkin');
-      }
-
-      setCheckins((prev) => prev.filter((c) => c.id !== checkinId));
+      await deleteCheckin(id);
     } catch (err) {
-      console.error('Failed to delete checkin:', err);
       alert(err instanceof Error ? err.message : '체크인 삭제에 실패했습니다.');
     }
   };
 
-  const handleOpenCreateTrip = () => {
-    setTripEditTitle('');
-    setTripEditDescription('');
-    setTripEditStartDate('');
-    setTripEditEndDate('');
-    setTripEditIsPublic(false);
-    setTripFormError(null);
-    setTripFormMode('create');
-    setShowTripForm(true);
-  };
-
-  const selectedTrip = trips.find((t) => t.id === selectedTripId);
-
-  const handleOpenTripEdit = (trip?: Trip) => {
-    const t = trip || selectedTrip;
-    if (!t) return;
-    setTripEditTitle(t.title);
-    setTripEditDescription(t.description || '');
-    setTripEditStartDate(t.start_date || '');
-    setTripEditEndDate(t.end_date || '');
-    setTripEditIsPublic(t.is_public);
-    setTripFormError(null);
-    setTripFormMode('edit');
-    setShowTripForm(true);
-  };
-
-  const handleTripFormSubmit = async () => {
-    if (!tripEditTitle.trim()) return;
-    setTripEditSubmitting(true);
-    setTripFormError(null);
-    try {
-      if (tripFormMode === 'create') {
-        const response = await fetch('/api/trips', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title: tripEditTitle.trim(),
-            description: tripEditDescription || undefined,
-            start_date: tripEditStartDate || undefined,
-            end_date: tripEditEndDate || undefined,
-            is_public: tripEditIsPublic,
-          }),
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Failed to create trip');
-        setTrips((prev) => [data.trip, ...prev]);
-        setSelectedTripId(data.trip.id);
-      } else {
-        const response = await fetch(`/api/trips/${selectedTripId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title: tripEditTitle.trim(),
-            description: tripEditDescription || undefined,
-            start_date: tripEditStartDate || undefined,
-            end_date: tripEditEndDate || undefined,
-            is_public: tripEditIsPublic,
-          }),
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Failed to update trip');
-        setTrips((prev) => prev.map((t) => (t.id === data.trip.id ? data.trip : t)));
-      }
-      setShowTripForm(false);
-    } catch (err) {
-      console.error('Failed to save trip:', err);
-      setTripFormError(err instanceof Error ? err.message : '저장에 실패했습니다.');
-    } finally {
-      setTripEditSubmitting(false);
-    }
-  };
-
-  const handleDeleteTrip = async () => {
-    if (!selectedTripId) return;
+  const handleDeleteTrip = async (tripId: string) => {
     if (!window.confirm('이 여행을 삭제하시겠습니까? 여행에 속한 체크인도 모두 삭제됩니다.')) return;
-
     try {
-      const response = await fetch(`/api/trips/${selectedTripId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to delete trip');
-      }
-
-      const remaining = trips.filter((t) => t.id !== selectedTripId);
-      setTrips(remaining);
+      const remaining = trips.filter((t) => t.id !== tripId);
+      await deleteTrip(tripId);
       setSelectedTripId(remaining.length > 0 ? remaining[0].id : '');
-      setCheckins([]);
     } catch (err) {
-      console.error('Failed to delete trip:', err);
       alert(err instanceof Error ? err.message : '여행 삭제에 실패했습니다.');
     }
   };
 
-  // Checkin을 MapPhoto 형식으로 변환 (시간순 정렬)
-  const mapPhotos: MapPhoto[] = checkins
-    .map((checkin) => ({
-      id: checkin.id,
-      url: checkin.photo_url || '',
-      latitude: checkin.latitude,
-      longitude: checkin.longitude,
-      title: checkin.title,
-      takenAt: checkin.checked_in_at,
-      message: checkin.message,
-    }))
-    .sort((a, b) => new Date(a.takenAt!).getTime() - new Date(b.takenAt!).getTime());
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    location.href = '/login';
+  };
 
   if (loading) {
     return (
@@ -284,11 +130,7 @@ export default function CheckinPage() {
     );
   }
 
-  const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    location.href = '/login';
-  };
+  const displayError = tripsError || checkinsError;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -297,8 +139,7 @@ export default function CheckinPage() {
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <button
             onClick={() => setShowDrawer(true)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
-            className="text-gray-900 dark:text-gray-100"
+            className="bg-transparent border-0 cursor-pointer p-1 flex items-center text-gray-900 dark:text-gray-100"
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <line x1="3" y1="6" x2="21" y2="6" />
@@ -333,20 +174,18 @@ export default function CheckinPage() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 pt-8" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
-        <div className="mb-6">
-        </div>
-
-        {error && (
+      <div
+        className="max-w-7xl mx-auto px-4 pt-8"
+        style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}
+      >
+        {displayError && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-red-800">{error}</p>
+            <p className="text-red-800">{displayError}</p>
           </div>
         )}
 
         {selectedTripId && (
           <>
-
-            {/* 체크인 폼 (전체화면 모달) */}
             {showForm && (
               <CheckinForm
                 tripId={selectedTripId}
@@ -354,10 +193,7 @@ export default function CheckinPage() {
                 userAvatarUrl={user?.user_metadata?.avatar_url}
                 editingCheckin={editingCheckin ?? undefined}
                 onSuccess={handleCheckinSuccess}
-                onCancel={() => {
-                  setShowForm(false);
-                  setEditingCheckin(null);
-                }}
+                onCancel={() => { setShowForm(false); setEditingCheckin(null); }}
                 onOpenLocationPicker={(initial, onSelect) => {
                   locationPickerInitial.current = initial;
                   locationPickerCallback.current = onSelect;
@@ -368,21 +204,19 @@ export default function CheckinPage() {
 
             {/* 여행 설명 및 날짜 */}
             {(() => {
-              const earliestCheckin = checkins.length > 0
+              const earliest = checkins.length > 0
                 ? [...checkins].sort((a, b) => new Date(a.checked_in_at).getTime() - new Date(b.checked_in_at).getTime())[0]
                 : null;
-              const startDateSource = selectedTrip?.start_date || earliestCheckin?.checked_in_at || null;
-              const endDateSource = selectedTrip?.end_date || null;
-              if (!selectedTrip?.description && !startDateSource) return null;
+              const startSrc = selectedTrip?.start_date || earliest?.checked_in_at || null;
+              const endSrc = selectedTrip?.end_date || null;
+              if (!selectedTrip?.description && !startSrc) return null;
               return (
                 <div className="mb-4 p-4 bg-gray-50 rounded-lg text-sm text-gray-700 space-y-1">
                   {selectedTrip?.description && <p>{selectedTrip.description}</p>}
-                  {startDateSource && (
+                  {startSrc && (
                     <p className="text-gray-500">
-                      {formatTripDate(startDateSource)}
-                      {endDateSource && endDateSource !== selectedTrip?.start_date
-                        ? ` ~ ${formatTripDate(endDateSource)}`
-                        : ''}
+                      {formatTripDate(startSrc)}
+                      {endSrc && endSrc !== selectedTrip?.start_date ? ` ~ ${formatTripDate(endSrc)}` : ''}
                     </p>
                   )}
                 </div>
@@ -399,94 +233,22 @@ export default function CheckinPage() {
               )}
             </div>
 
-            {/* 체크인 타임라인 */}
-            <div>
-              <div className="flex items-center mb-4">
-                <h2 className="text-xl font-bold text-gray-900 flex-1">
-                  기록 <span className="text-base font-normal text-gray-400">{checkins.length}곳</span>
-                </h2>
-                {checkins.length > 0 && (
-                  <button
-                    onClick={() => setSortOrder(o => o === 'desc' ? 'asc' : 'desc')}
-                    className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
-                  >
-                    {sortOrder === 'desc' ? '최신순 ↓' : '오래된순 ↑'}
-                  </button>
-                )}
-              </div>
-
-              {checkins.length > 0 ? (
-                <div>
-                  <div>
-                    {[...checkins].sort((a, b) => {
-                      const diff = new Date(a.checked_in_at).getTime() - new Date(b.checked_in_at).getTime();
-                      return sortOrder === 'desc' ? -diff : diff;
-                    }).map((checkin, index, sorted) => {
-                      const currentDate = new Date(checkin.checked_in_at).toDateString();
-                      const prevDate = index > 0
-                        ? new Date(sorted[index - 1].checked_in_at).toDateString()
-                        : null;
-                      const showDateHeader = currentDate !== prevDate;
-
-                      const formatDateHeader = (dateStr: string) => {
-                        const d = new Date(dateStr);
-                        const today = new Date();
-                        const yesterday = new Date(today);
-                        yesterday.setDate(today.getDate() - 1);
-                        const weekday = new Intl.DateTimeFormat('ko-KR', { weekday: 'short' }).format(d);
-                        if (d.toDateString() === today.toDateString()) return `오늘 (${weekday})`;
-                        if (d.toDateString() === yesterday.toDateString()) return `어제 (${weekday})`;
-                        return new Intl.DateTimeFormat('ko-KR', {
-                          year: 'numeric', month: 'long', day: 'numeric', weekday: 'short',
-                        }).format(d);
-                      };
-
-                      const isLast = index === sorted.length - 1;
-
-                      return (
-                        <div key={checkin.id}>
-                          {showDateHeader && (
-                            <div className={`flex items-center gap-2 mb-4 ${index > 0 ? 'mt-2' : ''}`}>
-                              <span className="text-xs font-semibold text-gray-500 whitespace-nowrap">
-                                {formatDateHeader(checkin.checked_in_at)}
-                              </span>
-                              <div className="flex-1 h-px bg-gray-200" />
-                            </div>
-                          )}
-                          <CheckinListItem
-                            checkin={checkin}
-                            onEdit={handleEditCheckin}
-                            onDelete={handleDeleteCheckin}
-                          />
-                          {!isLast && (
-                            <hr className="my-6 border-gray-200" />
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-16">
-                  <p className="text-4xl mb-3">🗺️</p>
-                  <p className="text-gray-500 font-medium mb-1">아직 체크인이 없습니다</p>
-                  <p className="text-gray-400 text-sm">
-                    아래 + 버튼을 눌러 첫 체크인을 기록해보세요!
-                  </p>
-                </div>
-              )}
-            </div>
+            <CheckinTimeline
+              checkins={checkins}
+              sortOrder={sortOrder}
+              onSortChange={() => setSortOrder((o) => (o === 'desc' ? 'asc' : 'desc'))}
+              onEdit={(checkin) => { setEditingCheckin(checkin); setShowForm(true); }}
+              onDelete={handleDeleteCheckin}
+            />
           </>
         )}
 
         {!selectedTripId && trips.length === 0 && (
           <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
             <p className="text-gray-500 text-lg mb-2">여행이 없습니다</p>
-            <p className="text-gray-400 text-sm mb-4">
-              먼저 여행을 만들어주세요!
-            </p>
+            <p className="text-gray-400 text-sm mb-4">먼저 여행을 만들어주세요!</p>
             <button
-              onClick={handleOpenCreateTrip}
+              onClick={() => { setTripFormMode('create'); setEditingTrip(undefined); setShowTripForm(true); }}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
             >
               + 첫 여행 만들기
@@ -494,179 +256,35 @@ export default function CheckinPage() {
           </div>
         )}
       </div>
-      {/* 왼쪽 드로어 */}
-      {mounted && showDrawer && createPortal(
-        <div style={{ position: 'fixed', inset: 0, zIndex: 10000 }}>
-          {/* 배경 오버레이 */}
-          <div
-            style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)' }}
-            onClick={() => setShowDrawer(false)}
-          />
-          {/* 드로어 패널 */}
-          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: '80%', maxWidth: '320px', backgroundColor: 'white', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-            {/* 새 여행 버튼 */}
-            <button
-              onClick={() => { setShowDrawer(false); handleOpenCreateTrip(); }}
-              style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '18px 20px', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderBottom: '1px solid #e5e7eb', background: 'none', cursor: 'pointer', fontSize: '15px', fontWeight: '600', color: '#111827', width: '100%', textAlign: 'left' }}
-            >
-              <span style={{ fontSize: '18px' }}>+</span> 새 여행 만들기
-            </button>
 
-            {/* 여행 목록 */}
-            <div style={{ padding: '12px 0' }}>
-              {trips.length === 0 ? (
-                <p style={{ padding: '12px 20px', color: '#9ca3af', fontSize: '14px' }}>여행이 없습니다</p>
-              ) : (
-                trips.map((trip) => (
-                  <div
-                    key={trip.id}
-                    style={{ display: 'flex', alignItems: 'flex-start', padding: '10px 20px', backgroundColor: trip.id === selectedTripId ? '#f0fdf4' : 'transparent' }}
-                  >
-                    <button
-                      onClick={() => { setSelectedTripId(trip.id); setShowDrawer(false); }}
-                      style={{ flex: 1, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
-                    >
-                      <div style={{ fontSize: '15px', fontWeight: trip.id === selectedTripId ? '600' : '400', color: trip.id === selectedTripId ? '#16a34a' : '#111827' }}>
-                        {trip.title}
-                      </div>
-                      {(() => {
-                        const label = formatTripDate(trip.start_date) ?? formatTripDate(trip.first_checkin_date);
-                        return label ? (
-                          <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>{label}</div>
-                        ) : null;
-                      })()}
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setSelectedTripId(trip.id); setShowDrawer(false); handleOpenTripEdit(trip); }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', color: '#9ca3af', fontSize: '13px' }}
-                    >
-                      수정
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setSelectedTripId(trip.id); handleDeleteTrip(); setShowDrawer(false); }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', color: '#ef4444', fontSize: '13px' }}
-                    >
-                      삭제
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>,
-        document.body
+      {mounted && showDrawer && (
+        <SideDrawer
+          trips={trips}
+          selectedTripId={selectedTripId}
+          onClose={() => setShowDrawer(false)}
+          onSelectTrip={setSelectedTripId}
+          onCreateTrip={() => { setTripFormMode('create'); setEditingTrip(undefined); setShowTripForm(true); }}
+          onEditTrip={(trip) => { setEditingTrip(trip); setTripFormMode('edit'); setShowTripForm(true); }}
+          onDeleteTrip={handleDeleteTrip}
+        />
       )}
 
-      {/* 하단 고정 바 */}
-      {mounted && selectedTripId && !showForm && createPortal(
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'white', borderTop: '1px solid #e5e7eb', paddingBottom: 'env(safe-area-inset-bottom, 0px)', zIndex: 9999 }}>
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '64px' }}>
-            <button
-              onClick={() => {
-                setEditingCheckin(null);
-                setShowForm(true);
-              }}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#6b7280', padding: '8px 24px', background: 'none', border: 'none', cursor: 'pointer' }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                <rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke="currentColor" strokeWidth={1.8} />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v8M8 12h8" />
-              </svg>
-              <span style={{ fontSize: '12px', marginTop: '2px' }}>체크인</span>
-            </button>
-          </div>
-        </div>,
-        document.body
+      {mounted && selectedTripId && !showForm && (
+        <BottomBar onCheckin={() => { setEditingCheckin(null); setShowForm(true); }} />
       )}
 
-      {/* 여행 생성/수정 폼 */}
-      {mounted && showTripForm && createPortal(
-        <div style={{ position: 'fixed', inset: 0, zIndex: 10001, backgroundColor: 'white', display: 'flex', flexDirection: 'column' }}>
-          {/* 헤더 */}
-          <div style={{ display: 'flex', alignItems: 'center', padding: '10px 16px', borderBottom: '1px solid #e5e7eb', gap: 12, flexShrink: 0 }}>
-            <span style={{ flex: 1, fontSize: 14, color: '#6b7280' }}>
-              {tripFormMode === 'create' ? '새 여행' : '여행 수정'}
-            </span>
-            <button
-              onClick={() => setShowTripForm(false)}
-              style={{ padding: '8px 20px', borderRadius: 20, border: 'none', backgroundColor: '#e5e7eb', color: '#374151', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}
-            >
-              취소
-            </button>
-            <button
-              onClick={handleTripFormSubmit}
-              disabled={!tripEditTitle.trim() || tripEditSubmitting}
-              style={{ padding: '8px 20px', borderRadius: 20, border: 'none', backgroundColor: tripEditTitle.trim() && !tripEditSubmitting ? '#16a34a' : '#d1d5db', color: tripEditTitle.trim() && !tripEditSubmitting ? 'white' : '#9ca3af', fontWeight: 700, fontSize: 14, cursor: tripEditTitle.trim() && !tripEditSubmitting ? 'pointer' : 'not-allowed', transition: 'background-color 0.15s' }}
-            >
-              {tripEditSubmitting ? '저장 중...' : tripFormMode === 'create' ? '만들기' : '저장'}
-            </button>
-          </div>
-
-          {/* 본문 */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px' }}>
-            <input
-              type="text"
-              value={tripEditTitle}
-              onChange={(e) => setTripEditTitle(e.target.value)}
-              placeholder="여행 이름을 입력하세요..."
-              autoFocus
-              style={{ width: '100%', fontSize: 22, fontWeight: 500, border: 'none', outline: 'none', color: '#111827', marginBottom: 12, background: 'transparent' }}
-            />
-            <textarea
-              value={tripEditDescription}
-              onChange={(e) => setTripEditDescription(e.target.value)}
-              placeholder="여행 설명을 남겨보세요..."
-              rows={3}
-              style={{ width: '100%', fontSize: 16, border: 'none', outline: 'none', resize: 'none', color: '#374151', background: 'transparent', lineHeight: 1.6 }}
-            />
-
-            {/* 날짜 */}
-            <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: 16, marginTop: 8 }}>
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 6 }}>시작일</div>
-                <input
-                  type="date"
-                  value={tripEditStartDate}
-                  onChange={(e) => setTripEditStartDate(e.target.value)}
-                  style={{ fontSize: 16, border: 'none', outline: 'none', color: tripEditStartDate ? '#111827' : '#9ca3af', background: 'transparent', width: '100%' }}
-                />
-              </div>
-              <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: 16, marginBottom: 16 }}>
-                <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 6 }}>종료일</div>
-                <input
-                  type="date"
-                  value={tripEditEndDate}
-                  onChange={(e) => setTripEditEndDate(e.target.value)}
-                  style={{ fontSize: 16, border: 'none', outline: 'none', color: tripEditEndDate ? '#111827' : '#9ca3af', background: 'transparent', width: '100%' }}
-                />
-              </div>
-            </div>
-
-            {/* 공개 토글 */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #f3f4f6', paddingTop: 16 }}>
-              <span style={{ fontSize: 15, color: '#374151' }}>공개 여행</span>
-              <label style={{ position: 'relative', display: 'inline-block', width: 44, height: 26, cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={tripEditIsPublic}
-                  onChange={(e) => setTripEditIsPublic(e.target.checked)}
-                  style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }}
-                />
-                <span style={{ position: 'absolute', inset: 0, backgroundColor: tripEditIsPublic ? '#16a34a' : '#d1d5db', borderRadius: 13, transition: 'background-color 0.2s' }}>
-                  <span style={{ position: 'absolute', width: 20, height: 20, borderRadius: '50%', backgroundColor: 'white', top: 3, left: tripEditIsPublic ? 21 : 3, transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
-                </span>
-              </label>
-            </div>
-
-            {/* 에러 */}
-            {tripFormError && (
-              <div style={{ marginTop: 16, padding: 12, backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8 }}>
-                <p style={{ fontSize: 14, color: '#dc2626' }}>{tripFormError}</p>
-              </div>
-            )}
-          </div>
-        </div>,
-        document.body
+      {mounted && showTripForm && (
+        <TripFormModal
+          mode={tripFormMode}
+          initialTrip={editingTrip}
+          onSuccess={(trip) => {
+            if (tripFormMode === 'create') setSelectedTripId(trip.id);
+            setShowTripForm(false);
+          }}
+          onCancel={() => setShowTripForm(false)}
+          onCreate={createTrip}
+          onUpdate={updateTrip}
+        />
       )}
 
       {showLocationPicker && (

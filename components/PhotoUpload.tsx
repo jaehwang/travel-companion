@@ -24,12 +24,6 @@ export default function PhotoUpload({ onUploadComplete, onUploadError }: PhotoUp
     const file = e.target.files?.[0];
     if (!file) return;
 
-    console.log('=== 파일 선택 시작 ===');
-    console.log('브라우저 정보:', {
-      userAgent: navigator.userAgent,
-      platform: navigator.platform
-    });
-
     // 이미지 파일 확인
     if (!file.type.startsWith('image/')) {
       onUploadError?.('이미지 파일만 업로드 가능합니다.');
@@ -44,14 +38,9 @@ export default function PhotoUpload({ onUploadComplete, onUploadError }: PhotoUp
     setPreviewUrl(preview);
 
     try {
-      console.log('⏳ EXIF 메타데이터 추출 시작...');
-      // EXIF 메타데이터 추출
       const meta = await extractPhotoMetadata(file);
       setMetadata(meta);
-      console.log('✅ 추출 완료! 메타데이터:', meta);
-      console.log('=== 파일 선택 완료 ===');
     } catch (error) {
-      console.error('❌ 메타데이터 추출 실패:', error);
       onUploadError?.('메타데이터 추출에 실패했습니다.');
     } finally {
       setIsProcessing(false);
@@ -74,20 +63,10 @@ export default function PhotoUpload({ onUploadComplete, onUploadError }: PhotoUp
         initialQuality: 0.85, // 품질 85%
       };
 
-      console.log('🔄 이미지 압축 시작...', {
-        원본크기: (selectedFile.size / 1024 / 1024).toFixed(2) + 'MB',
-        원본이름: selectedFile.name
-      });
-
       setUploadProgress(30);
 
       // 이미지 압축
       const compressedFile = await imageCompression(selectedFile, options);
-
-      console.log('✅ 이미지 압축 완료!', {
-        압축크기: (compressedFile.size / 1024 / 1024).toFixed(2) + 'MB',
-        압축률: ((1 - compressedFile.size / selectedFile.size) * 100).toFixed(1) + '%'
-      });
 
       setUploadProgress(50);
 
@@ -120,7 +99,6 @@ export default function PhotoUpload({ onUploadComplete, onUploadError }: PhotoUp
       }
 
       const photoUrl = signedUrlData.signedUrl;
-      console.log('✅ 업로드 완료:', photoUrl);
 
       // 업로드 완료 콜백
       onUploadComplete?.(photoUrl, metadata);
@@ -128,7 +106,6 @@ export default function PhotoUpload({ onUploadComplete, onUploadError }: PhotoUp
       // 상태 초기화
       resetForm();
     } catch (error: any) {
-      console.error('업로드 실패:', error);
       onUploadError?.(error.message || '업로드에 실패했습니다.');
     } finally {
       setIsUploading(false);

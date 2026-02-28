@@ -23,35 +23,17 @@ export interface PhotoMetadata {
  */
 export async function extractGPSFromPhoto(file: File): Promise<PhotoLocation | null> {
   try {
-    console.log('🔍 파일 정보:', {
-      name: file.name,
-      type: file.type,
-      size: file.size,
-      lastModified: new Date(file.lastModified).toISOString()
-    });
-
     // 전체 EXIF 데이터 읽기
     const exifData = await exifr.parse(file);
 
-    console.log('📊 추출된 EXIF 데이터:', exifData);
-
     // GPS 데이터 확인
-    if (!exifData) {
-      console.log('❌ EXIF 데이터가 없습니다.');
-      return null;
-    }
+    if (!exifData) return null;
 
     // latitude와 longitude 확인
     const latitude = exifData.latitude || exifData.GPSLatitude;
     const longitude = exifData.longitude || exifData.GPSLongitude;
 
-    console.log('📍 GPS 좌표:', { latitude, longitude });
-
-    if (!latitude || !longitude) {
-      console.log('❌ GPS 좌표가 없습니다.');
-      console.log('사용 가능한 필드:', Object.keys(exifData).filter(k => k.toLowerCase().includes('gps')));
-      return null;
-    }
+    if (!latitude || !longitude) return null;
 
     return {
       latitude: typeof latitude === 'number' ? latitude : parseFloat(latitude),
@@ -59,8 +41,7 @@ export async function extractGPSFromPhoto(file: File): Promise<PhotoLocation | n
       timestamp: exifData.DateTimeOriginal ? new Date(exifData.DateTimeOriginal) : undefined,
       altitude: exifData.GPSAltitude || exifData.altitude
     };
-  } catch (error) {
-    console.error('❌ EXIF 데이터 추출 실패:', error);
+  } catch {
     return null;
   }
 }
@@ -127,11 +108,8 @@ export async function extractPhotoMetadata(file: File): Promise<PhotoMetadata> {
       cameraModel: exif?.Model,
       exif: exif ? simplifyExif(exif) : undefined,
     };
-  } catch (error) {
-    console.error('메타데이터 추출 에러:', error);
-    return {
-      fileSize: file.size,
-    };
+  } catch {
+    return { fileSize: file.size };
   }
 }
 
