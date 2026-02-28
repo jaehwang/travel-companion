@@ -182,7 +182,7 @@ export default function Map({
                   )}
                   {selectedPhoto.takenAt && (
                     <p className="text-xs text-gray-600 mb-1">
-                      {new Date(selectedPhoto.takenAt).toLocaleString('ko-KR')}
+                      {new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(selectedPhoto.takenAt))}
                     </p>
                   )}
                   <p className="text-xs text-gray-500 mb-2">

@@ -18,7 +18,7 @@ function formatTripDate(dateStr: string | null | undefined): string | null {
   const date = isDateOnly
     ? (() => { const [y, m, d] = dateStr.split('-').map(Number); return new Date(y, m - 1, d); })()
     : new Date(dateStr);
-  return new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: 'numeric', day: 'numeric' }).format(date);
+  return new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' }).format(date);
 }
 
 export default function CheckinPage() {
@@ -441,21 +441,27 @@ export default function CheckinPage() {
             )}
 
             {/* 여행 설명 및 날짜 */}
-            {(selectedTrip?.description || selectedTrip?.start_date) && (
-              <div className="mb-4 p-4 bg-gray-50 rounded-lg text-sm text-gray-700 space-y-1">
-                {selectedTrip.description && (
-                  <p>{selectedTrip.description}</p>
-                )}
-                {(selectedTrip.start_date || selectedTrip.end_date) && (
-                  <p className="text-gray-500">
-                    {selectedTrip.start_date}
-                    {selectedTrip.end_date && selectedTrip.end_date !== selectedTrip.start_date
-                      ? ` ~ ${selectedTrip.end_date}`
-                      : ''}
-                  </p>
-                )}
-              </div>
-            )}
+            {(() => {
+              const earliestCheckin = checkins.length > 0
+                ? [...checkins].sort((a, b) => new Date(a.checked_in_at).getTime() - new Date(b.checked_in_at).getTime())[0]
+                : null;
+              const startDateSource = selectedTrip?.start_date || earliestCheckin?.checked_in_at || null;
+              const endDateSource = selectedTrip?.end_date || null;
+              if (!selectedTrip?.description && !startDateSource) return null;
+              return (
+                <div className="mb-4 p-4 bg-gray-50 rounded-lg text-sm text-gray-700 space-y-1">
+                  {selectedTrip?.description && <p>{selectedTrip.description}</p>}
+                  {startDateSource && (
+                    <p className="text-gray-500">
+                      {formatTripDate(startDateSource)}
+                      {endDateSource && endDateSource !== selectedTrip?.start_date
+                        ? ` ~ ${formatTripDate(endDateSource)}`
+                        : ''}
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* 지도 */}
             <div className="mb-6">
@@ -501,10 +507,11 @@ export default function CheckinPage() {
                         const today = new Date();
                         const yesterday = new Date(today);
                         yesterday.setDate(today.getDate() - 1);
-                        if (d.toDateString() === today.toDateString()) return '오늘';
-                        if (d.toDateString() === yesterday.toDateString()) return '어제';
+                        const weekday = new Intl.DateTimeFormat('ko-KR', { weekday: 'short' }).format(d);
+                        if (d.toDateString() === today.toDateString()) return `오늘 (${weekday})`;
+                        if (d.toDateString() === yesterday.toDateString()) return `어제 (${weekday})`;
                         return new Intl.DateTimeFormat('ko-KR', {
-                          year: 'numeric', month: 'long', day: 'numeric',
+                          year: 'numeric', month: 'long', day: 'numeric', weekday: 'short',
                         }).format(d);
                       };
 
@@ -563,7 +570,7 @@ export default function CheckinPage() {
       </div>
       {/* 왼쪽 드로어 */}
       {mounted && showDrawer && createPortal(
-        <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 10000 }}>
           {/* 배경 오버레이 */}
           <div
             style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)' }}

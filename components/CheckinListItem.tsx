@@ -16,6 +16,7 @@ export function CheckinListItem({ checkin, onEdit, onDelete }: CheckinListItemPr
     return new Intl.DateTimeFormat('ko-KR', {
       month: 'long',
       day: 'numeric',
+      weekday: 'short',
       hour: '2-digit',
       minute: '2-digit',
     }).format(date);

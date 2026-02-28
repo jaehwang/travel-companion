@@ -199,7 +199,7 @@ export default function PhotoUpload({ onUploadComplete, onUploadError }: PhotoUp
               )}
               {metadata.gps.timestamp && (
                 <p className="text-sm text-gray-700">
-                  🕐 촬영 시간: {new Date(metadata.gps.timestamp).toLocaleString('ko-KR')}
+                  🕐 촬영 시간: {new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(metadata.gps.timestamp))}
                 </p>
               )}
             </div>
@@ -224,7 +224,7 @@ export default function PhotoUpload({ onUploadComplete, onUploadError }: PhotoUp
               <p>📷 카메라: {metadata.cameraMake} {metadata.cameraModel}</p>
             )}
             {metadata.takenAt && (
-              <p>🕐 촬영 시간: {metadata.takenAt.toLocaleString('ko-KR')}</p>
+              <p>🕐 촬영 시간: {new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' }).format(metadata.takenAt)}</p>
             )}
           </div>
         </div>
