@@ -563,23 +563,30 @@ export default function CheckinPage() {
                 trips.map((trip) => (
                   <div
                     key={trip.id}
-                    style={{ display: 'flex', alignItems: 'center', padding: '10px 20px', backgroundColor: trip.id === selectedTripId ? '#f0fdf4' : 'transparent' }}
+                    style={{ display: 'flex', alignItems: 'flex-start', padding: '10px 20px', backgroundColor: trip.id === selectedTripId ? '#f0fdf4' : 'transparent' }}
                   >
                     <button
                       onClick={() => { setSelectedTripId(trip.id); setEditingTrip(false); setShowDrawer(false); }}
-                      style={{ flex: 1, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontSize: '15px', fontWeight: trip.id === selectedTripId ? '600' : '400', color: trip.id === selectedTripId ? '#16a34a' : '#111827' }}
+                      style={{ flex: 1, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
                     >
-                      {trip.title}
+                      <div style={{ fontSize: '15px', fontWeight: trip.id === selectedTripId ? '600' : '400', color: trip.id === selectedTripId ? '#16a34a' : '#111827' }}>
+                        {trip.title}
+                      </div>
+                      {trip.start_date && (
+                        <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>
+                          {trip.start_date}
+                        </div>
+                      )}
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); setSelectedTripId(trip.id); handleOpenTripEdit(); setShowDrawer(false); }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px', color: '#9ca3af', fontSize: '13px' }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', color: '#9ca3af', fontSize: '13px' }}
                     >
                       수정
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); setSelectedTripId(trip.id); handleDeleteTrip(); setShowDrawer(false); }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px', color: '#ef4444', fontSize: '13px' }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', color: '#ef4444', fontSize: '13px' }}
                     >
                       삭제
                     </button>
