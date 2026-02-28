@@ -97,6 +97,7 @@ export default function Map({
           defaultZoom={defaultZoom}
           mapId="f61fd161984b7ef0b0aaa09b"
           gestureHandling="greedy"
+          mapTypeControl={false}
           style={{ width: '100%', height: '100%' }}
         >
           <MapController
