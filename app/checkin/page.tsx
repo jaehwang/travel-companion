@@ -41,14 +41,16 @@ export default function CheckinPage() {
   useEffect(() => { setMounted(true); }, []);
   const [showDrawer, setShowDrawer] = useState(false);
 
-  // 여행 편집 상태
-  const [editingTrip, setEditingTrip] = useState(false);
+  // 여행 폼 상태
+  const [showTripForm, setShowTripForm] = useState(false);
+  const [tripFormMode, setTripFormMode] = useState<'create' | 'edit'>('create');
   const [tripEditTitle, setTripEditTitle] = useState('');
   const [tripEditDescription, setTripEditDescription] = useState('');
   const [tripEditStartDate, setTripEditStartDate] = useState('');
   const [tripEditEndDate, setTripEditEndDate] = useState('');
   const [tripEditIsPublic, setTripEditIsPublic] = useState(false);
   const [tripEditSubmitting, setTripEditSubmitting] = useState(false);
+  const [tripFormError, setTripFormError] = useState<string | null>(null);
 
   // 사용자 정보 로드
   useEffect(() => {
@@ -165,77 +167,73 @@ export default function CheckinPage() {
     }
   };
 
-  const handleCreateTrip = async () => {
-    const title = prompt('여행 이름을 입력하세요:');
-    if (!title || !title.trim()) return;
-
-    try {
-      const response = await fetch('/api/trips', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: title.trim(),
-          is_public: false,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create trip');
-      }
-
-      setTrips((prev) => [data.trip, ...prev]);
-      setSelectedTripId(data.trip.id);
-    } catch (err) {
-      console.error('Failed to create trip:', err);
-      alert(err instanceof Error ? err.message : '여행 생성에 실패했습니다.');
-    }
+  const handleOpenCreateTrip = () => {
+    setTripEditTitle('');
+    setTripEditDescription('');
+    setTripEditStartDate('');
+    setTripEditEndDate('');
+    setTripEditIsPublic(false);
+    setTripFormError(null);
+    setTripFormMode('create');
+    setShowTripForm(true);
   };
 
   const selectedTrip = trips.find((t) => t.id === selectedTripId);
 
-  const handleOpenTripEdit = () => {
-    if (!selectedTrip) return;
-    setTripEditTitle(selectedTrip.title);
-    setTripEditDescription(selectedTrip.description || '');
-    setTripEditStartDate(selectedTrip.start_date || '');
-    setTripEditEndDate(selectedTrip.end_date || '');
-    setTripEditIsPublic(selectedTrip.is_public);
-    setEditingTrip(true);
+  const handleOpenTripEdit = (trip?: Trip) => {
+    const t = trip || selectedTrip;
+    if (!t) return;
+    setTripEditTitle(t.title);
+    setTripEditDescription(t.description || '');
+    setTripEditStartDate(t.start_date || '');
+    setTripEditEndDate(t.end_date || '');
+    setTripEditIsPublic(t.is_public);
+    setTripFormError(null);
+    setTripFormMode('edit');
+    setShowTripForm(true);
   };
 
-  const handleUpdateTrip = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedTripId) return;
-
+  const handleTripFormSubmit = async () => {
+    if (!tripEditTitle.trim()) return;
     setTripEditSubmitting(true);
+    setTripFormError(null);
     try {
-      const response = await fetch(`/api/trips/${selectedTripId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: tripEditTitle,
-          description: tripEditDescription || undefined,
-          start_date: tripEditStartDate || undefined,
-          end_date: tripEditEndDate || undefined,
-          is_public: tripEditIsPublic,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to update trip');
+      if (tripFormMode === 'create') {
+        const response = await fetch('/api/trips', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: tripEditTitle.trim(),
+            description: tripEditDescription || undefined,
+            start_date: tripEditStartDate || undefined,
+            end_date: tripEditEndDate || undefined,
+            is_public: tripEditIsPublic,
+          }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to create trip');
+        setTrips((prev) => [data.trip, ...prev]);
+        setSelectedTripId(data.trip.id);
+      } else {
+        const response = await fetch(`/api/trips/${selectedTripId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: tripEditTitle.trim(),
+            description: tripEditDescription || undefined,
+            start_date: tripEditStartDate || undefined,
+            end_date: tripEditEndDate || undefined,
+            is_public: tripEditIsPublic,
+          }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to update trip');
+        setTrips((prev) => prev.map((t) => (t.id === data.trip.id ? data.trip : t)));
       }
-
-      setTrips((prev) => prev.map((t) => (t.id === data.trip.id ? data.trip : t)));
-      setEditingTrip(false);
+      setShowTripForm(false);
     } catch (err) {
-      console.error('Failed to update trip:', err);
-      alert(err instanceof Error ? err.message : '여행 수정에 실패했습니다.');
+      console.error('Failed to save trip:', err);
+      setTripFormError(err instanceof Error ? err.message : '저장에 실패했습니다.');
     } finally {
       setTripEditSubmitting(false);
     }
@@ -337,78 +335,6 @@ export default function CheckinPage() {
 
       <div className="max-w-7xl mx-auto px-4 pt-8" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
         <div className="mb-6">
-
-          {/* 여행 편집 폼 */}
-          {editingTrip && selectedTrip && (
-            <form onSubmit={handleUpdateTrip} className="mt-4 p-4 bg-white border border-gray-200 rounded-lg space-y-3">
-              <h3 className="font-semibold text-gray-900">여행 수정</h3>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">제목 *</label>
-                <input
-                  type="text"
-                  value={tripEditTitle}
-                  onChange={(e) => setTripEditTitle(e.target.value)}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">설명</label>
-                <textarea
-                  value={tripEditDescription}
-                  onChange={(e) => setTripEditDescription(e.target.value)}
-                  rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">시작일</label>
-                  <input
-                    type="date"
-                    value={tripEditStartDate}
-                    onChange={(e) => setTripEditStartDate(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">종료일</label>
-                  <input
-                    type="date"
-                    value={tripEditEndDate}
-                    onChange={(e) => setTripEditEndDate(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  id="trip-is-public"
-                  type="checkbox"
-                  checked={tripEditIsPublic}
-                  onChange={(e) => setTripEditIsPublic(e.target.checked)}
-                  className="rounded"
-                />
-                <label htmlFor="trip-is-public" className="text-sm text-gray-700">공개 여행</label>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  type="submit"
-                  disabled={tripEditSubmitting}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 font-medium"
-                >
-                  {tripEditSubmitting ? '저장 중...' : '저장'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setEditingTrip(false)}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
-                >
-                  취소
-                </button>
-              </div>
-            </form>
-          )}
         </div>
 
         {error && (
@@ -560,7 +486,7 @@ export default function CheckinPage() {
               먼저 여행을 만들어주세요!
             </p>
             <button
-              onClick={handleCreateTrip}
+              onClick={handleOpenCreateTrip}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
             >
               + 첫 여행 만들기
@@ -580,7 +506,7 @@ export default function CheckinPage() {
           <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: '80%', maxWidth: '320px', backgroundColor: 'white', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
             {/* 새 여행 버튼 */}
             <button
-              onClick={() => { handleCreateTrip(); setShowDrawer(false); }}
+              onClick={() => { setShowDrawer(false); handleOpenCreateTrip(); }}
               style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '18px 20px', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderBottom: '1px solid #e5e7eb', background: 'none', cursor: 'pointer', fontSize: '15px', fontWeight: '600', color: '#111827', width: '100%', textAlign: 'left' }}
             >
               <span style={{ fontSize: '18px' }}>+</span> 새 여행 만들기
@@ -597,7 +523,7 @@ export default function CheckinPage() {
                     style={{ display: 'flex', alignItems: 'flex-start', padding: '10px 20px', backgroundColor: trip.id === selectedTripId ? '#f0fdf4' : 'transparent' }}
                   >
                     <button
-                      onClick={() => { setSelectedTripId(trip.id); setEditingTrip(false); setShowDrawer(false); }}
+                      onClick={() => { setSelectedTripId(trip.id); setShowDrawer(false); }}
                       style={{ flex: 1, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
                     >
                       <div style={{ fontSize: '15px', fontWeight: trip.id === selectedTripId ? '600' : '400', color: trip.id === selectedTripId ? '#16a34a' : '#111827' }}>
@@ -611,7 +537,7 @@ export default function CheckinPage() {
                       })()}
                     </button>
                     <button
-                      onClick={(e) => { e.stopPropagation(); setSelectedTripId(trip.id); handleOpenTripEdit(); setShowDrawer(false); }}
+                      onClick={(e) => { e.stopPropagation(); setSelectedTripId(trip.id); setShowDrawer(false); handleOpenTripEdit(trip); }}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', color: '#9ca3af', fontSize: '13px' }}
                     >
                       수정
@@ -648,6 +574,96 @@ export default function CheckinPage() {
               </svg>
               <span style={{ fontSize: '12px', marginTop: '2px' }}>체크인</span>
             </button>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* 여행 생성/수정 폼 */}
+      {mounted && showTripForm && createPortal(
+        <div style={{ position: 'fixed', inset: 0, zIndex: 10001, backgroundColor: 'white', display: 'flex', flexDirection: 'column' }}>
+          {/* 헤더 */}
+          <div style={{ display: 'flex', alignItems: 'center', padding: '10px 16px', borderBottom: '1px solid #e5e7eb', gap: 12, flexShrink: 0 }}>
+            <span style={{ flex: 1, fontSize: 14, color: '#6b7280' }}>
+              {tripFormMode === 'create' ? '새 여행' : '여행 수정'}
+            </span>
+            <button
+              onClick={() => setShowTripForm(false)}
+              style={{ padding: '8px 20px', borderRadius: 20, border: 'none', backgroundColor: '#e5e7eb', color: '#374151', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}
+            >
+              취소
+            </button>
+            <button
+              onClick={handleTripFormSubmit}
+              disabled={!tripEditTitle.trim() || tripEditSubmitting}
+              style={{ padding: '8px 20px', borderRadius: 20, border: 'none', backgroundColor: tripEditTitle.trim() && !tripEditSubmitting ? '#16a34a' : '#d1d5db', color: tripEditTitle.trim() && !tripEditSubmitting ? 'white' : '#9ca3af', fontWeight: 700, fontSize: 14, cursor: tripEditTitle.trim() && !tripEditSubmitting ? 'pointer' : 'not-allowed', transition: 'background-color 0.15s' }}
+            >
+              {tripEditSubmitting ? '저장 중...' : tripFormMode === 'create' ? '만들기' : '저장'}
+            </button>
+          </div>
+
+          {/* 본문 */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px' }}>
+            <input
+              type="text"
+              value={tripEditTitle}
+              onChange={(e) => setTripEditTitle(e.target.value)}
+              placeholder="여행 이름을 입력하세요..."
+              autoFocus
+              style={{ width: '100%', fontSize: 22, fontWeight: 500, border: 'none', outline: 'none', color: '#111827', marginBottom: 12, background: 'transparent' }}
+            />
+            <textarea
+              value={tripEditDescription}
+              onChange={(e) => setTripEditDescription(e.target.value)}
+              placeholder="여행 설명을 남겨보세요..."
+              rows={3}
+              style={{ width: '100%', fontSize: 16, border: 'none', outline: 'none', resize: 'none', color: '#374151', background: 'transparent', lineHeight: 1.6 }}
+            />
+
+            {/* 날짜 */}
+            <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: 16, marginTop: 8 }}>
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 6 }}>시작일</div>
+                <input
+                  type="date"
+                  value={tripEditStartDate}
+                  onChange={(e) => setTripEditStartDate(e.target.value)}
+                  style={{ fontSize: 16, border: 'none', outline: 'none', color: tripEditStartDate ? '#111827' : '#9ca3af', background: 'transparent', width: '100%' }}
+                />
+              </div>
+              <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: 16, marginBottom: 16 }}>
+                <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 6 }}>종료일</div>
+                <input
+                  type="date"
+                  value={tripEditEndDate}
+                  onChange={(e) => setTripEditEndDate(e.target.value)}
+                  style={{ fontSize: 16, border: 'none', outline: 'none', color: tripEditEndDate ? '#111827' : '#9ca3af', background: 'transparent', width: '100%' }}
+                />
+              </div>
+            </div>
+
+            {/* 공개 토글 */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #f3f4f6', paddingTop: 16 }}>
+              <span style={{ fontSize: 15, color: '#374151' }}>공개 여행</span>
+              <label style={{ position: 'relative', display: 'inline-block', width: 44, height: 26, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={tripEditIsPublic}
+                  onChange={(e) => setTripEditIsPublic(e.target.checked)}
+                  style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }}
+                />
+                <span style={{ position: 'absolute', inset: 0, backgroundColor: tripEditIsPublic ? '#16a34a' : '#d1d5db', borderRadius: 13, transition: 'background-color 0.2s' }}>
+                  <span style={{ position: 'absolute', width: 20, height: 20, borderRadius: '50%', backgroundColor: 'white', top: 3, left: tripEditIsPublic ? 21 : 3, transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
+                </span>
+              </label>
+            </div>
+
+            {/* 에러 */}
+            {tripFormError && (
+              <div style={{ marginTop: 16, padding: 12, backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8 }}>
+                <p style={{ fontSize: 14, color: '#dc2626' }}>{tripFormError}</p>
+              </div>
+            )}
           </div>
         </div>,
         document.body
