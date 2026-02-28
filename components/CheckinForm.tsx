@@ -20,6 +20,12 @@ interface PlacePrediction {
   };
 }
 
+const toDateTimeLocalValue = (isoString: string): string => {
+  const d = new Date(isoString);
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
 const CATEGORY_EMOJI: Record<string, string> = {
   restaurant: '🍽️',
   attraction: '🏛️',
@@ -69,6 +75,7 @@ export default function CheckinForm({
   const [photoUrl, setPhotoUrl] = useState<string>('');
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string>('');
   const [photoMetadata, setPhotoMetadata] = useState<PhotoMetadata | null>(null);
+  const [checkedInAt, setCheckedInAt] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -125,6 +132,7 @@ export default function CheckinForm({
       setPhotoUrl(editingCheckin.photo_url || '');
       setPhotoPreviewUrl(editingCheckin.photo_url || '');
       setPhotoMetadata(null);
+      setCheckedInAt(editingCheckin.checked_in_at ? toDateTimeLocalValue(editingCheckin.checked_in_at) : '');
     } else {
       setTitle('');
       setPlace('');
@@ -135,6 +143,7 @@ export default function CheckinForm({
       setPhotoUrl('');
       setPhotoPreviewUrl('');
       setPhotoMetadata(null);
+      setCheckedInAt('');
     }
     setActivePanel('main');
     setSearchQuery('');
@@ -274,6 +283,7 @@ export default function CheckinForm({
         photo_metadata: photoMetadata || undefined,
       };
       if (!isEditMode) body.trip_id = tripId;
+      if (checkedInAt) body.checked_in_at = new Date(checkedInAt).toISOString();
 
       const response = await fetch(url, {
         method,
@@ -557,6 +567,27 @@ export default function CheckinForm({
                 <span style={{ color: '#93c5fd', marginLeft: 2, fontSize: 11 }}>✕</span>
               </button>
             )}
+            {checkedInAt && (
+              <button
+                onClick={() => setCheckedInAt('')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  padding: '6px 12px',
+                  borderRadius: 20,
+                  border: '1px solid #e9d5ff',
+                  backgroundColor: '#faf5ff',
+                  color: '#7c3aed',
+                  fontSize: 13,
+                  cursor: 'pointer',
+                }}
+              >
+                ⏰{' '}
+                {new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(checkedInAt))}
+                <span style={{ color: '#c4b5fd', marginLeft: 2, fontSize: 11 }}>✕</span>
+              </button>
+            )}
           </div>
 
           {/* 에러 */}
@@ -829,6 +860,20 @@ export default function CheckinForm({
           >
             🏷️
           </button>
+
+          {/* 시각 지정 */}
+          <div style={{ position: 'relative', width: 64, height: 64, flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', fontSize: 36, color: checkedInAt ? '#7c3aed' : '#6b7280', pointerEvents: 'none' }}>
+              ⏰
+            </div>
+            <input
+              type="datetime-local"
+              value={checkedInAt}
+              onChange={(e) => setCheckedInAt(e.target.value)}
+              style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }}
+              title="시각 지정"
+            />
+          </div>
         </div>
       )}
     </div>
