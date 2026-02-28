@@ -324,7 +324,7 @@ export default function CheckinPage() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-8 pb-24">
+      <div className="max-w-7xl mx-auto px-4 pt-8" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
         <div className="mb-6">
 
           {/* 여행 편집 폼 */}
@@ -594,20 +594,22 @@ export default function CheckinPage() {
 
       {/* 하단 고정 바 */}
       {mounted && selectedTripId && !showForm && createPortal(
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'white', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'center', alignItems: 'center', height: '64px', zIndex: 9999 }}>
-          <button
-            onClick={() => {
-              setEditingCheckin(null);
-              setShowForm(true);
-            }}
-            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#6b7280', padding: '8px 24px', background: 'none', border: 'none', cursor: 'pointer' }}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-              <rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke="currentColor" strokeWidth={1.8} />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v8M8 12h8" />
-            </svg>
-            <span style={{ fontSize: '12px', marginTop: '2px' }}>체크인</span>
-          </button>
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'white', borderTop: '1px solid #e5e7eb', paddingBottom: 'env(safe-area-inset-bottom, 0px)', zIndex: 9999 }}>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '64px' }}>
+            <button
+              onClick={() => {
+                setEditingCheckin(null);
+                setShowForm(true);
+              }}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#6b7280', padding: '8px 24px', background: 'none', border: 'none', cursor: 'pointer' }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke="currentColor" strokeWidth={1.8} />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v8M8 12h8" />
+              </svg>
+              <span style={{ fontSize: '12px', marginTop: '2px' }}>체크인</span>
+            </button>
+          </div>
         </div>,
         document.body
       )}
