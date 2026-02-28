@@ -11,6 +11,16 @@ import { createClient } from '@/lib/supabase/client';
 import type { Trip, Checkin } from '@/types/database';
 import type { User } from '@supabase/supabase-js';
 
+function formatTripDate(dateStr: string | null | undefined): string | null {
+  if (!dateStr) return null;
+  // start_date는 YYYY-MM-DD, checked_in_at은 ISO 타임스탬프
+  const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(dateStr);
+  const date = isDateOnly
+    ? (() => { const [y, m, d] = dateStr.split('-').map(Number); return new Date(y, m - 1, d); })()
+    : new Date(dateStr);
+  return new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: 'numeric', day: 'numeric' }).format(date);
+}
+
 export default function CheckinPage() {
   const [user, setUser] = useState<User | null>(null);
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -572,11 +582,12 @@ export default function CheckinPage() {
                       <div style={{ fontSize: '15px', fontWeight: trip.id === selectedTripId ? '600' : '400', color: trip.id === selectedTripId ? '#16a34a' : '#111827' }}>
                         {trip.title}
                       </div>
-                      {trip.start_date && (
-                        <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>
-                          {trip.start_date}
-                        </div>
-                      )}
+                      {(() => {
+                        const label = formatTripDate(trip.start_date) ?? formatTripDate(trip.first_checkin_date);
+                        return label ? (
+                          <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>{label}</div>
+                        ) : null;
+                      })()}
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); setSelectedTripId(trip.id); handleOpenTripEdit(); setShowDrawer(false); }}

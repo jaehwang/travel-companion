@@ -14,7 +14,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from('trips')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false }) as any;
 
     if (error) {
       console.error('Failed to fetch trips:', error);
@@ -24,7 +24,32 @@ export async function GET() {
       );
     }
 
-    return NextResponse.json({ trips: data });
+    // 각 여행의 첫 번째 체크인 날짜 조회
+    const tripIds = (data as any[]).map((t: any) => t.id);
+    const firstCheckinMap: Record<string, string> = {};
+
+    if (tripIds.length > 0) {
+      const { data: checkins } = await supabase
+        .from('checkins')
+        .select('trip_id, checked_in_at')
+        .in('trip_id', tripIds)
+        .order('checked_in_at', { ascending: true }) as any;
+
+      if (checkins) {
+        for (const c of checkins as any[]) {
+          if (!firstCheckinMap[c.trip_id]) {
+            firstCheckinMap[c.trip_id] = c.checked_in_at;
+          }
+        }
+      }
+    }
+
+    const trips = (data as any[]).map((t: any) => ({
+      ...t,
+      first_checkin_date: firstCheckinMap[t.id] ?? null,
+    }));
+
+    return NextResponse.json({ trips });
   } catch (error) {
     console.error('Unexpected error:', error);
     return NextResponse.json(

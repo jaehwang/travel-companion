@@ -37,6 +37,7 @@ export interface Trip {
   is_public: boolean;
   created_at: string;
   updated_at: string;
+  first_checkin_date?: string | null;
 }
 
 export interface Checkin {
