@@ -310,7 +310,7 @@ export default function CheckinPage() {
             {selectedTrip ? selectedTrip.title : 'Travel Companion'}
           </span>
           {user && (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               {user.user_metadata?.avatar_url && (
                 <img
                   src={user.user_metadata.avatar_url}
