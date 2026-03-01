@@ -75,7 +75,7 @@ export default function CheckinFormMainPanel({
         onChange={(e) => onMessageChange(e.target.value)}
         placeholder="메모를 남겨보세요..."
         rows={4}
-        className="w-full text-base border-0 outline-none resize-none text-gray-700 bg-transparent leading-relaxed"
+        className="w-full text-[18px] border-0 outline-none resize-none text-gray-700 bg-transparent leading-relaxed"
       />
 
       {/* 사진 처리 중 */}

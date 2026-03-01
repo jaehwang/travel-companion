@@ -48,7 +48,7 @@ export default function CheckinFormToolbar({
       <label
         htmlFor="checkin-photo-input"
         style={{ color: photoPreviewUrl ? '#16a34a' : '#6b7280' }}
-        className="flex items-center justify-center w-16 h-16 rounded-full cursor-pointer text-4xl shrink-0"
+        className="flex items-center justify-center w-[58px] h-[58px] rounded-full cursor-pointer text-[2rem] shrink-0"
         title="사진 추가"
       >
         📷
@@ -58,7 +58,7 @@ export default function CheckinFormToolbar({
       <button
         onClick={onOpenPlaceSearch}
         style={{ color: selectedLocation && hasPlaceFromSearch ? '#16a34a' : '#6b7280' }}
-        className="flex items-center justify-center w-16 h-16 rounded-full border-0 bg-transparent cursor-pointer text-4xl shrink-0"
+        className="flex items-center justify-center w-[58px] h-[58px] rounded-full border-0 bg-transparent cursor-pointer text-[2rem] shrink-0"
         title="장소 검색"
       >
         📍
@@ -69,7 +69,7 @@ export default function CheckinFormToolbar({
         onClick={onOpenLocationPicker}
         disabled={!onOpenLocationPicker}
         style={{ color: selectedLocation && !hasPlaceFromSearch ? '#16a34a' : '#6b7280' }}
-        className={`flex items-center justify-center w-16 h-16 rounded-full border-0 bg-transparent text-4xl shrink-0 ${
+        className={`flex items-center justify-center w-[58px] h-[58px] rounded-full border-0 bg-transparent text-[2rem] shrink-0 ${
           onOpenLocationPicker ? 'cursor-pointer opacity-100' : 'cursor-not-allowed opacity-40'
         }`}
         title="지도에서 위치 선택"
@@ -81,17 +81,17 @@ export default function CheckinFormToolbar({
       <button
         onClick={onOpenCategory}
         style={{ color: hasCategory ? '#1d4ed8' : '#6b7280' }}
-        className="flex items-center justify-center w-16 h-16 rounded-full border-0 bg-transparent cursor-pointer text-4xl shrink-0"
+        className="flex items-center justify-center w-[58px] h-[58px] rounded-full border-0 bg-transparent cursor-pointer text-[2rem] shrink-0"
         title="카테고리 선택"
       >
         🏷️
       </button>
 
       {/* 시각 지정 */}
-      <div className="relative w-16 h-16 shrink-0">
+      <div className="relative w-[58px] h-[58px] shrink-0">
         <div
           style={{ color: checkedInAt ? '#7c3aed' : '#6b7280' }}
-          className="flex items-center justify-center w-full h-full text-4xl pointer-events-none"
+          className="flex items-center justify-center w-full h-full text-[2rem] pointer-events-none"
         >
           ⏰
         </div>
