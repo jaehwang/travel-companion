@@ -10,6 +10,8 @@ export interface MapPhoto {
   latitude: number;
   longitude: number;
   title?: string;
+  place?: string;
+  place_id?: string;
   takenAt?: string;
   message?: string;
 }
@@ -184,9 +186,16 @@ export default function Map({
                       {new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(selectedPhoto.takenAt))}
                     </p>
                   )}
-                  <p className="text-xs text-gray-500 mb-2">
-                    📍 {selectedPhoto.latitude.toFixed(6)}, {selectedPhoto.longitude.toFixed(6)}
-                  </p>
+                  <a
+                    href={selectedPhoto.place_id
+                      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedPhoto.place || '')}&query_place_id=${selectedPhoto.place_id}`
+                      : `https://www.google.com/maps?q=${selectedPhoto.latitude},${selectedPhoto.longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ fontSize: 12, color: '#4285F4', textDecoration: 'none', display: 'block', marginBottom: 8 }}
+                  >
+                    📍 {selectedPhoto.place || '지도에서 보기'}
+                  </a>
 
                   {/* 이전/다음 버튼 */}
                   <div style={{

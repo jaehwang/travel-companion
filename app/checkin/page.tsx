@@ -82,6 +82,8 @@ export default function CheckinPage() {
       latitude: c.latitude,
       longitude: c.longitude,
       title: c.title,
+      place: c.place,
+      place_id: c.place_id,
       takenAt: c.checked_in_at,
       message: c.message,
     }))
