@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { useKeyboardHeight } from './hooks/useKeyboardHeight';
 import { usePhotoUpload } from './hooks/usePhotoUpload';
 import { usePlaceSearch } from './hooks/usePlaceSearch';
+import { useLocationSource } from './hooks/useLocationSource';
 import CheckinFormHeader from './CheckinFormHeader';
 import CheckinFormMainPanel from './CheckinFormMainPanel';
 import CheckinFormPlacePanel from './CheckinFormPlacePanel';
@@ -50,25 +51,23 @@ export default function CheckinForm({
   const [placeId, setPlaceId] = useState('');
   const [category, setCategory] = useState('');
   const [message, setMessage] = useState('');
-  const [selectedLocation, setSelectedLocation] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
   const [checkedInAt, setCheckedInAt] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const loc = useLocationSource();
+
   const toolbarBottom = useKeyboardHeight();
 
   const photo = usePhotoUpload({
-    onGpsExtracted: (lat, lng) => setSelectedLocation({ latitude: lat, longitude: lng }),
+    onGpsExtracted: (lat, lng) => loc.applyPhotoGps(lat, lng),
     onError: setError,
   });
 
   const placeSearch = usePlaceSearch({
     isActive: activePanel === 'place-search',
     onPlaceSelected: (lat, lng, name, pid) => {
-      setSelectedLocation({ latitude: lat, longitude: lng });
+      loc.setManualLocation(lat, lng);
       setPlace(name);
       setPlaceId(pid);
       setError(null);
@@ -80,7 +79,7 @@ export default function CheckinForm({
 
   const isEditMode = !!editingCheckin;
   const canSubmit =
-    !!selectedLocation &&
+    !!loc.location &&
     !!title.trim() &&
     !isSubmitting &&
     !photo.isProcessingPhoto &&
@@ -94,10 +93,7 @@ export default function CheckinForm({
       setPlaceId(editingCheckin.place_id || '');
       setCategory(editingCheckin.category || '');
       setMessage(editingCheckin.message || '');
-      setSelectedLocation({
-        latitude: editingCheckin.latitude,
-        longitude: editingCheckin.longitude,
-      });
+      loc.initLocation(editingCheckin.latitude, editingCheckin.longitude);
       setCheckedInAt(
         editingCheckin.checked_in_at ? toDateTimeLocalValue(editingCheckin.checked_in_at) : ''
       );
@@ -108,7 +104,7 @@ export default function CheckinForm({
       setPlaceId('');
       setCategory('');
       setMessage('');
-      setSelectedLocation(null);
+      loc.resetLocation();
       setCheckedInAt('');
       photo.reset();
     }
@@ -119,7 +115,7 @@ export default function CheckinForm({
   }, [editingCheckin]);
 
   const handleSubmit = async () => {
-    if (!selectedLocation) {
+    if (!loc.location) {
       setError('위치를 선택해주세요.');
       return;
     }
@@ -140,8 +136,8 @@ export default function CheckinForm({
         place_id: placeId || undefined,
         message: message.trim() || undefined,
         category: category || undefined,
-        latitude: selectedLocation.latitude,
-        longitude: selectedLocation.longitude,
+        latitude: loc.location!.latitude,
+        longitude: loc.location!.longitude,
         photo_url: photo.photoUrl || undefined,
         photo_metadata: photo.photoMetadata || undefined,
       };
@@ -191,11 +187,14 @@ export default function CheckinForm({
           isUploadingPhoto={photo.isUploadingPhoto}
           photoPreviewUrl={photo.photoPreviewUrl}
           photoMetadata={photo.photoMetadata}
-          onClearPhoto={photo.clearPhoto}
-          selectedLocation={selectedLocation}
+          onClearPhoto={() => {
+            photo.clearPhoto();
+            loc.onPhotoClear();
+          }}
+          selectedLocation={loc.location}
           place={place}
           onClearLocation={() => {
-            setSelectedLocation(null);
+            loc.clearLocation();
             setPlace('');
             setPlaceId('');
           }}
@@ -235,7 +234,7 @@ export default function CheckinForm({
           fileInputRef={photo.fileInputRef}
           photoPreviewUrl={photo.photoPreviewUrl}
           hasPlaceFromSearch={!!place}
-          selectedLocation={selectedLocation}
+          selectedLocation={loc.location}
           hasCategory={!!category}
           checkedInAt={checkedInAt}
           toolbarBottom={toolbarBottom}
@@ -247,8 +246,8 @@ export default function CheckinForm({
           onOpenLocationPicker={
             onOpenLocationPicker
               ? () =>
-                  onOpenLocationPicker(selectedLocation, (lat, lng) => {
-                    setSelectedLocation({ latitude: lat, longitude: lng });
+                  onOpenLocationPicker(loc.location, (lat, lng) => {
+                    loc.setManualLocation(lat, lng);
                     setPlace('');
                     setPlaceId('');
                     setError(null);
