@@ -90,64 +90,63 @@ export default function CheckinFormMainPanel({
 
       {/* 사진 미리보기 */}
       {photoPreviewUrl && !isProcessingPhoto && !isUploadingPhoto && (
-        <div className="mt-3 relative">
+        <div className="mt-3">
+          <div
+            onClick={onClearPhoto}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] cursor-pointer select-none mb-2"
+            style={{ backgroundColor: '#e5e7eb', color: '#4b5563' }}
+          >
+            <span>사진 삭제</span>
+            <span style={{ color: '#9ca3af', fontSize: '11px' }}>✕</span>
+          </div>
           <img
             src={photoPreviewUrl}
             alt="사진"
             className="w-full max-h-60 object-cover rounded-xl"
           />
-          <button
-            onClick={onClearPhoto}
-            className="absolute top-2 right-2 w-7 h-7 rounded-full border-0 bg-black/55 text-white cursor-pointer text-sm flex items-center justify-center"
-          >
-            ✕
-          </button>
-          {photoMetadata?.gps && (
-            <div className="absolute bottom-2 left-2 bg-black/55 text-white text-xs px-2 py-0.5 rounded-[10px]">
-              📍 GPS 추출됨
-            </div>
-          )}
         </div>
       )}
 
       {/* 선택된 정보 chips */}
       <div className="flex flex-wrap gap-2 mt-4">
         {selectedLocation && (
-          <button
+          <div
             onClick={onClearLocation}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-green-200 bg-green-50 text-green-700 text-[13px] cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] cursor-pointer select-none"
+            style={{ backgroundColor: '#e5e7eb', color: '#4b5563' }}
           >
-            📍{' '}
-            {place ||
-              `${selectedLocation.latitude.toFixed(4)}, ${selectedLocation.longitude.toFixed(4)}`}
-            <span className="text-green-300 ml-0.5 text-[11px]">✕</span>
-          </button>
+            <span>📍 {place || (photoMetadata?.gps ? 'GPS 추출됨' : `${selectedLocation.latitude.toFixed(4)}, ${selectedLocation.longitude.toFixed(4)}`)}</span>
+            <span style={{ color: '#9ca3af', fontSize: '11px' }}>✕</span>
+          </div>
         )}
         {category && (
-          <button
+          <div
             onClick={onClearCategory}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-blue-200 bg-blue-50 text-blue-700 text-[13px] cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] cursor-pointer select-none"
+            style={{ backgroundColor: '#e5e7eb', color: '#4b5563' }}
           >
-            {CATEGORY_EMOJI[category] || '🏷️'}{' '}
-            {CHECKIN_CATEGORY_LABELS[category as CheckinCategory] || category}
-            <span className="text-blue-300 ml-0.5 text-[11px]">✕</span>
-          </button>
+            <span>{CATEGORY_EMOJI[category] || '🏷️'} {CHECKIN_CATEGORY_LABELS[category as CheckinCategory] || category}</span>
+            <span style={{ color: '#9ca3af', fontSize: '11px' }}>✕</span>
+          </div>
         )}
         {checkedInAt && (
-          <button
+          <div
             onClick={onClearCheckedInAt}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-purple-200 bg-purple-50 text-purple-700 text-[13px] cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] cursor-pointer select-none"
+            style={{ backgroundColor: '#e5e7eb', color: '#4b5563' }}
           >
-            ⏰{' '}
-            {new Intl.DateTimeFormat('ko-KR', {
-              month: 'long',
-              day: 'numeric',
-              weekday: 'short',
-              hour: '2-digit',
-              minute: '2-digit',
-            }).format(new Date(checkedInAt))}
-            <span className="text-purple-300 ml-0.5 text-[11px]">✕</span>
-          </button>
+            <span>
+              ⏰{' '}
+              {new Intl.DateTimeFormat('ko-KR', {
+                month: 'long',
+                day: 'numeric',
+                weekday: 'short',
+                hour: '2-digit',
+                minute: '2-digit',
+              }).format(new Date(checkedInAt))}
+            </span>
+            <span style={{ color: '#9ca3af', fontSize: '11px' }}>✕</span>
+          </div>
         )}
       </div>
 

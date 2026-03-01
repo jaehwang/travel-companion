@@ -99,7 +99,7 @@ export default function CheckinFormToolbar({
           type="datetime-local"
           value={checkedInAt}
           onChange={(e) => onCheckedInAtChange(e.target.value)}
-          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full text-base"
           title="시각 지정"
         />
       </div>

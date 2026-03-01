@@ -59,6 +59,21 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
+/* iOS Safari 네이티브 버튼 데코레이션 제거 */
+/* Tailwind preflight의 동일 선택자로 특이도(specificity)를 맞춰 override */
+button,
+[type='button'],
+[type='reset'],
+[type='submit'] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input::-webkit-search-cancel-button,
+input::-webkit-clear-button {
+  display: none;
+}
+
 .user-avatar {
   width: 24px;
   height: 24px;

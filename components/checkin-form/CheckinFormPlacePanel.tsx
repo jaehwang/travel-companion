@@ -21,34 +21,37 @@ export default function CheckinFormPlacePanel({
 }: CheckinFormPlacePanelProps) {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <div className="flex items-center px-4 py-2.5 border-b border-gray-200 gap-2.5">
+      <div className="flex items-center px-4 py-2.5 border-b border-gray-200 gap-2">
         <button
           onClick={onBack}
-          className="text-gray-500 bg-transparent border-0 cursor-pointer text-sm whitespace-nowrap"
+          className="text-gray-500 bg-transparent border-0 cursor-pointer text-sm whitespace-nowrap shrink-0"
         >
           ← 뒤로
         </button>
-        <div className="flex-1 relative">
+        <div className="flex-1 flex items-center gap-1 border border-gray-300 rounded-full py-2 pl-4 pr-2 mr-4">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchQueryChange(e.target.value)}
             placeholder="장소 이름을 입력하세요"
             autoFocus
-            className="w-full py-2 pl-3.5 pr-9 border border-gray-300 rounded-full text-sm outline-none"
+            autoCorrect="off"
+            autoComplete="off"
+            spellCheck={false}
+            className="flex-1 min-w-0 text-base outline-none bg-transparent border-0"
           />
-          {searchQuery && (
+          {searchingPlaces && (
+            <div className="shrink-0 animate-spin w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full" />
+          )}
+          {searchQuery && !searchingPlaces && (
             <button
               onClick={() => onSearchQueryChange('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 bg-transparent border-0 cursor-pointer text-gray-400 text-base leading-none"
+              className="shrink-0 w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center border-0 cursor-pointer text-gray-500 text-[11px] leading-none"
             >
               ✕
             </button>
           )}
         </div>
-        {searchingPlaces && (
-          <div className="animate-spin w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full shrink-0" />
-        )}
       </div>
 
       <div className="flex-1 overflow-y-auto">
