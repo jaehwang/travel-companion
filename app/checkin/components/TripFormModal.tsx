@@ -67,24 +67,14 @@ export default function TripFormModal({
         </span>
         <button
           onClick={onCancel}
-          style={{ padding: '7px 18px', borderRadius: 20, border: 'none', backgroundColor: 'var(--color-border)', color: '#374151', fontWeight: 600, fontSize: 'var(--font-md)', cursor: 'pointer', whiteSpace: 'nowrap' }}
+          className="text-[15px] text-gray-500 hover:text-gray-700 px-4 py-3 rounded-full hover:bg-gray-100"
         >
           취소
         </button>
         <button
           onClick={handleSubmit}
           disabled={!canSubmit}
-          style={{
-            padding: '7px 18px',
-            borderRadius: 20,
-            border: 'none',
-            backgroundColor: canSubmit ? 'var(--color-primary)' : 'var(--color-bg-muted)',
-            color: canSubmit ? 'white' : 'var(--color-text-muted)',
-            fontWeight: 600,
-            fontSize: 'var(--font-md)',
-            cursor: canSubmit ? 'pointer' : 'not-allowed',
-            whiteSpace: 'nowrap',
-          }}
+          className="text-[15px] text-gray-500 hover:text-gray-700 px-4 py-3 rounded-full hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {submitting ? '저장 중...' : mode === 'create' ? '만들기' : '저장'}
         </button>
