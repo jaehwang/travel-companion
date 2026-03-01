@@ -38,11 +38,11 @@ export function CheckinListItem({ checkin, onEdit, onDelete }: CheckinListItemPr
           <div className="p-4">
             {/* 날짜 */}
             <div className="flex justify-end mb-2">
-              <span className="text-xs text-gray-400">{formatDate(checkin.checked_in_at)}</span>
+              <span className="text-xs text-text-muted">{formatDate(checkin.checked_in_at)}</span>
             </div>
 
             {/* 장소명 */}
-            <h3 className="text-base font-bold text-gray-900 mb-3 leading-snug">
+            <h3 className="text-base font-bold text-text-main mb-3 leading-snug">
               {checkin.title || '이름 없는 장소'}
             </h3>
 
@@ -68,7 +68,7 @@ export function CheckinListItem({ checkin, onEdit, onDelete }: CheckinListItemPr
                 href={mapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-gray-400 hover:text-gray-600 transition-colors no-underline"
+                className="text-xs text-text-muted hover:text-gray-600 transition-colors no-underline"
                 style={{ textDecoration: 'none' }}
               >
                 📍 {checkin.place || '지도에서 보기'}
@@ -78,7 +78,7 @@ export function CheckinListItem({ checkin, onEdit, onDelete }: CheckinListItemPr
                   {onEdit && (
                     <button
                       onClick={() => onEdit(checkin)}
-                      className="text-xs text-gray-400 hover:text-gray-700 transition-colors"
+                      className="text-xs text-text-muted hover:text-gray-700 transition-colors"
                     >
                       수정
                     </button>
@@ -86,7 +86,7 @@ export function CheckinListItem({ checkin, onEdit, onDelete }: CheckinListItemPr
                   {onDelete && (
                     <button
                       onClick={handleDelete}
-                      className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+                      className="text-xs text-text-muted hover:text-red-500 transition-colors"
                     >
                       삭제
                     </button>

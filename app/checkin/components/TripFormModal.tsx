@@ -61,13 +61,13 @@ export default function TripFormModal({
       style={{ position: 'fixed', inset: 0, zIndex: 10001, backgroundColor: 'white', display: 'flex', flexDirection: 'column' }}
     >
       {/* 헤더 */}
-      <div style={{ display: 'flex', alignItems: 'center', padding: '10px 16px', borderBottom: '1px solid #e5e7eb', gap: 10, flexShrink: 0 }}>
-        <span style={{ flex: 1, fontSize: 15, color: '#6b7280' }}>
+      <div style={{ display: 'flex', alignItems: 'center', padding: '10px 16px', borderBottom: '1px solid var(--color-border)', gap: 10, flexShrink: 0 }}>
+        <span style={{ flex: 1, fontSize: 'var(--font-md)', color: 'var(--color-text-sub)' }}>
           {mode === 'create' ? '새 여행' : '여행 수정'}
         </span>
         <button
           onClick={onCancel}
-          style={{ padding: '7px 18px', borderRadius: 20, border: 'none', backgroundColor: '#e5e7eb', color: '#374151', fontWeight: 600, fontSize: 15, cursor: 'pointer', whiteSpace: 'nowrap' }}
+          style={{ padding: '7px 18px', borderRadius: 20, border: 'none', backgroundColor: 'var(--color-border)', color: '#374151', fontWeight: 600, fontSize: 'var(--font-md)', cursor: 'pointer', whiteSpace: 'nowrap' }}
         >
           취소
         </button>
@@ -78,10 +78,10 @@ export default function TripFormModal({
             padding: '7px 18px',
             borderRadius: 20,
             border: 'none',
-            backgroundColor: canSubmit ? '#16a34a' : '#d1d5db',
-            color: canSubmit ? 'white' : '#9ca3af',
+            backgroundColor: canSubmit ? 'var(--color-primary)' : 'var(--color-bg-muted)',
+            color: canSubmit ? 'white' : 'var(--color-text-muted)',
             fontWeight: 600,
-            fontSize: 15,
+            fontSize: 'var(--font-md)',
             cursor: canSubmit ? 'pointer' : 'not-allowed',
             whiteSpace: 'nowrap',
           }}
@@ -98,41 +98,41 @@ export default function TripFormModal({
           onChange={(e) => setTitle(e.target.value)}
           placeholder="여행 이름을 입력하세요..."
           autoFocus
-          style={{ width: '100%', fontSize: 26, fontWeight: 600, border: 'none', outline: 'none', color: '#111827', marginBottom: 12, background: 'transparent' }}
+          style={{ width: '100%', fontSize: 26, fontWeight: 600, border: 'none', outline: 'none', color: 'var(--color-text)', marginBottom: 12, background: 'transparent' }}
         />
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="여행 설명을 남겨보세요..."
           rows={3}
-          style={{ width: '100%', fontSize: 14, border: 'none', outline: 'none', resize: 'none', color: '#6b7280', background: 'transparent', lineHeight: 1.6 }}
+          style={{ width: '100%', fontSize: 'var(--font-base)', border: 'none', outline: 'none', resize: 'none', color: 'var(--color-text-sub)', background: 'transparent', lineHeight: 1.6 }}
         />
 
         {/* 날짜 */}
-        <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: 16, marginTop: 8 }}>
+        <div style={{ borderTop: '1px solid var(--color-border-light)', paddingTop: 16, marginTop: 8 }}>
           <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 6 }}>시작일</div>
+            <div style={{ fontSize: 'var(--font-xs)', color: 'var(--color-text-muted)', marginBottom: 6 }}>시작일</div>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              style={{ fontSize: 16, border: 'none', outline: 'none', color: startDate ? '#111827' : '#9ca3af', background: 'transparent', width: '100%' }}
+              style={{ fontSize: 'var(--font-lg)', border: 'none', outline: 'none', color: startDate ? 'var(--color-text)' : 'var(--color-text-muted)', background: 'transparent', width: '100%' }}
             />
           </div>
-          <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: 16, marginBottom: 16 }}>
-            <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 6 }}>종료일</div>
+          <div style={{ borderTop: '1px solid var(--color-border-light)', paddingTop: 16, marginBottom: 16 }}>
+            <div style={{ fontSize: 'var(--font-xs)', color: 'var(--color-text-muted)', marginBottom: 6 }}>종료일</div>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              style={{ fontSize: 16, border: 'none', outline: 'none', color: endDate ? '#111827' : '#9ca3af', background: 'transparent', width: '100%' }}
+              style={{ fontSize: 'var(--font-lg)', border: 'none', outline: 'none', color: endDate ? 'var(--color-text)' : 'var(--color-text-muted)', background: 'transparent', width: '100%' }}
             />
           </div>
         </div>
 
         {/* 공개 토글 */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #f3f4f6', paddingTop: 16 }}>
-          <span style={{ fontSize: 15, color: '#374151' }}>공개 여행</span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--color-border-light)', paddingTop: 16 }}>
+          <span style={{ fontSize: 'var(--font-md)', color: '#374151' }}>공개 여행</span>
           <label style={{ position: 'relative', display: 'inline-block', width: 51, height: 31, cursor: 'pointer' }}>
             <input
               type="checkbox"
@@ -144,7 +144,7 @@ export default function TripFormModal({
               position: 'absolute',
               inset: 0,
               borderRadius: 15.5,
-              backgroundColor: isPublic ? '#16a34a' : '#d1d5db',
+              backgroundColor: isPublic ? 'var(--color-primary)' : 'var(--color-bg-muted)',
               transition: 'background-color 0.2s',
             }} />
             <span style={{
@@ -162,8 +162,8 @@ export default function TripFormModal({
         </div>
 
         {error && (
-          <div style={{ marginTop: 16, padding: 12, backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8 }}>
-            <p style={{ fontSize: 14, color: '#dc2626' }}>{error}</p>
+          <div style={{ marginTop: 16, padding: 12, backgroundColor: 'var(--color-danger-bg)', border: '1px solid var(--color-danger-border)', borderRadius: 8 }}>
+            <p style={{ fontSize: 'var(--font-base)', color: 'var(--color-danger)' }}>{error}</p>
           </div>
         )}
       </div>

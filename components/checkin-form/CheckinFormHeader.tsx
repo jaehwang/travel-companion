@@ -20,7 +20,7 @@ export default function CheckinFormHeader({
   onSubmit,
 }: CheckinFormHeaderProps) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', padding: '12px 20px', borderBottom: '1px solid #e5e7eb', gap: 12, flexShrink: 0 }}>
+    <div style={{ display: 'flex', alignItems: 'center', padding: '12px 20px', borderBottom: '1px solid var(--color-border)', gap: 12, flexShrink: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 24, flex: 1, minWidth: 0 }}>
         {userAvatarUrl ? (
           <img
@@ -30,7 +30,7 @@ export default function CheckinFormHeader({
             referrerPolicy="no-referrer"
           />
         ) : (
-          <div style={{ width: 28, height: 28, borderRadius: '50%', backgroundColor: '#e5e7eb', flexShrink: 0 }} />
+          <div style={{ width: 28, height: 28, borderRadius: '50%', backgroundColor: 'var(--color-border)', flexShrink: 0 }} />
         )}
 
         <span className="text-[16px] text-gray-600 truncate font-medium">

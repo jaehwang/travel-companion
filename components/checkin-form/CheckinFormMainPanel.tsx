@@ -67,7 +67,7 @@ export default function CheckinFormMainPanel({
         value={title}
         onChange={(e) => onTitleChange(e.target.value)}
         placeholder="제목을 입력하세요..."
-        className="w-full text-[22px] font-medium border-0 outline-none text-gray-900 mb-3 bg-transparent"
+        className="w-full text-[22px] font-medium border-0 outline-none text-text-main mb-3 bg-transparent"
       />
 
       <textarea
@@ -82,7 +82,7 @@ export default function CheckinFormMainPanel({
       {(isProcessingPhoto || isUploadingPhoto) && (
         <div className="mt-3 p-3 bg-gray-100 rounded-xl flex items-center gap-2">
           <div className="animate-spin w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full" />
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-text-sub">
             {isProcessingPhoto ? '사진 처리 중...' : '업로드 중...'}
           </span>
         </div>
@@ -153,8 +153,8 @@ export default function CheckinFormMainPanel({
 
       {/* 에러 */}
       {error && (
-        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-600">{error}</p>
+        <div className="mt-3 p-3 bg-danger-bg border border-red-200 rounded-lg">
+          <p className="text-sm text-danger">{error}</p>
         </div>
       )}
     </div>

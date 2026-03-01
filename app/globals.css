@@ -5,6 +5,45 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* 색상 - 텍스트 */
+  --color-text:        #111827;
+  --color-text-sub:    #6b7280;
+  --color-text-muted:  #9ca3af;
+
+  /* 색상 - 액션/상태 */
+  --color-primary:        #16a34a;
+  --color-primary-bg:     #f0fdf4;
+  --color-danger:         #dc2626;
+  --color-danger-bg:      #fef2f2;
+  --color-danger-border:  #fecaca;
+
+  /* 색상 - 배경/테두리 */
+  --color-border:       #e5e7eb;
+  --color-border-light: #f3f4f6;
+  --color-bg-muted:     #d1d5db;
+
+  /* 폰트 크기 */
+  --font-title: 22px;
+  --font-xl:    18px;
+  --font-lg:    16px;
+  --font-md:    15px;
+  --font-base:  14px;
+  --font-sm:    13px;
+  --font-xs:    12px;
+
+  /* 간격 */
+  --space-xs:   4px;
+  --space-sm:   8px;
+  --space-md:  12px;
+  --space-lg:  16px;
+  --space-xl:  20px;
+  --space-2xl: 24px;
+
+  /* Border Radius */
+  --radius-sm:   8px;
+  --radius-md:  12px;
+  --radius-pill: 9999px;
 }
 
 @media (prefers-color-scheme: dark) {
