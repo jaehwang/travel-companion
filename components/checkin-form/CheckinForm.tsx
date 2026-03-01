@@ -11,9 +11,10 @@ import CheckinFormMainPanel from './CheckinFormMainPanel';
 import CheckinFormPlacePanel from './CheckinFormPlacePanel';
 import CheckinFormCategoryPanel from './CheckinFormCategoryPanel';
 import CheckinFormToolbar from './CheckinFormToolbar';
+import CheckinFormTimePanel from './CheckinFormTimePanel';
 import type { Checkin } from '@/types/database';
 
-type Panel = 'main' | 'place-search' | 'category';
+type Panel = 'main' | 'place-search' | 'category' | 'time';
 
 const TOOLBAR_HEIGHT = 96;
 
@@ -229,6 +230,14 @@ export default function CheckinForm({
         />
       )}
 
+      {activePanel === 'time' && (
+        <CheckinFormTimePanel
+          checkedInAt={checkedInAt}
+          onCheckedInAtChange={setCheckedInAt}
+          onClose={() => setActivePanel('main')}
+        />
+      )}
+
       {activePanel === 'main' && (
         <CheckinFormToolbar
           fileInputRef={photo.fileInputRef}
@@ -255,7 +264,7 @@ export default function CheckinForm({
               : undefined
           }
           onOpenCategory={() => setActivePanel('category')}
-          onCheckedInAtChange={setCheckedInAt}
+          onOpenTime={() => setActivePanel('time')}
         />
       )}
     </div>

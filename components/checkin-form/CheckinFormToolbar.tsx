@@ -14,7 +14,7 @@ interface CheckinFormToolbarProps {
   onOpenPlaceSearch: () => void;
   onOpenLocationPicker?: () => void;
   onOpenCategory: () => void;
-  onCheckedInAtChange: (v: string) => void;
+  onOpenTime: () => void;
 }
 
 export default function CheckinFormToolbar({
@@ -29,7 +29,7 @@ export default function CheckinFormToolbar({
   onOpenPlaceSearch,
   onOpenLocationPicker,
   onOpenCategory,
-  onCheckedInAtChange,
+  onOpenTime,
 }: CheckinFormToolbarProps) {
   return (
     <div
@@ -88,21 +88,14 @@ export default function CheckinFormToolbar({
       </button>
 
       {/* 시각 지정 */}
-      <div className="relative w-[58px] h-[58px] shrink-0">
-        <div
-          style={{ color: checkedInAt ? '#7c3aed' : 'var(--color-text-sub)' }}
-          className="flex items-center justify-center w-full h-full text-[2rem] pointer-events-none"
-        >
-          ⏰
-        </div>
-        <input
-          type="datetime-local"
-          value={checkedInAt}
-          onChange={(e) => onCheckedInAtChange(e.target.value)}
-          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full text-base"
-          title="시각 지정"
-        />
-      </div>
+      <button
+        onClick={onOpenTime}
+        style={{ color: checkedInAt ? '#7c3aed' : 'var(--color-text-sub)' }}
+        className="flex items-center justify-center w-[58px] h-[58px] rounded-full border-0 bg-transparent cursor-pointer text-[2rem] shrink-0"
+        title="시각 지정"
+      >
+        ⏰
+      </button>
     </div>
   );
 }
