@@ -61,91 +61,109 @@ export default function TripFormModal({
       style={{ position: 'fixed', inset: 0, zIndex: 10001, backgroundColor: 'white', display: 'flex', flexDirection: 'column' }}
     >
       {/* 헤더 */}
-      <div className="flex items-center px-4 py-2.5 border-b border-gray-200 gap-3 shrink-0">
-        <span className="flex-1 text-sm text-gray-500">
+      <div style={{ display: 'flex', alignItems: 'center', padding: '10px 16px', borderBottom: '1px solid #e5e7eb', gap: 10, flexShrink: 0 }}>
+        <span style={{ flex: 1, fontSize: 15, color: '#6b7280' }}>
           {mode === 'create' ? '새 여행' : '여행 수정'}
         </span>
         <button
           onClick={onCancel}
-          className="px-5 py-2 rounded-full bg-gray-200 text-gray-700 font-bold text-sm cursor-pointer border-0 whitespace-nowrap"
+          style={{ padding: '7px 18px', borderRadius: 20, border: 'none', backgroundColor: '#e5e7eb', color: '#374151', fontWeight: 600, fontSize: 15, cursor: 'pointer', whiteSpace: 'nowrap' }}
         >
           취소
         </button>
         <button
           onClick={handleSubmit}
           disabled={!canSubmit}
-          className={`px-5 py-2 rounded-full border-0 font-bold text-sm whitespace-nowrap transition-colors duration-150 ${
-            canSubmit ? 'bg-green-600 text-white cursor-pointer' : 'bg-gray-300 text-gray-400 cursor-not-allowed'
-          }`}
+          style={{
+            padding: '7px 18px',
+            borderRadius: 20,
+            border: 'none',
+            backgroundColor: canSubmit ? '#16a34a' : '#d1d5db',
+            color: canSubmit ? 'white' : '#9ca3af',
+            fontWeight: 600,
+            fontSize: 15,
+            cursor: canSubmit ? 'pointer' : 'not-allowed',
+            whiteSpace: 'nowrap',
+          }}
         >
           {submitting ? '저장 중...' : mode === 'create' ? '만들기' : '저장'}
         </button>
       </div>
 
       {/* 본문 */}
-      <div className="flex-1 overflow-y-auto px-4 pt-5">
+      <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px' }}>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="여행 이름을 입력하세요..."
           autoFocus
-          className="w-full text-[22px] font-medium border-0 outline-none text-gray-900 mb-3 bg-transparent"
+          style={{ width: '100%', fontSize: 26, fontWeight: 600, border: 'none', outline: 'none', color: '#111827', marginBottom: 12, background: 'transparent' }}
         />
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="여행 설명을 남겨보세요..."
           rows={3}
-          className="w-full text-base border-0 outline-none resize-none text-gray-700 bg-transparent leading-relaxed"
+          style={{ width: '100%', fontSize: 14, border: 'none', outline: 'none', resize: 'none', color: '#6b7280', background: 'transparent', lineHeight: 1.6 }}
         />
 
         {/* 날짜 */}
-        <div className="border-t border-gray-100 pt-4 mt-2">
-          <div className="mb-4">
-            <div className="text-xs text-gray-400 mb-1.5">시작일</div>
+        <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: 16, marginTop: 8 }}>
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 6 }}>시작일</div>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className={`text-base border-0 outline-none bg-transparent w-full ${startDate ? 'text-gray-900' : 'text-gray-400'}`}
+              style={{ fontSize: 16, border: 'none', outline: 'none', color: startDate ? '#111827' : '#9ca3af', background: 'transparent', width: '100%' }}
             />
           </div>
-          <div className="border-t border-gray-100 pt-4 mb-4">
-            <div className="text-xs text-gray-400 mb-1.5">종료일</div>
+          <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: 16, marginBottom: 16 }}>
+            <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 6 }}>종료일</div>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className={`text-base border-0 outline-none bg-transparent w-full ${endDate ? 'text-gray-900' : 'text-gray-400'}`}
+              style={{ fontSize: 16, border: 'none', outline: 'none', color: endDate ? '#111827' : '#9ca3af', background: 'transparent', width: '100%' }}
             />
           </div>
         </div>
 
         {/* 공개 토글 */}
-        <div className="flex items-center justify-between border-t border-gray-100 pt-4">
-          <span className="text-[15px] text-gray-700">공개 여행</span>
-          <label className="relative inline-block w-11 h-[26px] cursor-pointer">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #f3f4f6', paddingTop: 16 }}>
+          <span style={{ fontSize: 15, color: '#374151' }}>공개 여행</span>
+          <label style={{ position: 'relative', display: 'inline-block', width: 51, height: 31, cursor: 'pointer' }}>
             <input
               type="checkbox"
               checked={isPublic}
               onChange={(e) => setIsPublic(e.target.checked)}
-              className="opacity-0 w-0 h-0 absolute"
+              style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }}
             />
-            <span
-              className={`absolute inset-0 rounded-[13px] transition-colors duration-200 ${isPublic ? 'bg-green-600' : 'bg-gray-300'}`}
-            >
-              <span
-                style={{ left: isPublic ? 21 : 3 }}
-                className="absolute w-5 h-5 rounded-full bg-white top-[3px] transition-[left] duration-200 shadow-sm"
-              />
-            </span>
+            <span style={{
+              position: 'absolute',
+              inset: 0,
+              borderRadius: 15.5,
+              backgroundColor: isPublic ? '#16a34a' : '#d1d5db',
+              transition: 'background-color 0.2s',
+            }} />
+            <span style={{
+              position: 'absolute',
+              width: 27,
+              height: 27,
+              borderRadius: '50%',
+              backgroundColor: 'white',
+              top: 2,
+              left: isPublic ? 22 : 2,
+              transition: 'left 0.2s',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+            }} />
           </label>
         </div>
 
         {error && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-600">{error}</p>
+          <div style={{ marginTop: 16, padding: 12, backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8 }}>
+            <p style={{ fontSize: 14, color: '#dc2626' }}>{error}</p>
           </div>
         )}
       </div>
