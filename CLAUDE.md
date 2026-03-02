@@ -51,7 +51,10 @@
 - Feature branch 사용
 - 주요 기능 완성 시 커밋
 - main 브랜치 push → Vercel 자동 배포
-- **커밋 전 반드시 `npm test` 를 실행하여 모든 테스트를 통과해야 한다**
+- **커밋 전 반드시 아래 순서로 실행하여 모두 통과해야 한다**
+  1. `npm run build` - 빌드 성공 확인
+  2. `npm test` - 모든 테스트 통과 확인
+- **dev 서버가 실행 중인 상태에서 `npm run build`를 실행하지 않는다** (`.next` 충돌 발생)
 
 ### 코드 스타일
 - TypeScript strict mode
