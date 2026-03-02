@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import CheckinForm from '@/components/checkin-form/CheckinForm';
 import { LocationPicker } from '@/components/LocationPicker';
@@ -27,7 +27,7 @@ function formatTripDate(dateStr: string | null | undefined): string | null {
   }).format(date);
 }
 
-export default function CheckinPage() {
+function CheckinPageInner() {
   const searchParams = useSearchParams();
   const [user, setUser] = useState<User | null>(null);
   const [selectedTripId, setSelectedTripId] = useState(searchParams.get('trip_id') ?? '');
@@ -302,5 +302,13 @@ export default function CheckinPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function CheckinPage() {
+  return (
+    <Suspense>
+      <CheckinPageInner />
+    </Suspense>
   );
 }
