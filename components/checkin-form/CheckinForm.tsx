@@ -67,6 +67,9 @@ export default function CheckinForm({
 
   const placeSearch = usePlaceSearch({
     isActive: activePanel === 'place-search',
+    location: loc.location
+      ? { lat: loc.location.latitude, lng: loc.location.longitude }
+      : undefined,
     onPlaceSelected: (lat, lng, name, pid) => {
       loc.setManualLocation(lat, lng);
       setPlace(name);

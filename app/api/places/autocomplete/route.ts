@@ -17,12 +17,19 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  const lat = searchParams.get('lat');
+  const lng = searchParams.get('lng');
+
   try {
     // Places API Autocomplete
     const url = new URL('https://maps.googleapis.com/maps/api/place/autocomplete/json');
     url.searchParams.set('input', input);
     url.searchParams.set('key', apiKey);
     url.searchParams.set('language', 'ko');
+    if (lat && lng) {
+      url.searchParams.set('location', `${lat},${lng}`);
+      url.searchParams.set('radius', '50000');
+    }
 
     const response = await fetch(url.toString());
     const data = await response.json();

@@ -13,6 +13,7 @@ export interface PlacePrediction {
 
 interface UsePlaceSearchOptions {
   isActive: boolean;
+  location?: { lat: number; lng: number };
   onPlaceSelected: (lat: number, lng: number, name: string, placeId: string) => void;
   onError?: (message: string) => void;
 }
@@ -28,6 +29,7 @@ export interface UsePlaceSearchReturn {
 
 export function usePlaceSearch({
   isActive,
+  location,
   onPlaceSelected,
   onError,
 }: UsePlaceSearchOptions): UsePlaceSearchReturn {
@@ -43,9 +45,12 @@ export function usePlaceSearch({
     const timer = setTimeout(async () => {
       setSearchingPlaces(true);
       try {
-        const response = await fetch(
-          `/api/places/autocomplete?input=${encodeURIComponent(searchQuery)}`
-        );
+        const params = new URLSearchParams({ input: searchQuery });
+        if (location) {
+          params.set('lat', String(location.lat));
+          params.set('lng', String(location.lng));
+        }
+        const response = await fetch(`/api/places/autocomplete?${params.toString()}`);
         const data = await response.json();
         if (!response.ok) throw new Error(data.error);
         setPredictions(data.predictions || []);
