@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import CheckinForm from '@/components/checkin-form/CheckinForm';
 import { LocationPicker } from '@/components/LocationPicker';
 import Map, { MapPhoto } from '@/components/Map';
@@ -27,8 +28,9 @@ function formatTripDate(dateStr: string | null | undefined): string | null {
 }
 
 export default function CheckinPage() {
+  const searchParams = useSearchParams();
   const [user, setUser] = useState<User | null>(null);
-  const [selectedTripId, setSelectedTripId] = useState('');
+  const [selectedTripId, setSelectedTripId] = useState(searchParams.get('trip_id') ?? '');
   const [showForm, setShowForm] = useState(false);
   const [editingCheckin, setEditingCheckin] = useState<Checkin | null>(null);
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
@@ -54,7 +56,7 @@ export default function CheckinPage() {
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
   }, []);
 
-  // 첫 번째 여행 자동 선택
+  // 첫 번째 여행 자동 선택 (URL에 trip_id 없을 때만)
   useEffect(() => {
     if (trips.length > 0 && !selectedTripId) {
       setSelectedTripId(trips[0].id);

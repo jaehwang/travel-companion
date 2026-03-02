@@ -38,6 +38,7 @@ export interface Trip {
   created_at: string;
   updated_at: string;
   first_checkin_date?: string | null;
+  cover_photo_url?: string | null;
 }
 
 export interface Checkin {

@@ -1,12 +1,15 @@
 'use client';
 
 import { createPortal } from 'react-dom';
+import { useRouter } from 'next/navigation';
 
 interface BottomBarProps {
   onCheckin: () => void;
 }
 
 export default function BottomBar({ onCheckin }: BottomBarProps) {
+  const router = useRouter();
+
   return createPortal(
     <div
       style={{
@@ -20,10 +23,20 @@ export default function BottomBar({ onCheckin }: BottomBarProps) {
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
     >
-      <div className="flex justify-center items-center h-16">
+      <div className="relative flex items-center h-16 px-4">
+        <button
+          onClick={() => router.push('/')}
+          className="flex flex-col items-center justify-center text-gray-500 px-4 py-2 bg-transparent border-0 cursor-pointer"
+        >
+          <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z" />
+            <polyline points="9 21 9 12 15 12 15 21" />
+          </svg>
+          <span className="text-xs mt-0.5">홈</span>
+        </button>
         <button
           onClick={onCheckin}
-          className="flex flex-col items-center justify-center text-gray-500 px-6 py-2 bg-transparent border-0 cursor-pointer"
+          className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-center text-gray-500 px-6 py-2 bg-transparent border-0 cursor-pointer"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

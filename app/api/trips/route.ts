@@ -24,14 +24,15 @@ export async function GET() {
       );
     }
 
-    // 각 여행의 첫 번째 체크인 날짜 조회
+    // 각 여행의 첫 번째 체크인 날짜 및 사진 조회
     const tripIds = (data as any[]).map((t: any) => t.id);
     const firstCheckinMap: Record<string, string> = {};
+    const photoMap: Record<string, string[]> = {};
 
     if (tripIds.length > 0) {
       const { data: checkins } = await supabase
         .from('checkins')
-        .select('trip_id, checked_in_at')
+        .select('trip_id, checked_in_at, photo_url')
         .in('trip_id', tripIds)
         .order('checked_in_at', { ascending: true }) as any;
 
@@ -40,14 +41,25 @@ export async function GET() {
           if (!firstCheckinMap[c.trip_id]) {
             firstCheckinMap[c.trip_id] = c.checked_in_at;
           }
+          if (c.photo_url) {
+            if (!photoMap[c.trip_id]) photoMap[c.trip_id] = [];
+            photoMap[c.trip_id].push(c.photo_url);
+          }
         }
       }
     }
 
-    const trips = (data as any[]).map((t: any) => ({
-      ...t,
-      first_checkin_date: firstCheckinMap[t.id] ?? null,
-    }));
+    const trips = (data as any[]).map((t: any) => {
+      const photos = photoMap[t.id] ?? [];
+      const cover_photo_url = photos.length > 0
+        ? photos[Math.floor(Math.random() * photos.length)]
+        : null;
+      return {
+        ...t,
+        first_checkin_date: firstCheckinMap[t.id] ?? null,
+        cover_photo_url,
+      };
+    });
 
     return NextResponse.json({ trips });
   } catch (error) {
