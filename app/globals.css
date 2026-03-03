@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,6 +7,16 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Home 페이지 디자인 토큰 */
+  --tc-bg:         #FFF8F0;
+  --tc-dot:        #DDD0C4;
+  --tc-warm-dark:  #2D2416;
+  --tc-warm-mid:   #8B7355;
+  --tc-warm-faint: #C4A882;
+  --tc-card-bg:    #FFFFFF;
+  --tc-card-empty: #F5EEE6;
+  --tc-skeleton:   #EDE3D5;
 
   /* 색상 - 텍스트 */
   --color-text:        #111827;
@@ -50,6 +62,15 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+
+    --tc-bg:         #1A1208;
+    --tc-dot:        #2A1C0A;
+    --tc-warm-dark:  #F5EEE6;
+    --tc-warm-mid:   #C4A882;
+    --tc-warm-faint: #8B7355;
+    --tc-card-bg:    #2A1E0E;
+    --tc-card-empty: #2D2010;
+    --tc-skeleton:   #3A2A14;
   }
 }
 
@@ -93,4 +114,140 @@ input::-webkit-clear-button {
     width: 40px;
     height: 40px;
   }
+}
+
+/* ============================================
+   Home 페이지 디자인 시스템
+   ============================================ */
+
+/* 페이지 배경 — 크림 + 도트 패턴 */
+.tc-page-bg {
+  min-height: 100vh;
+  background-color: var(--tc-bg);
+  background-image: radial-gradient(circle, var(--tc-dot) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* 브랜드 타이틀 폰트 */
+.tc-brand {
+  font-family: 'Pacifico', cursive;
+  color: var(--tc-warm-dark);
+}
+
+/* 비행기 떠다니는 애니메이션 */
+@keyframes tc-plane-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%       { transform: translateY(-10px) rotate(5deg); }
+}
+.tc-plane {
+  display: inline-block;
+  animation: tc-plane-float 3.5s ease-in-out infinite;
+}
+
+/* 히어로 섹션 페이드인 */
+@keyframes tc-fade-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.tc-hero {
+  animation: tc-fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.tc-hero-sub {
+  animation: tc-fade-up 0.6s 0.15s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* 여행 카드 */
+@keyframes tc-card-enter {
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.tc-trip-card {
+  background: var(--tc-card-bg);
+  box-shadow: 0 4px 20px rgba(45, 36, 22, 0.1);
+  animation: tc-card-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.22s ease;
+}
+.tc-trip-card:hover {
+  transform: translateY(-7px) scale(1.025);
+  box-shadow: 0 14px 40px rgba(45, 36, 22, 0.18);
+}
+.tc-trip-card:active {
+  transform: translateY(-2px) scale(1.005);
+  box-shadow: 0 6px 20px rgba(45, 36, 22, 0.14);
+}
+
+@media (prefers-color-scheme: dark) {
+  .tc-trip-card {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  }
+  .tc-trip-card:hover {
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* 카드 사진 빈 상태 */
+.tc-card-photo-empty {
+  background: var(--tc-card-empty);
+}
+
+/* 스켈레톤 로딩 */
+.tc-skeleton-card {
+  background: var(--tc-card-empty);
+  border-radius: 20px;
+  overflow: hidden;
+}
+.tc-skeleton-fill {
+  background: var(--tc-skeleton);
+}
+
+@keyframes tc-shimmer {
+  0%   { opacity: 0.5; }
+  50%  { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+.tc-shimmer {
+  animation: tc-shimmer 1.4s ease-in-out infinite;
+}
+
+/* 체크인 카드 */
+.tc-checkin-card {
+  background: var(--tc-card-bg);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(45, 36, 22, 0.08);
+  transition: box-shadow 0.2s ease;
+}
+.tc-checkin-card:hover {
+  box-shadow: 0 8px 28px rgba(45, 36, 22, 0.14);
+}
+
+@media (prefers-color-scheme: dark) {
+  .tc-checkin-card {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  }
+  .tc-checkin-card:hover {
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  }
+}
+
+/* 헤더 */
+.tc-header {
+  background: var(--tc-card-bg);
+  border-bottom: 1.5px solid var(--tc-dot);
+}
+
+/* 사이드 드로어 패널 */
+.tc-drawer-panel {
+  background: var(--tc-bg);
+}
+
+/* 바텀바 */
+.tc-bottom-bar {
+  background: var(--tc-card-bg);
+  border-top: 1.5px solid var(--tc-dot);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }

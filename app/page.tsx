@@ -9,6 +9,15 @@ import type { Trip } from '@/types/database';
 import TripFormModal from '@/app/checkin/components/TripFormModal';
 import type { TripFormData } from '@/app/checkin/hooks/useTrips';
 
+const CARD_ACCENTS = [
+  '#FF6B47', // coral
+  '#F59E0B', // amber
+  '#10B981', // emerald
+  '#3B82F6', // blue
+  '#8B5CF6', // violet
+  '#EC4899', // pink
+];
+
 export default function Home() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -78,91 +87,256 @@ export default function Home() {
   const displayName = user?.user_metadata?.full_name || user?.email || '';
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <div className="max-w-xl mx-auto px-4 py-8">
-        {/* 사용자 영역 */}
-        {user ? (
-          <div className="flex items-center justify-between mb-8">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              {displayName}님, 환영합니다 👋
-            </p>
-            <button
-              onClick={handleLogout}
-              className="text-[15px] text-gray-500 hover:text-gray-700 px-4 py-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:text-gray-300 transition-colors"
-            >
-              로그아웃
-            </button>
-          </div>
-        ) : (
-          <div className="flex justify-end mb-8">
+    <main className="tc-page-bg">
+      <div style={{ maxWidth: 480, margin: '0 auto', padding: '24px 16px 80px' }}>
+
+        {/* 상단 바 */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 12, marginBottom: 40 }}>
+          {user ? (
+            <>
+              <span style={{ fontSize: 13, color: 'var(--tc-warm-mid)' }}>
+                {displayName}님 👋
+              </span>
+              <button
+                onClick={handleLogout}
+                style={{
+                  fontSize: 13,
+                  color: 'var(--tc-warm-mid)',
+                  padding: '6px 16px',
+                  borderRadius: 9999,
+                  border: '1.5px solid var(--tc-dot)',
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  transition: 'background 0.15s',
+                }}
+              >
+                로그아웃
+              </button>
+            </>
+          ) : (
             <Link
               href="/login"
-              className="inline-block px-5 py-2 rounded-full bg-orange-600 text-white text-sm font-medium hover:bg-orange-700 transition-colors"
+              style={{
+                fontSize: 14,
+                fontWeight: 700,
+                color: '#fff',
+                padding: '8px 20px',
+                borderRadius: 9999,
+                background: '#FF6B47',
+                boxShadow: '0 4px 14px rgba(255,107,71,0.45)',
+                textDecoration: 'none',
+                transition: 'transform 0.15s',
+              }}
             >
-              로그인
+              로그인 ✈️
+            </Link>
+          )}
+        </div>
+
+        {/* 히어로 */}
+        <div className="tc-hero" style={{ marginBottom: 48 }}>
+          <div className="tc-plane" style={{ fontSize: 48, marginBottom: 12 }}>✈️</div>
+          <h1
+            className="tc-brand"
+            style={{
+              fontSize: 'clamp(2.4rem, 10vw, 3.4rem)',
+              lineHeight: 1.1,
+              marginBottom: 10,
+            }}
+          >
+            Travel<br />Companion
+          </h1>
+          <p className="tc-hero-sub" style={{ fontSize: 15, color: 'var(--tc-warm-mid)' }}>
+            나만의 여행 이야기를 기록하세요
+          </p>
+        </div>
+
+        {/* 비로그인 CTA */}
+        {!user && (
+          <div style={{ textAlign: 'center', padding: '40px 0' }}>
+            <div style={{ fontSize: 52, marginBottom: 16 }}>🗺️</div>
+            <p style={{ fontSize: 17, fontWeight: 800, color: 'var(--tc-warm-dark)', marginBottom: 8 }}>
+              여행의 순간을 기록해보세요
+            </p>
+            <p style={{ fontSize: 14, color: 'var(--tc-warm-mid)', marginBottom: 28 }}>
+              로그인하면 나만의 여행 일기를 만들 수 있어요
+            </p>
+            <Link
+              href="/login"
+              style={{
+                display: 'inline-block',
+                fontSize: 15,
+                fontWeight: 700,
+                color: '#fff',
+                padding: '12px 32px',
+                borderRadius: 9999,
+                background: '#FF6B47',
+                boxShadow: '0 6px 20px rgba(255,107,71,0.45)',
+                textDecoration: 'none',
+              }}
+            >
+              시작하기 →
             </Link>
           </div>
         )}
 
-        {/* 앱 타이틀 */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2">🗺️ Travel Companion</h1>
-          <p className="text-gray-600 dark:text-gray-400">여행 기록 공유 앱</p>
-        </div>
-
         {/* 여행 목록 */}
         {user && (
           <section>
-            <div className="flex items-center mb-3">
-              <h2 className="text-base font-bold text-gray-800 dark:text-gray-200">내 여행</h2>
+            {/* 섹션 헤더 */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <h2 style={{ fontSize: 18, fontWeight: 900, color: 'var(--tc-warm-dark)', letterSpacing: '-0.01em' }}>
+                내 여행
+              </h2>
               <button
                 onClick={() => setShowTripForm(true)}
-                className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 ml-2 leading-none font-bold"
-                style={{ fontSize: '0.8rem' }}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: '50%',
+                  background: '#FF6B47',
+                  color: '#fff',
+                  fontSize: 22,
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: 'none',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(255,107,71,0.45)',
+                  transition: 'transform 0.15s',
+                  flexShrink: 0,
+                }}
               >
                 +
               </button>
             </div>
-            {loadingTrips ? (
-              <p className="text-center text-gray-400 py-10">불러오는 중...</p>
-            ) : trips.length === 0 ? (
-              <p className="text-center text-gray-400 py-10">여행이 없습니다.</p>
-            ) : (
-              <div className="grid grid-cols-2 gap-3">
-                {trips.map((trip) => (
-                  <button
-                    key={trip.id}
-                    onClick={() => router.push(`/checkin?trip_id=${trip.id}`)}
-                    className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-md transition-shadow overflow-hidden text-left flex flex-col"
-                  >
-                    <div className="w-full aspect-square flex-shrink-0 overflow-hidden bg-gray-100 dark:bg-gray-700">
-                      {trip.cover_photo_url ? (
-                        <img
-                          src={trip.cover_photo_url}
-                          alt={trip.title}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-2xl">
-                          🗺️
-                        </div>
-                      )}
+
+            {/* 로딩 스켈레톤 */}
+            {loadingTrips && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i} className="tc-skeleton-card tc-shimmer" style={{ animationDelay: `${i * 0.12}s` }}>
+                    <div style={{ height: 5, background: CARD_ACCENTS[i % CARD_ACCENTS.length], opacity: 0.4 }} />
+                    <div className="tc-skeleton-fill" style={{ aspectRatio: '4/3' }} />
+                    <div style={{ padding: 12 }}>
+                      <div className="tc-skeleton-fill" style={{ height: 8, borderRadius: 4, width: '55%', marginBottom: 8 }} />
+                      <div className="tc-skeleton-fill" style={{ height: 12, borderRadius: 4, width: '85%' }} />
                     </div>
-                    <div className="p-3 flex flex-col flex-1 overflow-hidden">
-                      <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-0.5 truncate">
-                        {trip.title}
-                      </h3>
-                      {trip.description && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 line-clamp-2 flex-1">
-                          {trip.description}
-                        </p>
-                      )}
-                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-auto">
-                        {formatTripDate(trip.start_date ?? trip.first_checkin_date) ?? '날짜 미정'}
-                      </p>
-                    </div>
-                  </button>
+                  </div>
                 ))}
+              </div>
+            )}
+
+            {/* 빈 상태 */}
+            {!loadingTrips && trips.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                <div style={{ fontSize: 48, marginBottom: 12 }}>🗺️</div>
+                <p style={{ fontSize: 16, fontWeight: 800, color: 'var(--tc-warm-dark)', marginBottom: 6 }}>
+                  첫 여행을 기록해볼까요?
+                </p>
+                <p style={{ fontSize: 13, color: 'var(--tc-warm-mid)' }}>
+                  위의 + 버튼을 눌러 새로운 여행을 만드세요
+                </p>
+              </div>
+            )}
+
+            {/* 여행 카드 그리드 */}
+            {!loadingTrips && trips.length > 0 && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                {trips.map((trip, i) => {
+                  const accent = CARD_ACCENTS[i % CARD_ACCENTS.length];
+                  return (
+                    <button
+                      key={trip.id}
+                      onClick={() => router.push(`/checkin?trip_id=${trip.id}`)}
+                      className="tc-trip-card"
+                      style={{
+                        borderRadius: 20,
+                        overflow: 'hidden',
+                        border: 'none',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        animationDelay: `${i * 0.07}s`,
+                      }}
+                    >
+                      {/* 액센트 상단 스트립 */}
+                      <div style={{ height: 5, background: accent, flexShrink: 0 }} />
+
+                      {/* 커버 사진 */}
+                      <div
+                        className="tc-card-photo-empty"
+                        style={{ aspectRatio: '4/3', overflow: 'hidden', flexShrink: 0 }}
+                      >
+                        {trip.cover_photo_url ? (
+                          <img
+                            src={trip.cover_photo_url}
+                            alt={trip.title}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                          />
+                        ) : (
+                          <div style={{
+                            width: '100%',
+                            height: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: 32,
+                          }}>
+                            🗺️
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 텍스트 영역 */}
+                      <div style={{ padding: '10px 12px 12px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                        {/* 날짜 — 액센트 컬러로 */}
+                        <p style={{
+                          fontSize: 10,
+                          fontWeight: 700,
+                          color: accent,
+                          letterSpacing: '0.06em',
+                          textTransform: 'uppercase',
+                          marginBottom: 4,
+                        }}>
+                          {formatTripDate(trip.start_date ?? trip.first_checkin_date) ?? '날짜 미정'}
+                        </p>
+
+                        {/* 제목 */}
+                        <h3 style={{
+                          fontSize: 14,
+                          fontWeight: 900,
+                          color: 'var(--tc-warm-dark)',
+                          marginBottom: trip.description ? 4 : 0,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          letterSpacing: '-0.01em',
+                        }}>
+                          {trip.title}
+                        </h3>
+
+                        {/* 설명 */}
+                        {trip.description && (
+                          <p style={{
+                            fontSize: 11,
+                            color: 'var(--tc-warm-mid)',
+                            lineHeight: 1.45,
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                            flex: 1,
+                          }}>
+                            {trip.description}
+                          </p>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </section>

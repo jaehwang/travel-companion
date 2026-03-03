@@ -128,8 +128,11 @@ function CheckinPageInner() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-600">로딩 중...</p>
+      <div className="tc-page-bg" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="tc-plane" style={{ fontSize: 44, marginBottom: 16 }}>✈️</div>
+          <p style={{ fontSize: 14, color: 'var(--tc-warm-mid)' }}>불러오는 중...</p>
+        </div>
       </div>
     );
   }
@@ -137,25 +140,48 @@ function CheckinPageInner() {
   const displayError = tripsError || checkinsError;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="tc-page-bg" style={{ minHeight: '100vh' }}>
       {/* 헤더 */}
-      <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <header className="tc-header">
+        <div style={{ maxWidth: '100%', padding: '0 16px', height: 56, display: 'flex', alignItems: 'center', gap: 12 }}>
+          {/* 햄버거 */}
           <button
             onClick={() => setShowDrawer(true)}
-            className="bg-transparent border-0 cursor-pointer p-1 flex items-center text-gray-900 dark:text-gray-100"
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 6,
+              color: 'var(--tc-warm-dark)',
+              display: 'flex',
+              alignItems: 'center',
+              flexShrink: 0,
+            }}
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
               <line x1="3" y1="6" x2="21" y2="6" />
               <line x1="3" y1="12" x2="21" y2="12" />
               <line x1="3" y1="18" x2="21" y2="18" />
             </svg>
           </button>
-          <span className="font-bold text-gray-900 dark:text-gray-100 flex-1 ml-3">
+
+          {/* 여행 제목 */}
+          <span style={{
+            flex: 1,
+            fontSize: 16,
+            fontWeight: 800,
+            color: 'var(--tc-warm-dark)',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            letterSpacing: '-0.01em',
+          }}>
             {selectedTrip ? selectedTrip.title : 'Travel Companion'}
           </span>
+
+          {/* 유저 영역 */}
           {user && (
-            <div className="flex items-center gap-4">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
               {user.user_metadata?.avatar_url && (
                 <img
                   src={user.user_metadata.avatar_url}
@@ -164,12 +190,17 @@ function CheckinPageInner() {
                   referrerPolicy="no-referrer"
                 />
               )}
-              <span className="text-sm text-gray-700 hidden sm:block">
-                {user.user_metadata?.name || user.email}
-              </span>
               <button
                 onClick={handleLogout}
-                className="text-[15px] text-gray-500 hover:text-gray-700 px-4 py-3 rounded-full hover:bg-gray-100"
+                style={{
+                  fontSize: 13,
+                  color: 'var(--tc-warm-mid)',
+                  background: 'none',
+                  border: '1.5px solid var(--tc-dot)',
+                  borderRadius: 9999,
+                  padding: '5px 14px',
+                  cursor: 'pointer',
+                }}
               >
                 로그아웃
               </button>
@@ -178,13 +209,24 @@ function CheckinPageInner() {
         </div>
       </header>
 
+      {/* 본문 */}
       <div
-        className="max-w-7xl mx-auto px-4 pt-8"
-        style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}
+        style={{
+          maxWidth: '100%',
+          padding: '20px 16px',
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))',
+        }}
       >
+        {/* 에러 */}
         {displayError && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-red-800">{displayError}</p>
+          <div style={{
+            marginBottom: 16,
+            padding: '12px 16px',
+            background: '#FFF5F5',
+            border: '1px solid #fca5a5',
+            borderRadius: 12,
+          }}>
+            <p style={{ color: '#DC2626', fontSize: 14 }}>{displayError}</p>
           </div>
         )}
 
@@ -215,11 +257,22 @@ function CheckinPageInner() {
               const endSrc = selectedTrip?.end_date || null;
               if (!selectedTrip?.description && !startSrc) return null;
               return (
-                <div className="mb-4 p-4 bg-gray-50 rounded-lg text-sm text-gray-700 space-y-1">
-                  {selectedTrip?.description && <p>{selectedTrip.description}</p>}
+                <div style={{
+                  marginBottom: 16,
+                  padding: '12px 16px',
+                  background: 'var(--tc-card-bg)',
+                  borderRadius: 14,
+                  boxShadow: '0 2px 8px rgba(45,36,22,0.06)',
+                  borderLeft: '4px solid #FF6B47',
+                }}>
+                  {selectedTrip?.description && (
+                    <p style={{ fontSize: 14, color: 'var(--tc-warm-dark)', marginBottom: startSrc ? 4 : 0 }}>
+                      {selectedTrip.description}
+                    </p>
+                  )}
                   {startSrc && (
-                    <p className="text-gray-500">
-                      {formatTripDate(startSrc)}
+                    <p style={{ fontSize: 12, color: 'var(--tc-warm-mid)' }}>
+                      📅 {formatTripDate(startSrc)}
                       {endSrc && endSrc !== selectedTrip?.start_date ? ` ~ ${formatTripDate(endSrc)}` : ''}
                     </p>
                   )}
@@ -228,10 +281,10 @@ function CheckinPageInner() {
             })()}
 
             {/* 지도 */}
-            <div className="mb-6">
-              <Map photos={mapPhotos} height="400px" defaultCenter={mapCenter} />
+            <div style={{ marginBottom: 24, borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 20px rgba(45,36,22,0.1)' }}>
+              <Map photos={mapPhotos} height="360px" defaultCenter={mapCenter} />
               {mapPhotos.length === 0 && (
-                <p className="mt-2 text-center text-sm text-gray-500">
+                <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--tc-warm-faint)', padding: '8px 0 4px' }}>
                   체크인을 추가하면 지도에 위치가 표시됩니다
                 </p>
               )}
@@ -248,12 +301,34 @@ function CheckinPageInner() {
         )}
 
         {!selectedTripId && trips.length === 0 && (
-          <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
-            <p className="text-gray-500 text-lg mb-2">여행이 없습니다</p>
-            <p className="text-gray-400 text-sm mb-4">먼저 여행을 만들어주세요!</p>
+          <div style={{
+            marginTop: 40,
+            textAlign: 'center',
+            padding: '48px 24px',
+            background: 'var(--tc-card-bg)',
+            borderRadius: 20,
+            boxShadow: '0 4px 20px rgba(45,36,22,0.08)',
+          }}>
+            <div style={{ fontSize: 52, marginBottom: 16 }}>🗺️</div>
+            <p style={{ fontSize: 17, fontWeight: 800, color: 'var(--tc-warm-dark)', marginBottom: 8 }}>
+              여행이 없습니다
+            </p>
+            <p style={{ fontSize: 14, color: 'var(--tc-warm-mid)', marginBottom: 24 }}>
+              첫 여행을 만들어보세요!
+            </p>
             <button
               onClick={() => { setTripFormMode('create'); setEditingTrip(undefined); setShowTripForm(true); }}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+              style={{
+                fontSize: 15,
+                fontWeight: 700,
+                color: 'white',
+                background: '#FF6B47',
+                border: 'none',
+                borderRadius: 9999,
+                padding: '12px 28px',
+                cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(255,107,71,0.45)',
+              }}
             >
               + 첫 여행 만들기
             </button>

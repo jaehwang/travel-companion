@@ -35,57 +35,103 @@ export default function SideDrawer({
 }: SideDrawerProps) {
   return createPortal(
     <div style={{ position: 'fixed', inset: 0, zIndex: 10000 }}>
+      {/* 배경 딤 */}
       <div
-        style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)' }}
+        style={{ position: 'absolute', inset: 0, background: 'rgba(45, 36, 22, 0.45)' }}
         onClick={onClose}
       />
+
+      {/* 드로어 패널 */}
       <div
-        style={{ position: 'absolute', top: 0, left: 0, bottom: 0, backgroundColor: 'white' }}
-        className="w-4/5 max-w-[320px] overflow-y-auto flex flex-col"
+        className="tc-drawer-panel"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          bottom: 0,
+          width: '80%',
+          maxWidth: 320,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
       >
-        {/* 새 여행 만들기 버튼 */}
+        {/* 헤더 */}
+        <div style={{
+          padding: '20px 20px 16px',
+          borderBottom: '1.5px solid var(--tc-dot)',
+        }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--tc-warm-faint)', letterSpacing: '0.08em', marginBottom: 2 }}>
+            MY TRIPS
+          </p>
+          <p className="tc-brand" style={{ fontSize: 20 }}>Travel Companion</p>
+        </div>
+
+        {/* 새 여행 만들기 */}
         <button
           onClick={() => { onClose(); onCreateTrip(); }}
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 12,
-            padding: '18px 20px',
-            borderTop: 'none',
-            borderLeft: 'none',
-            borderRight: 'none',
-            borderBottom: '1px solid #e5e7eb',
+            gap: 10,
+            padding: '16px 20px',
             background: 'none',
+            border: 'none',
+            borderBottom: '1.5px solid var(--tc-dot)',
             cursor: 'pointer',
-            fontSize: 15,
-            fontWeight: 600,
-            color: '#111827',
+            fontSize: 14,
+            fontWeight: 700,
+            color: '#FF6B47',
             width: '100%',
             textAlign: 'left',
           }}
         >
-          <span style={{ fontSize: 18 }}>+</span> 새 여행 만들기
+          <span style={{
+            width: 28,
+            height: 28,
+            borderRadius: '50%',
+            background: '#FF6B47',
+            color: 'white',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 18,
+            fontWeight: 700,
+            flexShrink: 0,
+          }}>+</span>
+          새 여행 만들기
         </button>
 
-        <div>
+        {/* 여행 목록 */}
+        <div style={{ flex: 1 }}>
           {trips.length === 0 ? (
-            <p style={{ padding: '12px 20px', color: '#9ca3af', fontSize: 14 }}>
+            <p style={{ padding: '20px', color: 'var(--tc-warm-faint)', fontSize: 13 }}>
               여행이 없습니다
             </p>
           ) : (
-            trips.map((trip, index) => {
+            trips.map((trip) => {
               const isSelected = trip.id === selectedTripId;
               const label = formatTripDate(trip.start_date) ?? formatTripDate(trip.first_checkin_date);
               return (
                 <div
                   key={trip.id}
                   style={{
-                    backgroundColor: isSelected ? '#f0fdf4' : 'white',
-                    padding: '5px 20px',
+                    borderBottom: '1px solid var(--tc-dot)',
+                    background: isSelected ? 'rgba(255,107,71,0.07)' : 'transparent',
                   }}
                 >
-                  {/* 여행 제목 + 수정/삭제 버튼 행 */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {/* 여행 선택 버튼 */}
+                  <div style={{ display: 'flex', alignItems: 'center', padding: '12px 20px 4px' }}>
+                    {isSelected && (
+                      <div style={{
+                        width: 4,
+                        height: 20,
+                        background: '#FF6B47',
+                        borderRadius: 2,
+                        marginRight: 10,
+                        flexShrink: 0,
+                      }} />
+                    )}
                     <button
                       onClick={() => { onSelectTrip(trip.id); onClose(); }}
                       style={{
@@ -96,53 +142,53 @@ export default function SideDrawer({
                         textAlign: 'left',
                         padding: 0,
                         fontSize: 15,
-                        fontWeight: isSelected ? 600 : 400,
-                        color: isSelected ? '#16a34a' : '#111827',
+                        fontWeight: isSelected ? 800 : 500,
+                        color: isSelected ? '#FF6B47' : 'var(--tc-warm-dark)',
+                        letterSpacing: '-0.01em',
                       }}
                     >
-                      {isSelected && <span style={{ marginRight: 6 }}>✓</span>}
                       {trip.title}
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onClose(); onEditTrip(trip); }}
-                      style={{
-                        fontSize: 11,
-                        color: '#6b7280',
-                        border: '1px solid #d1d5db',
-                        borderRadius: 5,
-                        padding: '2px 7px',
-                        background: 'white',
-                        cursor: 'pointer',
-                        whiteSpace: 'nowrap',
-                        flexShrink: 0,
-                      }}
-                    >
-                      수정
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onDeleteTrip(trip.id); onClose(); }}
-                      style={{
-                        fontSize: 11,
-                        color: '#ef4444',
-                        border: '1px solid #fca5a5',
-                        borderRadius: 5,
-                        padding: '2px 7px',
-                        background: 'white',
-                        cursor: 'pointer',
-                        whiteSpace: 'nowrap',
-                        flexShrink: 0,
-                      }}
-                    >
-                      삭제
                     </button>
                   </div>
 
-                  {/* 날짜 */}
-                  {label && (
-                    <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 3 }}>
-                      {label}
+                  {/* 날짜 + 수정/삭제 버튼 */}
+                  <div style={{ display: 'flex', alignItems: 'center', padding: '2px 20px 12px', paddingLeft: isSelected ? 34 : 20 }}>
+                    {label && (
+                      <span style={{ fontSize: 11, color: 'var(--tc-warm-faint)', flex: 1 }}>
+                        {label}
+                      </span>
+                    )}
+                    <div style={{ display: 'flex', gap: 6, marginLeft: 'auto' }}>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onClose(); onEditTrip(trip); }}
+                        style={{
+                          fontSize: 11,
+                          color: 'var(--tc-warm-mid)',
+                          border: '1px solid var(--tc-dot)',
+                          borderRadius: 6,
+                          padding: '2px 8px',
+                          background: 'var(--tc-card-bg)',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        수정
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onDeleteTrip(trip.id); onClose(); }}
+                        style={{
+                          fontSize: 11,
+                          color: '#EF4444',
+                          border: '1px solid #fca5a5',
+                          borderRadius: 6,
+                          padding: '2px 8px',
+                          background: 'var(--tc-card-bg)',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        삭제
+                      </button>
                     </div>
-                  )}
+                  </div>
                 </div>
               );
             })
