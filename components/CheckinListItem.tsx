@@ -8,15 +8,24 @@ interface CheckinListItemProps {
   onDelete?: (checkinId: string) => void;
 }
 
+const CATEGORY_META: Record<string, { icon: string; label: string; color: string }> = {
+  restaurant:     { icon: '🍽️', label: '음식점',   color: '#FF6B47' },
+  cafe:           { icon: '☕',  label: '카페',     color: '#F59E0B' },
+  attraction:     { icon: '🏛️', label: '명소',     color: '#3B82F6' },
+  accommodation:  { icon: '🏨', label: '숙소',     color: '#8B5CF6' },
+  shopping:       { icon: '🛍️', label: '쇼핑',     color: '#EC4899' },
+  nature:         { icon: '🌿', label: '자연',     color: '#10B981' },
+  activity:       { icon: '🎯', label: '액티비티', color: '#EF4444' },
+  transportation: { icon: '🚌', label: '교통',     color: '#6B7280' },
+  other:          { icon: '📍', label: '기타',     color: '#C4A882' },
+};
 
 export function CheckinListItem({ checkin, onEdit, onDelete }: CheckinListItemProps) {
+  const meta = CATEGORY_META[checkin.category ?? 'other'] ?? CATEGORY_META.other;
 
-  const formatDate = (dateString: string) => {
+  const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('ko-KR', {
-      month: 'long',
-      day: 'numeric',
-      weekday: 'short',
       hour: '2-digit',
       minute: '2-digit',
     }).format(date);
@@ -33,69 +42,118 @@ export function CheckinListItem({ checkin, onEdit, onDelete }: CheckinListItemPr
   };
 
   return (
-    <div>
-      <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-          <div className="p-4">
-            {/* 날짜 */}
-            <div className="flex justify-end mb-2">
-              <span className="text-xs text-text-muted">{formatDate(checkin.checked_in_at)}</span>
-            </div>
+    <div className="tc-checkin-card">
+      <div style={{ display: 'flex' }}>
+        {/* 카테고리 액센트 좌측 스트립 */}
+        <div style={{ width: 5, background: meta.color, flexShrink: 0 }} />
 
-            {/* 장소명 */}
-            <h3 className="text-base font-bold text-text-main mb-3 leading-snug">
-              {checkin.title || '이름 없는 장소'}
-            </h3>
+        {/* 본문 */}
+        <div style={{ flex: 1, padding: '14px 14px 12px' }}>
+          {/* 상단 메타 — 카테고리 + 시간 */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: meta.color, letterSpacing: '0.02em' }}>
+              {meta.icon} {meta.label}
+            </span>
+            <span style={{ fontSize: 11, color: 'var(--tc-warm-faint)' }}>
+              {formatTime(checkin.checked_in_at)}
+            </span>
+          </div>
 
-            {/* 사진 */}
-            {checkin.photo_url && (
-              <img
-                src={checkin.photo_url}
-                alt={checkin.title || 'Checkin photo'}
-                className="w-full h-52 object-cover rounded-xl mb-3"
-              />
+          {/* 제목 */}
+          <h3 style={{
+            fontSize: 16,
+            fontWeight: 900,
+            color: 'var(--tc-warm-dark)',
+            marginBottom: 10,
+            lineHeight: 1.3,
+            letterSpacing: '-0.01em',
+          }}>
+            {checkin.title || '이름 없는 장소'}
+          </h3>
+
+          {/* 사진 */}
+          {checkin.photo_url && (
+            <img
+              src={checkin.photo_url}
+              alt={checkin.title || 'Checkin photo'}
+              style={{
+                width: '100%',
+                aspectRatio: '4/3',
+                objectFit: 'cover',
+                borderRadius: 10,
+                marginBottom: 10,
+                display: 'block',
+              }}
+            />
+          )}
+
+          {/* 메모 */}
+          {checkin.message && (
+            <p style={{
+              fontSize: 14,
+              color: 'var(--tc-warm-mid)',
+              whiteSpace: 'pre-wrap',
+              lineHeight: 1.65,
+              marginBottom: 12,
+            }}>
+              {checkin.message}
+            </p>
+          )}
+
+          {/* 하단 — 장소 링크 + 액션 */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+            <a
+              href={mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontSize: 12,
+                color: 'var(--tc-warm-faint)',
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 3,
+              }}
+            >
+              📍 {checkin.place || '지도에서 보기'}
+            </a>
+            {(onEdit || onDelete) && (
+              <div style={{ display: 'flex', gap: 10 }}>
+                {onEdit && (
+                  <button
+                    onClick={() => onEdit(checkin)}
+                    style={{
+                      fontSize: 12,
+                      color: 'var(--tc-warm-mid)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: '2px 0',
+                    }}
+                  >
+                    수정
+                  </button>
+                )}
+                {onDelete && (
+                  <button
+                    onClick={handleDelete}
+                    style={{
+                      fontSize: 12,
+                      color: '#EF4444',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: '2px 0',
+                    }}
+                  >
+                    삭제
+                  </button>
+                )}
+              </div>
             )}
-
-            {/* 메모 */}
-            {checkin.message && (
-              <p className="text-sm text-gray-600 whitespace-pre-wrap mb-3 leading-relaxed">
-                {checkin.message}
-              </p>
-            )}
-
-            {/* 하단 (좌표 링크 + 액션) */}
-            <div className="flex items-center justify-between mt-2">
-              <a
-                href={mapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-text-muted hover:text-gray-600 transition-colors no-underline"
-                style={{ textDecoration: 'none' }}
-              >
-                📍 {checkin.place || '지도에서 보기'}
-              </a>
-              {(onEdit || onDelete) && (
-                <div className="flex gap-3">
-                  {onEdit && (
-                    <button
-                      onClick={() => onEdit(checkin)}
-                      className="text-xs text-text-muted hover:text-gray-700 transition-colors"
-                    >
-                      수정
-                    </button>
-                  )}
-                  {onDelete && (
-                    <button
-                      onClick={handleDelete}
-                      className="text-xs text-text-muted hover:text-red-500 transition-colors"
-                    >
-                      삭제
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
           </div>
         </div>
+      </div>
     </div>
   );
 }

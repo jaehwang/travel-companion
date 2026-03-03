@@ -17,6 +17,71 @@ interface CheckinFormToolbarProps {
   onOpenTime: () => void;
 }
 
+const ACTIVE_COLOR = '#FF6B47';
+const INACTIVE_COLOR = 'var(--tc-warm-faint)';
+
+function ToolbarBtn({
+  emoji,
+  label,
+  active,
+  disabled,
+  onClick,
+  htmlFor,
+}: {
+  emoji: string;
+  label: string;
+  active: boolean;
+  disabled?: boolean;
+  onClick?: () => void;
+  htmlFor?: string;
+}) {
+  const color = disabled ? '#d1d5db' : active ? ACTIVE_COLOR : INACTIVE_COLOR;
+  const bg = active ? 'rgba(255,107,71,0.1)' : 'transparent';
+
+  const inner = (
+    <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+      <span style={{ fontSize: 26, lineHeight: 1 }}>{emoji}</span>
+      <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.02em', color }}>{label}</span>
+    </span>
+  );
+
+  if (htmlFor) {
+    return (
+      <label
+        htmlFor={htmlFor}
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          width: 60, height: 60, borderRadius: 14,
+          background: bg,
+          cursor: 'pointer',
+          transition: 'background 0.15s',
+          flexShrink: 0,
+        }}
+      >
+        {inner}
+      </label>
+    );
+  }
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        width: 60, height: 60, borderRadius: 14,
+        background: bg,
+        border: 'none', cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.4 : 1,
+        transition: 'background 0.15s',
+        flexShrink: 0,
+      }}
+    >
+      {inner}
+    </button>
+  );
+}
+
 export default function CheckinFormToolbar({
   fileInputRef,
   photoPreviewUrl,
@@ -33,69 +98,60 @@ export default function CheckinFormToolbar({
 }: CheckinFormToolbarProps) {
   return (
     <div
-      style={{ position: 'fixed', bottom: toolbarBottom, left: 0, right: 0, zIndex: 10000, backgroundColor: 'white', borderTop: '1px solid var(--color-border)' }}
-      className="px-4 py-2 flex items-center gap-1 min-h-[80px]"
+      style={{
+        position: 'fixed',
+        bottom: toolbarBottom,
+        left: 0, right: 0,
+        zIndex: 10000,
+        background: 'var(--tc-card-bg)',
+        borderTop: '1.5px solid var(--tc-dot)',
+        padding: '8px 12px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 4,
+        minHeight: 80,
+      }}
     >
-      {/* 사진 */}
       <input
         ref={fileInputRef}
         type="file"
         accept="image/*"
         onChange={onFileChange}
-        className="hidden"
+        style={{ display: 'none' }}
         id="checkin-photo-input"
       />
-      <label
+
+      <ToolbarBtn
+        emoji="📷"
+        label="사진"
+        active={!!photoPreviewUrl}
         htmlFor="checkin-photo-input"
-        style={{ color: photoPreviewUrl ? 'var(--color-primary)' : 'var(--color-text-sub)' }}
-        className="flex items-center justify-center w-[58px] h-[58px] rounded-full cursor-pointer text-[2rem] shrink-0"
-        title="사진 추가"
-      >
-        📷
-      </label>
-
-      {/* 장소 검색 */}
-      <button
+      />
+      <ToolbarBtn
+        emoji="📍"
+        label="장소"
+        active={!!(selectedLocation && hasPlaceFromSearch)}
         onClick={onOpenPlaceSearch}
-        style={{ color: selectedLocation && hasPlaceFromSearch ? 'var(--color-primary)' : 'var(--color-text-sub)' }}
-        className="flex items-center justify-center w-[58px] h-[58px] rounded-full border-0 bg-transparent cursor-pointer text-[2rem] shrink-0"
-        title="장소 검색"
-      >
-        📍
-      </button>
-
-      {/* 지도에서 선택 */}
-      <button
-        onClick={onOpenLocationPicker}
+      />
+      <ToolbarBtn
+        emoji="🗺️"
+        label="지도"
+        active={!!(selectedLocation && !hasPlaceFromSearch)}
         disabled={!onOpenLocationPicker}
-        style={{ color: selectedLocation && !hasPlaceFromSearch ? 'var(--color-primary)' : 'var(--color-text-sub)' }}
-        className={`flex items-center justify-center w-[58px] h-[58px] rounded-full border-0 bg-transparent text-[2rem] shrink-0 ${
-          onOpenLocationPicker ? 'cursor-pointer opacity-100' : 'cursor-not-allowed opacity-40'
-        }`}
-        title="지도에서 위치 선택"
-      >
-        🗺️
-      </button>
-
-      {/* 카테고리 */}
-      <button
+        onClick={onOpenLocationPicker}
+      />
+      <ToolbarBtn
+        emoji="🏷️"
+        label="분류"
+        active={hasCategory}
         onClick={onOpenCategory}
-        style={{ color: hasCategory ? '#1d4ed8' : 'var(--color-text-sub)' }}
-        className="flex items-center justify-center w-[58px] h-[58px] rounded-full border-0 bg-transparent cursor-pointer text-[2rem] shrink-0"
-        title="카테고리 선택"
-      >
-        🏷️
-      </button>
-
-      {/* 시각 지정 */}
-      <button
+      />
+      <ToolbarBtn
+        emoji="⏰"
+        label="시각"
+        active={!!checkedInAt}
         onClick={onOpenTime}
-        style={{ color: checkedInAt ? '#7c3aed' : 'var(--color-text-sub)' }}
-        className="flex items-center justify-center w-[58px] h-[58px] rounded-full border-0 bg-transparent cursor-pointer text-[2rem] shrink-0"
-        title="시각 지정"
-      >
-        ⏰
-      </button>
+      />
     </div>
   );
 }

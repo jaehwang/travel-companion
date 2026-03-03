@@ -14,6 +14,18 @@ const CATEGORY_EMOJI: Record<string, string> = {
   other: '📌',
 };
 
+const CATEGORY_COLORS: Record<string, string> = {
+  restaurant: '#FF6B47',
+  cafe: '#F59E0B',
+  attraction: '#3B82F6',
+  accommodation: '#8B5CF6',
+  shopping: '#EC4899',
+  nature: '#10B981',
+  activity: '#EF4444',
+  transportation: '#6B7280',
+  other: '#C4A882',
+};
+
 interface CheckinFormCategoryPanelProps {
   category: string;
   onSelectCategory: (category: string) => void;
@@ -26,39 +38,65 @@ export default function CheckinFormCategoryPanel({
   onClose,
 }: CheckinFormCategoryPanelProps) {
   return (
-    <div className="flex-1 overflow-hidden flex flex-col">
-      <div className="flex items-center justify-between px-4 py-3.5 border-b border-gray-200">
-        <span className="font-semibold text-base text-gray-900">카테고리 선택</span>
+    <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--tc-bg)' }}>
+      {/* 패널 헤더 */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '14px 20px',
+        borderBottom: '1.5px solid var(--tc-dot)',
+      }}>
+        <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--tc-warm-dark)', letterSpacing: '-0.01em' }}>
+          어떤 곳인가요?
+        </span>
         <button
           onClick={onClose}
-          className="text-gray-500 bg-transparent border-0 cursor-pointer text-sm"
+          style={{
+            fontSize: 13, fontWeight: 600,
+            color: 'var(--tc-warm-mid)',
+            background: 'var(--tc-card-empty)',
+            border: 'none', borderRadius: 9999,
+            padding: '5px 14px', cursor: 'pointer',
+          }}
         >
           닫기
         </button>
       </div>
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="grid grid-cols-3 gap-2.5">
-          {Object.entries(CHECKIN_CATEGORY_LABELS).map(([value, label]) => (
-            <button
-              key={value}
-              onClick={() => {
-                onSelectCategory(value);
-                onClose();
-              }}
-              className={`py-3.5 px-2 rounded-xl border-2 cursor-pointer flex flex-col items-center gap-1.5 transition-colors duration-150 ${
-                category === value
-                  ? 'border-green-600 bg-green-50'
-                  : 'border-gray-200 bg-white'
-              }`}
-            >
-              <span className="text-[26px]">{CATEGORY_EMOJI[value] || '📌'}</span>
-              <span
-                className={`text-xs text-gray-700 ${category === value ? 'font-semibold' : 'font-normal'}`}
+
+      {/* 카테고리 그리드 */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+          {Object.entries(CHECKIN_CATEGORY_LABELS).map(([value, label]) => {
+            const isSelected = category === value;
+            const color = CATEGORY_COLORS[value] ?? '#C4A882';
+            return (
+              <button
+                key={value}
+                onClick={() => { onSelectCategory(value); onClose(); }}
+                style={{
+                  padding: '16px 8px',
+                  borderRadius: 16,
+                  border: `2px solid ${isSelected ? color : 'var(--tc-dot)'}`,
+                  background: isSelected ? `${color}14` : 'var(--tc-card-bg)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 8,
+                  transition: 'all 0.15s ease',
+                }}
               >
-                {label}
-              </span>
-            </button>
-          ))}
+                <span style={{ fontSize: 28, lineHeight: 1 }}>{CATEGORY_EMOJI[value] || '📌'}</span>
+                <span style={{
+                  fontSize: 12,
+                  fontWeight: isSelected ? 800 : 500,
+                  color: isSelected ? color : 'var(--tc-warm-mid)',
+                  letterSpacing: '-0.01em',
+                }}>
+                  {label}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

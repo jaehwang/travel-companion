@@ -41,49 +41,93 @@ export default function CheckinTimeline({
 
   return (
     <div>
-      <div className="flex items-center mb-4">
-        <h2 className="text-xl font-bold text-gray-900 flex-1">
-          기록 <span className="text-base font-normal text-gray-400">{checkins.length}곳</span>
+      {/* 섹션 헤더 */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <h2 style={{ fontSize: 18, fontWeight: 900, color: 'var(--tc-warm-dark)', letterSpacing: '-0.01em' }}>
+          기록{' '}
+          <span style={{ fontSize: 14, fontWeight: 400, color: 'var(--tc-warm-faint)' }}>
+            {checkins.length}곳
+          </span>
         </h2>
         {checkins.length > 0 && (
           <button
             onClick={onSortChange}
-            className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: 'var(--tc-warm-mid)',
+              background: 'var(--tc-card-empty)',
+              border: 'none',
+              borderRadius: 20,
+              padding: '5px 12px',
+              cursor: 'pointer',
+              letterSpacing: '0.01em',
+            }}
           >
             {sortOrder === 'desc' ? '최신순 ↓' : '오래된순 ↑'}
           </button>
         )}
       </div>
 
-      {checkins.length > 0 ? (
-        <div>
+      {/* 빈 상태 */}
+      {checkins.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '48px 0' }}>
+          <div style={{ fontSize: 48, marginBottom: 14 }}>🗺️</div>
+          <p style={{ fontSize: 16, fontWeight: 800, color: 'var(--tc-warm-dark)', marginBottom: 6 }}>
+            아직 체크인이 없어요
+          </p>
+          <p style={{ fontSize: 13, color: 'var(--tc-warm-mid)' }}>
+            아래 + 버튼을 눌러 첫 순간을 기록해보세요
+          </p>
+        </div>
+      )}
+
+      {/* 타임라인 */}
+      {sorted.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
           {sorted.map((checkin, index) => {
             const currentDate = new Date(checkin.checked_in_at).toDateString();
             const prevDate = index > 0 ? new Date(sorted[index - 1].checked_in_at).toDateString() : null;
             const showDateHeader = currentDate !== prevDate;
-            const isLast = index === sorted.length - 1;
 
             return (
               <div key={checkin.id}>
+                {/* 날짜 구분선 */}
                 {showDateHeader && (
-                  <div className={`flex items-center gap-2 mb-4 ${index > 0 ? 'mt-2' : ''}`}>
-                    <span className="text-xs font-semibold text-gray-500 whitespace-nowrap">
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    marginTop: index > 0 ? 28 : 0,
+                    marginBottom: 12,
+                  }}>
+                    <div style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      background: '#FF6B47',
+                      flexShrink: 0,
+                    }} />
+                    <span style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: 'var(--tc-warm-mid)',
+                      whiteSpace: 'nowrap',
+                      letterSpacing: '0.02em',
+                    }}>
                       {formatDateHeader(checkin.checked_in_at)}
                     </span>
-                    <div className="flex-1 h-px bg-gray-200" />
+                    <div style={{ flex: 1, height: 1, background: 'var(--tc-dot)' }} />
                   </div>
                 )}
-                <CheckinListItem checkin={checkin} onEdit={onEdit} onDelete={onDelete} />
-                {!isLast && <hr className="my-6 border-gray-200" />}
+
+                {/* 체크인 카드 */}
+                <div style={{ marginBottom: 10 }}>
+                  <CheckinListItem checkin={checkin} onEdit={onEdit} onDelete={onDelete} />
+                </div>
               </div>
             );
           })}
-        </div>
-      ) : (
-        <div className="text-center py-16">
-          <p className="text-4xl mb-3">🗺️</p>
-          <p className="text-gray-500 font-medium mb-1">아직 체크인이 없습니다</p>
-          <p className="text-gray-400 text-sm">아래 + 버튼을 눌러 첫 체크인을 기록해보세요!</p>
         </div>
       )}
     </div>

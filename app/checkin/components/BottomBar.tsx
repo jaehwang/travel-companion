@@ -12,45 +12,78 @@ export default function BottomBar({ onCheckin }: BottomBarProps) {
 
   return createPortal(
     <div
+      className="tc-bottom-bar"
       style={{
         position: 'fixed',
         bottom: 0,
         left: 0,
         right: 0,
         zIndex: 9999,
-        backgroundColor: 'white',
-        borderTop: '1px solid #e5e7eb',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
     >
-      <div className="relative flex items-center h-16 px-4">
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', height: 64, padding: '0 16px' }}>
+        {/* 홈 버튼 */}
         <button
           onClick={() => router.push('/')}
-          className="flex flex-col items-center justify-center text-gray-500 px-4 py-2 bg-transparent border-0 cursor-pointer"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 2,
+            color: 'var(--tc-warm-faint)',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '8px 16px',
+          }}
         >
-          <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+          <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
             <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z" />
             <polyline points="9 21 9 12 15 12 15 21" />
           </svg>
-          <span className="text-xs mt-0.5">홈</span>
+          <span style={{ fontSize: 10, fontWeight: 600 }}>홈</span>
         </button>
+
+        {/* 체크인 FAB — 중앙 */}
         <button
           onClick={onCheckin}
-          className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-center text-gray-500 px-6 py-2 bg-transparent border-0 cursor-pointer"
+          style={{
+            position: 'absolute',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 56,
+            height: 56,
+            borderRadius: '50%',
+            background: '#FF6B47',
+            color: 'white',
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4px 16px rgba(255, 107, 71, 0.5)',
+            transition: 'transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease',
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.transform = 'translateX(-50%) scale(1.1)';
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.transform = 'translateX(-50%) scale(1)';
+          }}
         >
           <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="28"
-            height="28"
+            width="26"
+            height="26"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
-            strokeWidth={1.8}
+            strokeWidth={2.2}
+            strokeLinecap="round"
           >
-            <rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke="currentColor" strokeWidth={1.8} />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v8M8 12h8" />
+            <path d="M12 5v14M5 12h14" />
           </svg>
-          <span className="text-xs mt-0.5">체크인</span>
         </button>
       </div>
     </div>,

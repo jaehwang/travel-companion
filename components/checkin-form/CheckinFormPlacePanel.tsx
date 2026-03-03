@@ -20,15 +20,37 @@ export default function CheckinFormPlacePanel({
   onBack,
 }: CheckinFormPlacePanelProps) {
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
-      <div className="flex items-center px-4 py-2.5 border-b border-gray-200 gap-2">
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--tc-bg)' }}>
+      {/* 검색 헤더 */}
+      <div style={{
+        display: 'flex', alignItems: 'center',
+        padding: '10px 16px',
+        borderBottom: '1.5px solid var(--tc-dot)',
+        gap: 10,
+      }}>
         <button
           onClick={onBack}
-          className="text-gray-500 bg-transparent border-0 cursor-pointer text-sm whitespace-nowrap shrink-0"
+          style={{
+            fontSize: 13, fontWeight: 700,
+            color: '#FF6B47',
+            background: 'none', border: 'none', cursor: 'pointer',
+            whiteSpace: 'nowrap', flexShrink: 0,
+            padding: '4px 0',
+          }}
         >
           ← 뒤로
         </button>
-        <div className="flex-1 flex items-center gap-1 border border-gray-300 rounded-full py-2 pl-4 pr-2 mr-4">
+
+        {/* 검색 인풋 */}
+        <div style={{
+          flex: 1,
+          display: 'flex', alignItems: 'center', gap: 8,
+          background: 'var(--tc-card-bg)',
+          border: '1.5px solid var(--tc-dot)',
+          borderRadius: 9999,
+          padding: '8px 14px',
+        }}>
+          <span style={{ fontSize: 16, flexShrink: 0 }}>🔍</span>
           <input
             type="text"
             value={searchQuery}
@@ -38,15 +60,34 @@ export default function CheckinFormPlacePanel({
             autoCorrect="off"
             autoComplete="off"
             spellCheck={false}
-            className="flex-1 min-w-0 text-base outline-none bg-transparent border-0"
+            style={{
+              flex: 1, minWidth: 0,
+              fontSize: 15,
+              outline: 'none', border: 'none',
+              background: 'transparent',
+              color: 'var(--tc-warm-dark)',
+            }}
           />
           {searchingPlaces && (
-            <div className="shrink-0 animate-spin w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full" />
+            <div style={{
+              width: 16, height: 16, flexShrink: 0,
+              border: '2px solid #FF6B47',
+              borderTopColor: 'transparent',
+              borderRadius: '50%',
+              animation: 'spin 0.8s linear infinite',
+            }} />
           )}
           {searchQuery && !searchingPlaces && (
             <button
               onClick={() => onSearchQueryChange('')}
-              className="shrink-0 w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center border-0 cursor-pointer text-gray-500 text-[11px] leading-none"
+              style={{
+                width: 20, height: 20, flexShrink: 0,
+                borderRadius: '50%',
+                background: 'var(--tc-card-empty)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: 'none', cursor: 'pointer',
+                color: 'var(--tc-warm-mid)', fontSize: 11,
+              }}
             >
               ✕
             </button>
@@ -54,29 +95,40 @@ export default function CheckinFormPlacePanel({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      {/* 검색 결과 */}
+      <div style={{ flex: 1, overflowY: 'auto' }}>
         {predictions.map((p) => (
           <button
             key={p.place_id}
             onClick={() => onSelectPlace(p)}
-            className="w-full text-left px-4 py-3.5 border-0 border-b border-gray-100 bg-white cursor-pointer hover:bg-gray-50"
+            style={{
+              width: '100%', textAlign: 'left',
+              padding: '14px 20px',
+              background: 'none', border: 'none',
+              borderBottom: '1px solid var(--tc-dot)',
+              cursor: 'pointer',
+              display: 'block',
+            }}
           >
-            <div className="font-medium text-[15px] text-gray-900">
-              {p.structured_formatting.main_text}
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tc-warm-dark)', marginBottom: 3 }}>
+              📍 {p.structured_formatting.main_text}
             </div>
-            <div className="text-[13px] text-gray-500 mt-0.5">
+            <div style={{ fontSize: 12, color: 'var(--tc-warm-mid)' }}>
               {p.structured_formatting.secondary_text}
             </div>
           </button>
         ))}
+
         {searchQuery.trim().length >= 2 && predictions.length === 0 && !searchingPlaces && (
-          <div className="p-8 text-center text-gray-400 text-sm">
-            검색 결과가 없습니다
+          <div style={{ padding: '48px 20px', textAlign: 'center' }}>
+            <div style={{ fontSize: 36, marginBottom: 12 }}>🔍</div>
+            <p style={{ fontSize: 14, color: 'var(--tc-warm-faint)' }}>검색 결과가 없습니다</p>
           </div>
         )}
         {searchQuery.trim().length < 2 && (
-          <div className="p-8 text-center text-gray-300 text-sm">
-            장소 이름을 2자 이상 입력하세요
+          <div style={{ padding: '48px 20px', textAlign: 'center' }}>
+            <div style={{ fontSize: 36, marginBottom: 12 }}>📍</div>
+            <p style={{ fontSize: 14, color: 'var(--tc-warm-faint)' }}>장소 이름을 2자 이상 입력하세요</p>
           </div>
         )}
       </div>
