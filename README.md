@@ -2,6 +2,15 @@
 
 여행하면서 기억하고 싶은 순간을 기록하는 앱입니다. 사진과 위치 정보를 활용하여 여행의 추억을 시각화하고 공유할 수 있습니다.
 
+## 주요 기능
+
+- 사진 업로드 및 EXIF GPS 정보 자동 추출
+- 이미지 자동 압축 (최대 1MB/1920px)
+- 현재 위치 또는 지도에서 위치 선택하여 체크인
+- 장소 이름, 카테고리(9가지), 메모 입력
+- Google Maps 위에 체크인 마커 및 여행 경로 시각화
+- 다크 모드 지원 (시스템 설정 자동 감지)
+
 ## 시작하기
 
 ### 필수 요구사항
@@ -24,7 +33,13 @@ cp .env.local.example .env.local
 
 필요한 API 키:
 - **Supabase**: [https://supabase.com](https://supabase.com)에서 프로젝트 생성
-- **Mapbox**: [https://www.mapbox.com](https://www.mapbox.com)에서 액세스 토큰 발급
+- **Google Maps**: [https://console.cloud.google.com](https://console.cloud.google.com)에서 Maps JavaScript API 키 발급
+
+```
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=...
+```
 
 ### 개발 서버 실행
 
@@ -39,22 +54,36 @@ npm run dev
 - **프레임워크**: Next.js 15 (App Router)
 - **언어**: TypeScript
 - **스타일링**: Tailwind CSS
-- **지도**: Mapbox GL JS
-- **이미지 처리**: exifr
+- **지도**: Google Maps JavaScript API
+- **이미지 처리**: exifr (EXIF 추출), browser-image-compression
 - **백엔드**: Supabase (PostgreSQL + Storage + Auth)
+- **배포**: Vercel
 
 ## 프로젝트 구조
 
 ```
 travel-companion/
-├── app/                # Next.js App Router
-│   ├── layout.tsx     # 루트 레이아웃
-│   ├── page.tsx       # 홈 페이지
-│   └── globals.css    # 전역 스타일
-├── components/        # React 컴포넌트
-├── lib/              # 유틸리티 함수
-├── public/           # 정적 파일
-└── types/            # TypeScript 타입 정의
+├── app/
+│   ├── api/
+│   │   ├── checkins/      # 체크인 CRUD API
+│   │   └── trips/         # 여행 CRUD API
+│   ├── checkin/page.tsx   # 체크인 메인 페이지
+│   ├── layout.tsx
+│   ├── page.tsx           # 홈 페이지 (여행 목록)
+│   └── globals.css
+├── components/
+│   ├── CheckinForm.tsx    # 체크인 생성 폼
+│   ├── CheckinListItem.tsx
+│   ├── LocationPicker.tsx # 지도 위치 선택 모달
+│   ├── Map.tsx            # Google Maps 지도
+│   └── PhotoUpload.tsx
+├── hooks/
+│   └── useGeolocation.ts
+├── lib/
+│   ├── supabase.ts
+│   └── exif.ts
+└── types/
+    └── database.ts
 ```
 
 ## 테스트
@@ -80,6 +109,13 @@ Vercel을 통한 자동 배포:
 
 ```bash
 git push origin main
+```
+
+커밋 전 반드시 빌드 및 테스트를 확인하세요:
+
+```bash
+npm run build
+npm test
 ```
 
 ## 검토 사항
