@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Trip } from '@/types/database';
+import LogoutButton from '@/components/LogoutButton';
 
 async function fetchTrips(supabase: SupabaseClient): Promise<Trip[]> {
   const { data, error } = await supabase
@@ -89,7 +90,7 @@ export default async function Home() {
           <span style={{ fontSize: 13, color: 'var(--tc-warm-mid)' }}>
             {displayName}님 👋
           </span>
-          {/* LogoutButton will be added in US-004 */}
+          <LogoutButton />
         </div>
 
         {/* 히어로 */}
