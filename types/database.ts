@@ -64,6 +64,8 @@ export interface Checkin {
 }
 
 // Insert types (without auto-generated fields)
+export type TripFormData = Omit<TripInsert, 'user_id'>;
+
 export interface TripInsert {
   user_id?: string;
   title: string;
