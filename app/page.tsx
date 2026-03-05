@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import type { Trip } from '@/types/database';
-import TripFormModal from '@/app/checkin/components/TripFormModal';
-import type { TripFormData } from '@/app/checkin/hooks/useTrips';
+import TripFormModal from '@/components/TripFormModal';
+import type { TripFormData } from '@/types/database';
 
 const CARD_ACCENTS = [
   '#FF6B47', // coral

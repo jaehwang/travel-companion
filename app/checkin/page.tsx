@@ -12,7 +12,7 @@ import type { User } from '@supabase/supabase-js';
 import { useTrips } from './hooks/useTrips';
 import { useCheckins } from './hooks/useCheckins';
 import SideDrawer from './components/SideDrawer';
-import TripFormModal from './components/TripFormModal';
+import TripFormModal from '@/components/TripFormModal';
 import CheckinTimeline from './components/CheckinTimeline';
 import BottomBar from './components/BottomBar';
 

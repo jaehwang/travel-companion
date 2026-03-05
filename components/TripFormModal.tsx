@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import type { Trip } from '@/types/database';
-import type { TripFormData } from '@/types/database';
+import type { Trip, TripFormData } from '@/types/database';
 
 interface TripFormModalProps {
   mode: 'create' | 'edit';

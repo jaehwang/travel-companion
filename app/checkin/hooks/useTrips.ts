@@ -1,15 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { Trip } from '@/types/database';
+import type { Trip, TripFormData } from '@/types/database';
 
-export interface TripFormData {
-  title: string;
-  description?: string;
-  start_date?: string;
-  end_date?: string;
-  is_public?: boolean;
-}
+export type { TripFormData };
 
 export function useTrips() {
   const [trips, setTrips] = useState<Trip[]>([]);
