@@ -1,0 +1,123 @@
+{
+  "project": "TravelCompanion",
+  "branchName": "ralph/main-page-server-component",
+  "description": "메인 페이지 서버 컴포넌트 전환 - 클라이언트 fetch를 0회로 줄여 초기 로딩 성능 개선",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "TripFormModal 이동 + TripFormData 타입 통합",
+      "description": "As a developer, I want TripFormModal moved to the top-level components/ directory and TripFormData consolidated into types/database.ts so that cross-page imports are eliminated.",
+      "acceptanceCriteria": [
+        "types/database.ts에 `export type TripFormData = Omit<TripInsert, 'user_id'>` 추가",
+        "app/checkin/hooks/useTrips.ts에서 TripFormData 정의 제거, @/types/database에서 import로 교체",
+        "app/checkin/components/TripFormModal.tsx를 components/TripFormModal.tsx로 이동",
+        "TripFormModal.tsx 내 TripFormData import를 @/types/database로 변경",
+        "app/checkin/page.tsx의 TripFormModal import 경로를 @/components/TripFormModal로 업데이트",
+        "app/page.tsx의 TripFormModal, TripFormData import 경로 업데이트",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "app/page.tsx async Server Component 전환",
+      "description": "As a developer, I want to convert app/page.tsx to an async Server Component so that auth and trips data are fetched on the server before HTML is sent to the client.",
+      "acceptanceCriteria": [
+        "'use client' 지시어 제거",
+        "export default async function Home()으로 변경",
+        "@/lib/supabase/server의 createClient()로 서버에서 user 조회",
+        "로그인하지 않은 경우 /login으로 redirect",
+        "useState, useEffect, useCallback, useRouter 제거",
+        "여행 카드 클릭: button + router.push() → Link 컴포넌트로 대체",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "trips 조회 로직을 서버 컴포넌트로 이전",
+      "description": "As a developer, I want the trips query logic moved into a server-side fetchTrips() function in page.tsx so that no client-side fetch is needed on the main page.",
+      "acceptanceCriteria": [
+        "page.tsx 내 fetchTrips(supabase) 함수 구현",
+        "trips 테이블을 created_at 내림차순으로 조회",
+        "checkins에서 first_checkin_date, cover_photo_url 보강 (기존 /api/trips GET 로직과 동일)",
+        "fetchTrips() 결과가 Server Component에서 직접 렌더링됨",
+        "/api/trips GET 핸들러는 그대로 유지 (app/checkin/hooks/useTrips.ts가 계속 사용)",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "LogoutButton Client Component 신규 생성",
+      "description": "As a user, I want a logout button that works correctly so that I can sign out of the app.",
+      "acceptanceCriteria": [
+        "components/LogoutButton.tsx 파일 생성",
+        "'use client' 지시어 포함",
+        "supabase.auth.signOut() 후 window.location.href = '/'로 이동",
+        "app/page.tsx에서 import하여 사용",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "TripCreateButton Client Component 신규 생성",
+      "description": "As a user, I want to create a new trip from the main page so that I can start recording a new journey.",
+      "acceptanceCriteria": [
+        "components/TripCreateButton.tsx 파일 생성",
+        "'use client' 지시어 포함",
+        "+ 버튼 클릭 시 TripFormModal 표시 (@/components/TripFormModal 경로로 import)",
+        "여행 생성(POST /api/trips) 성공 시 /checkin?trip_id=...으로 이동 (기존 동작 유지)",
+        "app/page.tsx에서 import하여 사용",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "메인 페이지 클라이언트 fetch 0회 검증",
+      "description": "As a developer, I want to verify that the main page loads with zero client-side fetches so that the performance goal is confirmed.",
+      "acceptanceCriteria": [
+        "브라우저 Network 탭에서 메인 페이지 로드 시 auth 관련 클라이언트 fetch 없음",
+        "브라우저 Network 탭에서 메인 페이지 로드 시 /api/trips 클라이언트 fetch 없음",
+        "여행 카드가 페이지 로드 즉시 표시됨 (빈 화면 없음)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "자동화 테스트 추가",
+      "description": "As a developer, I want automated tests for the refactored main page and related components so that regressions are caught automatically.",
+      "acceptanceCriteria": [
+        "fetchTrips() 함수에 대한 단위 테스트 작성 (Supabase 클라이언트 mock)",
+        "LogoutButton 렌더링 및 클릭 핸들러 테스트",
+        "TripCreateButton 렌더링 및 모달 열기 테스트",
+        "기존 테스트 모두 통과 (npm test)",
+        "npm run build 성공",
+        "Typecheck passes"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
