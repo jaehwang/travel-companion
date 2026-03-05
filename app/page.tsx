@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Trip } from '@/types/database';
 import LogoutButton from '@/components/LogoutButton';
+import TripCreateButton from '@/components/TripCreateButton';
 
 async function fetchTrips(supabase: SupabaseClient): Promise<Trip[]> {
   const { data, error } = await supabase
@@ -118,7 +119,7 @@ export default async function Home() {
             <h2 style={{ fontSize: 18, fontWeight: 900, color: 'var(--tc-warm-dark)', letterSpacing: '-0.01em' }}>
               내 여행
             </h2>
-            {/* TripCreateButton will be added in US-005 */}
+            <TripCreateButton />
           </div>
 
           {/* 빈 상태 */}
