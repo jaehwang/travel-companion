@@ -1,0 +1,79 @@
+## Codebase Patterns
+- TripFormData is defined in types/database.ts as `Omit<TripInsert, 'user_id'>`
+- useTrips.ts re-exports TripFormData for backward compatibility
+- TripFormModal lives in components/ (top-level), not in app/checkin/components/
+- app/checkin/components/TripFormModal.tsx still exists (old location) but imports from @/types/database
+- Next.js App Router page.tsx prohibits extra named exports — extract helpers to separate files (e.g., app/lib/) for testability
+- window.location cannot be redefined with Object.defineProperty in jsdom — avoid mocking it in tests
+
+# Ralph Progress Log
+Started: 2026년  3월  5일 목요일 22시 11분 26초 KST
+---
+
+## 2026-03-05 - US-007
+- What was implemented: fetchTrips() extracted to app/lib/fetchTrips.ts for testability; tests added for fetchTrips (5 cases), LogoutButton (2 cases), TripCreateButton (4 cases); total tests grew from 99 to 110
+- Files changed: app/lib/fetchTrips.ts (new), app/page.tsx (import updated), app/__tests__/fetchTrips.test.ts (new), components/__tests__/LogoutButton.test.tsx (new), components/__tests__/TripCreateButton.test.tsx (new)
+- **Learnings for future iterations:**
+  - Next.js App Router page.tsx prohibits extra named exports — must extract helpers to separate files for testability
+  - window.location cannot be redefined with Object.defineProperty in jsdom — just remove the mock
+  - TripFormModal must be mocked in TripCreateButton tests (complex component with portal dependencies)
+  - fetchTrips test uses @jest-environment node (no DOM needed)
+  - Build and all 110 tests passed cleanly
+---
+
+## 2026-03-05 - US-001
+- What was implemented: TripFormData type added to types/database.ts; TripFormModal moved to components/; all import paths updated across app/page.tsx, app/checkin/page.tsx, useTrips.ts
+- Files changed: types/database.ts, app/checkin/hooks/useTrips.ts, app/checkin/components/TripFormModal.tsx, components/TripFormModal.tsx (new), app/checkin/page.tsx, app/page.tsx
+- **Learnings for future iterations:**
+  - The old app/checkin/components/TripFormModal.tsx was NOT deleted (only import updated) - future stories can delete it if needed
+  - useTrips.ts re-exports TripFormData for any remaining backward compat imports
+  - Typecheck passed cleanly with no errors
+---
+
+## 2026-03-05 - US-003
+- What was implemented: fetchTrips(supabase) added to app/page.tsx; queries trips ordered by created_at desc, enriches with first_checkin_date and cover_photo_url from checkins; result used directly in Server Component instead of hardcoded []. /api/trips GET handler unchanged.
+- Files changed: app/page.tsx
+- **Learnings for future iterations:**
+  - SupabaseClient type imported from @supabase/supabase-js for function parameter typing
+  - fetchTrips logic mirrors /api/trips GET exactly — random cover photo selection included
+  - Typecheck passed cleanly
+---
+
+## 2026-03-05 - US-004
+- What was implemented: components/LogoutButton.tsx created as 'use client' component; calls supabase.auth.signOut() then redirects via window.location.href = '/'; imported and rendered in app/page.tsx replacing the placeholder comment
+- Files changed: components/LogoutButton.tsx (new), app/page.tsx
+- **Learnings for future iterations:**
+  - LogoutButton uses @/lib/supabase/client (browser client), not server client
+  - window.location.href redirect ensures full page reload after logout (clears server-side session)
+  - Typecheck passed cleanly
+---
+
+## 2026-03-05 - US-005
+- What was implemented: components/TripCreateButton.tsx created as 'use client' component; shows + button that opens TripFormModal; on success navigates to /checkin?trip_id=... via router.push(); imported in app/page.tsx replacing placeholder comment
+- Files changed: components/TripCreateButton.tsx (new), app/page.tsx
+- **Learnings for future iterations:**
+  - TripCreateButton passes a stub handleUpdate (throws) since TripFormModal requires both onCreate and onUpdate props but only create mode is used
+  - Uses useRouter from next/navigation for navigation after creation
+  - Typecheck, build, and all 99 tests passed cleanly
+---
+
+## 2026-03-05 - US-006
+- What was implemented: Verified that main page loads with zero client-side fetches. app/page.tsx is an async Server Component — auth via server-side createClient(), trips fetched via fetchTrips() before HTML is sent. LogoutButton and TripCreateButton only trigger fetches on user interaction (click), not on page load. All trips render immediately from server data with no loading state.
+- Files changed: scripts/ralph/prd.json (passes: true), scripts/ralph/progress.txt
+- **Learnings for future iterations:**
+  - No browser MCP tools available — browser verification done by code inspection
+  - Server Component pattern confirmed: no 'use client' in page.tsx, no useEffect/useState for data fetching
+  - Client components (LogoutButton, TripCreateButton) do not fetch on mount — event-driven only
+  - Typecheck passed, all 99 tests passed
+---
+
+## 2026-03-05 - US-002
+- What was implemented: app/page.tsx converted from 'use client' to async Server Component; server-side auth via createClient() from @/lib/supabase/server; redirect('/login') if no user; removed useState/useEffect/useCallback/useRouter; trip cards changed from button+router.push to Link; TripFormModal removed (placeholder comments for US-004/US-005)
+- Files changed: app/page.tsx
+- **Learnings for future iterations:**
+  - trips array is hardcoded to [] for now — fetchTrips() will be added in US-003
+  - LogoutButton placeholder comment left in US-002; actual component in US-004
+  - TripCreateButton placeholder comment left; actual component in US-005
+  - lib/supabase/server.ts createClient() is async (uses await cookies())
+  - Typecheck passed with zero errors
+---
