@@ -1,0 +1,18 @@
+## Codebase Patterns
+- TripFormData is defined in types/database.ts as `Omit<TripInsert, 'user_id'>`
+- useTrips.ts re-exports TripFormData for backward compatibility
+- TripFormModal lives in components/ (top-level), not in app/checkin/components/
+- app/checkin/components/TripFormModal.tsx still exists (old location) but imports from @/types/database
+
+# Ralph Progress Log
+Started: 2026년  3월  5일 목요일 22시 11분 26초 KST
+---
+
+## 2026-03-05 - US-001
+- What was implemented: TripFormData type added to types/database.ts; TripFormModal moved to components/; all import paths updated across app/page.tsx, app/checkin/page.tsx, useTrips.ts
+- Files changed: types/database.ts, app/checkin/hooks/useTrips.ts, app/checkin/components/TripFormModal.tsx, components/TripFormModal.tsx (new), app/checkin/page.tsx, app/page.tsx
+- **Learnings for future iterations:**
+  - The old app/checkin/components/TripFormModal.tsx was NOT deleted (only import updated) - future stories can delete it if needed
+  - useTrips.ts re-exports TripFormData for any remaining backward compat imports
+  - Typecheck passed cleanly with no errors
+---
