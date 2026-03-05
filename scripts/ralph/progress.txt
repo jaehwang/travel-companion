@@ -3,9 +3,22 @@
 - useTrips.ts re-exports TripFormData for backward compatibility
 - TripFormModal lives in components/ (top-level), not in app/checkin/components/
 - app/checkin/components/TripFormModal.tsx still exists (old location) but imports from @/types/database
+- Next.js App Router page.tsx prohibits extra named exports — extract helpers to separate files (e.g., app/lib/) for testability
+- window.location cannot be redefined with Object.defineProperty in jsdom — avoid mocking it in tests
 
 # Ralph Progress Log
 Started: 2026년  3월  5일 목요일 22시 11분 26초 KST
+---
+
+## 2026-03-05 - US-007
+- What was implemented: fetchTrips() extracted to app/lib/fetchTrips.ts for testability; tests added for fetchTrips (5 cases), LogoutButton (2 cases), TripCreateButton (4 cases); total tests grew from 99 to 110
+- Files changed: app/lib/fetchTrips.ts (new), app/page.tsx (import updated), app/__tests__/fetchTrips.test.ts (new), components/__tests__/LogoutButton.test.tsx (new), components/__tests__/TripCreateButton.test.tsx (new)
+- **Learnings for future iterations:**
+  - Next.js App Router page.tsx prohibits extra named exports — must extract helpers to separate files for testability
+  - window.location cannot be redefined with Object.defineProperty in jsdom — just remove the mock
+  - TripFormModal must be mocked in TripCreateButton tests (complex component with portal dependencies)
+  - fetchTrips test uses @jest-environment node (no DOM needed)
+  - Build and all 110 tests passed cleanly
 ---
 
 ## 2026-03-05 - US-001
