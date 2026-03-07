@@ -44,5 +44,17 @@ export function useCheckins(tripId: string) {
     setCheckins((prev) => prev.filter((c) => c.id !== id));
   };
 
-  return { checkins, loading, error, addCheckin, updateCheckin, deleteCheckin };
+  const reloadCheckins = async () => {
+    if (!tripId) return;
+    try {
+      const r = await fetch(`/api/checkins?trip_id=${tripId}`);
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Failed to fetch checkins');
+      setCheckins(data.checkins || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '체크인 목록을 불러오는데 실패했습니다.');
+    }
+  };
+
+  return { checkins, loading, error, addCheckin, updateCheckin, deleteCheckin, reloadCheckins };
 }

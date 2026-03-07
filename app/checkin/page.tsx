@@ -41,13 +41,14 @@ function CheckinPageInner() {
   const [editingTrip, setEditingTrip] = useState<Trip | undefined>();
   const [mapCenter, setMapCenter] = useState({ lat: 37.5665, lng: 126.978 });
   const [mounted, setMounted] = useState(false);
+  const [applyingPlace, setApplyingPlace] = useState(false);
   const locationPickerInitial = useRef<{ latitude: number; longitude: number } | null>(null);
   const locationPickerCallback = useRef<((lat: number, lng: number) => void) | null>(null);
 
   useEffect(() => { setMounted(true); }, []);
 
   const { trips, loading, error: tripsError, createTrip, updateTrip, deleteTrip } = useTrips();
-  const { checkins, error: checkinsError, addCheckin, updateCheckin, deleteCheckin } = useCheckins(selectedTripId);
+  const { checkins, error: checkinsError, addCheckin, updateCheckin, deleteCheckin, reloadCheckins } = useCheckins(selectedTripId);
   const { getCurrentPosition } = useGeolocation();
 
   // 사용자 정보
@@ -117,6 +118,28 @@ function CheckinPageInner() {
       setSelectedTripId(remaining.length > 0 ? remaining[0].id : '');
     } catch (err) {
       alert(err instanceof Error ? err.message : '여행 삭제에 실패했습니다.');
+    }
+  };
+
+  const handleBulkApplyPlace = async () => {
+    if (!selectedTrip?.place || checkins.length === 0) return;
+    const confirmed = window.confirm(
+      `"${selectedTrip.place}"을(를) 이 여행의 모든 체크인(${checkins.length}개)에 적용합니다. 기존 장소가 덮어씌워집니다.`
+    );
+    if (!confirmed) return;
+    setApplyingPlace(true);
+    try {
+      const res = await fetch(`/api/trips/${selectedTrip.id}/apply-place`, { method: 'POST' });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to apply place');
+      }
+      await reloadCheckins();
+      alert('장소가 모든 체크인에 적용되었습니다.');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '일괄 적용에 실패했습니다.');
+    } finally {
+      setApplyingPlace(false);
     }
   };
 
@@ -238,6 +261,10 @@ function CheckinPageInner() {
                 tripName={selectedTrip?.title}
                 userAvatarUrl={user?.user_metadata?.avatar_url}
                 editingCheckin={editingCheckin ?? undefined}
+                initialPlace={editingCheckin ? undefined : selectedTrip?.place}
+                initialPlaceId={editingCheckin ? undefined : selectedTrip?.place_id}
+                initialLatitude={editingCheckin ? undefined : selectedTrip?.latitude}
+                initialLongitude={editingCheckin ? undefined : selectedTrip?.longitude}
                 onSuccess={handleCheckinSuccess}
                 onCancel={() => { setShowForm(false); setEditingCheckin(null); }}
                 onOpenLocationPicker={(initial, onSelect) => {
@@ -255,7 +282,8 @@ function CheckinPageInner() {
                 : null;
               const startSrc = selectedTrip?.start_date || earliest?.checked_in_at || null;
               const endSrc = selectedTrip?.end_date || null;
-              if (!selectedTrip?.description && !startSrc) return null;
+              const hasPlace = !!selectedTrip?.place;
+              if (!selectedTrip?.description && !startSrc && !hasPlace) return null;
               return (
                 <div style={{
                   marginBottom: 16,
@@ -271,10 +299,52 @@ function CheckinPageInner() {
                     </p>
                   )}
                   {startSrc && (
-                    <p style={{ fontSize: 12, color: 'var(--tc-warm-mid)' }}>
+                    <p style={{ fontSize: 12, color: 'var(--tc-warm-mid)', marginBottom: hasPlace ? 4 : 0 }}>
                       📅 {formatTripDate(startSrc)}
                       {endSrc && endSrc !== selectedTrip?.start_date ? ` ~ ${formatTripDate(endSrc)}` : ''}
                     </p>
+                  )}
+                  {hasPlace && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <p style={{ fontSize: 12, color: 'var(--tc-warm-mid)', flex: 1 }}>
+                        📍 {selectedTrip.place}
+                      </p>
+                      {checkins.length > 0 && (
+                        <button
+                          onClick={handleBulkApplyPlace}
+                          disabled={applyingPlace}
+                          title="체크인 장소 일괄 적용"
+                          style={{
+                            width: 28, height: 28, flexShrink: 0,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            color: 'var(--tc-warm-mid)',
+                            background: 'var(--tc-card-empty)',
+                            border: '1px solid var(--tc-dot)',
+                            borderRadius: 8,
+                            cursor: applyingPlace ? 'not-allowed' : 'pointer',
+                            opacity: applyingPlace ? 0.4 : 1,
+                            transition: 'opacity 0.2s',
+                          }}
+                        >
+                          {applyingPlace ? (
+                            <div style={{
+                              width: 12, height: 12,
+                              border: '2px solid var(--tc-warm-mid)',
+                              borderTopColor: 'transparent',
+                              borderRadius: '50%',
+                              animation: 'spin 0.8s linear infinite',
+                            }} />
+                          ) : (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M21 2v6h-6"/>
+                              <path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+                              <path d="M3 22v-6h6"/>
+                              <path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+                            </svg>
+                          )}
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               );

@@ -151,13 +151,20 @@ export default function SideDrawer({
                     </button>
                   </div>
 
-                  {/* 날짜 + 수정/삭제 버튼 */}
+                  {/* 날짜 + 장소 + 수정/삭제 버튼 */}
                   <div style={{ display: 'flex', alignItems: 'center', padding: '2px 20px 12px', paddingLeft: isSelected ? 34 : 20 }}>
-                    {label && (
-                      <span style={{ fontSize: 11, color: 'var(--tc-warm-faint)', flex: 1 }}>
-                        {label}
-                      </span>
-                    )}
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      {label && (
+                        <span style={{ fontSize: 11, color: 'var(--tc-warm-faint)' }}>
+                          {label}
+                        </span>
+                      )}
+                      {trip.place && (
+                        <span style={{ fontSize: 11, color: 'var(--tc-warm-faint)' }}>
+                          📍 {trip.place}
+                        </span>
+                      )}
+                    </div>
                     <div style={{ display: 'flex', gap: 6, marginLeft: 'auto' }}>
                       <button
                         onClick={(e) => { e.stopPropagation(); onClose(); onEditTrip(trip); }}

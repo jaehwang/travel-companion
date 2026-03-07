@@ -16,7 +16,7 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
-    const { title, description, start_date, end_date, is_public } = body;
+    const { title, description, start_date, end_date, is_public, place, place_id, latitude, longitude } = body;
 
     if (title !== undefined && (!title || typeof title !== 'string' || title.trim().length === 0)) {
       return NextResponse.json(
@@ -25,12 +25,16 @@ export async function PATCH(
       );
     }
 
-    const updateData: Partial<TripInsert> = {};
+    const updateData: Record<string, unknown> = {};
     if (title !== undefined) updateData.title = title.trim();
-    if (description !== undefined) updateData.description = description?.trim() || undefined;
-    if (start_date !== undefined) updateData.start_date = start_date || undefined;
-    if (end_date !== undefined) updateData.end_date = end_date || undefined;
+    if (description !== undefined) updateData.description = description?.trim() || null;
+    if (start_date !== undefined) updateData.start_date = start_date || null;
+    if (end_date !== undefined) updateData.end_date = end_date || null;
     if (is_public !== undefined) updateData.is_public = is_public;
+    if (place !== undefined) updateData.place = place?.trim() || null;
+    if (place_id !== undefined) updateData.place_id = place_id || null;
+    if (latitude !== undefined) updateData.latitude = latitude ?? null;
+    if (longitude !== undefined) updateData.longitude = longitude ?? null;
 
     const { data, error } = await (supabase.from('trips') as any)
       .update(updateData)

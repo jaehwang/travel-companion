@@ -29,6 +29,10 @@ interface CheckinFormProps {
   tripName?: string;
   userAvatarUrl?: string;
   editingCheckin?: Checkin;
+  initialPlace?: string | null;
+  initialPlaceId?: string | null;
+  initialLatitude?: number | null;
+  initialLongitude?: number | null;
   onSuccess?: (checkin: Checkin) => void;
   onCancel?: () => void;
   onOpenLocationPicker?: (
@@ -42,6 +46,10 @@ export default function CheckinForm({
   tripName,
   userAvatarUrl,
   editingCheckin,
+  initialPlace,
+  initialPlaceId,
+  initialLatitude,
+  initialLongitude,
   onSuccess,
   onCancel,
   onOpenLocationPicker,
@@ -104,11 +112,15 @@ export default function CheckinForm({
       photo.reset(editingCheckin.photo_url || undefined);
     } else {
       setTitle('');
-      setPlace('');
-      setPlaceId('');
+      setPlace(initialPlace || '');
+      setPlaceId(initialPlaceId || '');
       setCategory('');
       setMessage('');
-      loc.resetLocation();
+      if (initialLatitude != null && initialLongitude != null) {
+        loc.initLocation(initialLatitude, initialLongitude);
+      } else {
+        loc.resetLocation();
+      }
       setCheckedInAt('');
       photo.reset();
     }
