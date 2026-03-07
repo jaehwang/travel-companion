@@ -39,6 +39,10 @@ export interface Trip {
   updated_at: string;
   first_checkin_date?: string | null;
   cover_photo_url?: string | null;
+  place?: string | null;
+  place_id?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface Checkin {
@@ -73,6 +77,10 @@ export interface TripInsert {
   start_date?: string;
   end_date?: string;
   is_public?: boolean;
+  place?: string | null;
+  place_id?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface CheckinInsert {
