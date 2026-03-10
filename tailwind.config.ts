@@ -21,6 +21,16 @@ export default {
         'text-sub':    'var(--color-text-sub)',
         'text-muted':  'var(--color-text-muted)',
         'bg-muted':    'var(--color-bg-muted)',
+
+        // Travel Companion 
+        'tc-bg':         'var(--tc-bg)',
+        'tc-dot':        'var(--tc-dot)',
+        'tc-warm-dark':  'var(--tc-warm-dark)',
+        'tc-warm-mid':   'var(--tc-warm-mid)',
+        'tc-warm-faint': 'var(--tc-warm-faint)',
+        'tc-card-bg':    'var(--tc-card-bg)',
+        'tc-card-empty': 'var(--tc-card-empty)',
+        'tc-skeleton':   'var(--tc-skeleton)',
       },
       fontSize: {
         'title': 'var(--font-title)',

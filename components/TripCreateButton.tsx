@@ -33,21 +33,10 @@ export default function TripCreateButton() {
     <>
       <button
         onClick={() => setShowModal(true)}
+        className="w-8 h-8 md:w-10 md:h-10 rounded-full text-white text-[22px] md:text-2xl font-normal border-none cursor-pointer flex items-center justify-center leading-none hover:scale-105 transition-transform"
         style={{
-          width: 32,
-          height: 32,
-          borderRadius: '50%',
           background: '#FF6B47',
-          color: 'white',
-          fontSize: 22,
-          fontWeight: 400,
-          border: 'none',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
           boxShadow: '0 3px 10px rgba(255,107,71,0.4)',
-          lineHeight: 1,
         }}
         aria-label="새 여행 만들기"
       >

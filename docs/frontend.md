@@ -88,8 +88,9 @@ OS 기본 시스템 폰트를 사용한다 (`-apple-system, BlinkMacSystemFont, 
 ## 레이아웃
 
 ### 홈 페이지
-- 컨테이너: `max-width: 480px`, 중앙 정렬
-- 패딩: `24px 16px`, 하단 `80px` (바텀바 높이 확보)
+- 컨테이너: 모바일에서 데스크톱까지 지원하는 가변 너비 (Tailwind: `max-w-md md:max-w-3xl lg:max-w-5xl`, 중앙 정렬 `mx-auto`)
+- 패딩: `px-4 py-6 md:py-10`, 하단 `pb-20` (바텀바 높이 확보)
+- 여행 카드 슬롯: 반응형 그리드 렌더링 (`grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4`)
 
 ### 체크인 페이지
 - 컨테이너: full-width (지도가 전체 너비를 사용)
@@ -97,7 +98,12 @@ OS 기본 시스템 폰트를 사용한다 (`-apple-system, BlinkMacSystemFont, 
 
 ---
 
-## CSS 클래스 (globals.css)
+## Tailwind CSS v4 연동 및 클래스
+
+프로젝트는 **Tailwind CSS v4**를 기반으로 하며, 다음과 같이 `globals.css` 및 `tailwind.config.ts`가 연동된다.
+1. `globals.css` 상단에 `@import "tailwindcss";` 및 `@config "../tailwind.config.ts";` 선언.
+2. 커스텀 색상(CSS 변수)은 Tailwind Config(`theme.extend.colors`) 내에 `tc-bg`, `tc-warm-dark` 등의 이름으로 주입하여 유틸리티 클래스(`text-tc-warm-dark`, `bg-tc-bg` 등)로 사용함.
+3. 인라인 스타일(`style={{...}}`) 지양, Tailwind의 Utility-First 클래스와 아래에 정의된 공통 클래스 사용.
 
 ### 배경
 
@@ -149,31 +155,15 @@ OS 기본 시스템 폰트를 사용한다 (`-apple-system, BlinkMacSystemFont, 
 
 ### 주 액션 버튼 (코랄 pill)
 
-```tsx
-style={{
-  background: '#FF6B47',
-  color: 'white',
-  borderRadius: 9999,
-  padding: '8px 18px',
-  fontWeight: 700,
-  fontSize: 14,
-  border: 'none',
-  boxShadow: '0 3px 10px rgba(255,107,71,0.4)',
-}}
-```
+- 클래스 예시: `rounded-full text-white font-normal border-none flex items-center justify-center leading-none hover:scale-105 transition-transform`
+- 배경은 인라인 혹은 `bg-[#FF6B47]`, 그림자는 인라인 혹은 Tailwind box-shadow 확장 사용 (`boxShadow: '0 3px 10px rgba(255,107,71,0.4)'`)
 
 비활성 시 `background: 'var(--tc-card-empty)'`, `color: 'var(--tc-warm-faint)'`, `boxShadow: 'none'`
 
 ### FAB (중앙 체크인 버튼)
 
-```tsx
-style={{
-  width: 56, height: 56,
-  borderRadius: '50%',
-  background: '#FF6B47',
-  boxShadow: '0 4px 16px rgba(255,107,71,0.5)',
-}}
-```
+- 중앙 하단에 고정되는 원형 주황색 버튼.
+- 크기: `w-14 h-14` (56px) 등 Tailwind 유틸리티 우선 적용 + Glow 그림자.
 
 ### 보조 버튼 (크림 pill)
 
@@ -275,7 +265,7 @@ Easing 원칙:
 
 ## 다크 모드
 
-`tailwind.config.ts`에 `darkMode: 'media'` 설정.
+`tailwind.config.ts`에 `darkMode: 'media'` 설정 기반.
 `prefers-color-scheme: dark` 미디어 쿼리로 `--tc-*` 변수가 자동 전환된다.
-인라인 스타일은 `var(--tc-*)` 변수로 작성하여 다크 모드를 자동 지원한다.
+최소한의 인라인 스타일이나 Tailwind 클래스 모두 이 `var(--tc-*)` 변수에 의존하여 다크 모드를 자동 지원한다.
 하드코딩 색상(`#FF6B47` 등 액센트 컬러)은 다크 모드에서도 동일하게 사용한다.

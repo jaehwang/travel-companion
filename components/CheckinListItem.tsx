@@ -43,31 +43,24 @@ export function CheckinListItem({ checkin, onEdit, onDelete }: CheckinListItemPr
 
   return (
     <div className="tc-checkin-card">
-      <div style={{ display: 'flex' }}>
+      <div className="flex">
         {/* 카테고리 액센트 좌측 스트립 */}
-        <div style={{ width: 5, background: meta.color, flexShrink: 0 }} />
+        <div className="w-[5px] shrink-0" style={{ background: meta.color }} />
 
         {/* 본문 */}
-        <div style={{ flex: 1, padding: '14px 14px 12px' }}>
+        <div className="flex-1 p-[14px] pb-3">
           {/* 상단 메타 — 카테고리 + 시간 */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: meta.color, letterSpacing: '0.02em' }}>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold tracking-[0.02em]" style={{ color: meta.color }}>
               {meta.icon} {meta.label}
             </span>
-            <span style={{ fontSize: 11, color: 'var(--tc-warm-faint)' }}>
+            <span className="text-[11px] text-tc-warm-faint">
               {formatTime(checkin.checked_in_at)}
             </span>
           </div>
 
           {/* 제목 */}
-          <h3 style={{
-            fontSize: 16,
-            fontWeight: 900,
-            color: 'var(--tc-warm-dark)',
-            marginBottom: 10,
-            lineHeight: 1.3,
-            letterSpacing: '-0.01em',
-          }}>
+          <h3 className="text-base font-black text-tc-warm-dark mb-2.5 leading-[1.3] tracking-[-0.01em]">
             {checkin.title || '이름 없는 장소'}
           </h3>
 
@@ -76,60 +69,33 @@ export function CheckinListItem({ checkin, onEdit, onDelete }: CheckinListItemPr
             <img
               src={checkin.photo_url}
               alt={checkin.title || 'Checkin photo'}
-              style={{
-                width: '100%',
-                aspectRatio: '4/3',
-                objectFit: 'cover',
-                borderRadius: 10,
-                marginBottom: 10,
-                display: 'block',
-              }}
+              className="w-full aspect-[4/3] object-cover rounded-[10px] mb-2.5 block"
             />
           )}
 
           {/* 메모 */}
           {checkin.message && (
-            <p style={{
-              fontSize: 14,
-              color: 'var(--tc-warm-mid)',
-              whiteSpace: 'pre-wrap',
-              lineHeight: 1.65,
-              marginBottom: 12,
-            }}>
+            <p className="text-sm text-tc-warm-mid whitespace-pre-wrap leading-[1.65] mb-3">
               {checkin.message}
             </p>
           )}
 
           {/* 하단 — 장소 링크 + 액션 */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+          <div className="flex items-center justify-between mt-1">
             <a
               href={mapsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              style={{
-                fontSize: 12,
-                color: 'var(--tc-warm-faint)',
-                textDecoration: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 3,
-              }}
+              className="text-xs text-tc-warm-faint no-underline flex items-center gap-[3px] hover:text-tc-warm-mid transition-colors"
             >
               📍 {checkin.place || '지도에서 보기'}
             </a>
             {(onEdit || onDelete) && (
-              <div style={{ display: 'flex', gap: 10 }}>
+              <div className="flex gap-2.5">
                 {onEdit && (
                   <button
                     onClick={() => onEdit(checkin)}
-                    style={{
-                      fontSize: 12,
-                      color: 'var(--tc-warm-mid)',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      padding: '2px 0',
-                    }}
+                    className="text-xs text-tc-warm-mid bg-transparent border-none cursor-pointer py-0.5 hover:text-tc-warm-dark transition-colors"
                   >
                     수정
                   </button>
@@ -137,14 +103,7 @@ export function CheckinListItem({ checkin, onEdit, onDelete }: CheckinListItemPr
                 {onDelete && (
                   <button
                     onClick={handleDelete}
-                    style={{
-                      fontSize: 12,
-                      color: '#EF4444',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      padding: '2px 0',
-                    }}
+                    className="text-xs text-[#EF4444] bg-transparent border-none cursor-pointer py-0.5 hover:text-red-600 transition-colors"
                   >
                     삭제
                   </button>
