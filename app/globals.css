@@ -250,3 +250,19 @@ input::-webkit-clear-button {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* 체크인 타임라인 그리드 */
+.checkin-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 640px) {
+  .checkin-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 768px) {
+  .checkin-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 900px) {
+  .checkin-grid { grid-template-columns: repeat(4, 1fr); }
+}

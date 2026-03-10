@@ -95,6 +95,8 @@ OS 기본 시스템 폰트를 사용한다 (`-apple-system, BlinkMacSystemFont, 
 ### 체크인 페이지
 - 컨테이너: full-width (지도가 전체 너비를 사용)
 - 패딩: `20px 16px`, 하단 `calc(80px + env(safe-area-inset-bottom, 0px))`
+- 체크인 카드 그리드: `.checkin-grid` (640px→2단, 768px→3단, 900px→4단)
+  - Tailwind 반응형 클래스 대신 `globals.css`에 직접 정의 (Turbopack arbitrary value 미지원 우회)
 
 ---
 
@@ -241,6 +243,7 @@ Easing 원칙:
 
 ### 체크인 타임라인 (`app/checkin/components/CheckinTimeline.tsx`)
 - 날짜 구분: 코랄 8px 도트 + 따뜻한 텍스트 + `--tc-dot` 라인
+- 체크인 카드: 날짜별 그룹핑 후 `.checkin-grid`로 반응형 다단 배치
 
 ### 사이드 드로어 (`app/checkin/components/SideDrawer.tsx`)
 - 패널: `.tc-drawer-panel` (크림 배경)

@@ -42,27 +42,17 @@ export default function CheckinTimeline({
   return (
     <div>
       {/* 섹션 헤더 */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 900, color: 'var(--tc-warm-dark)', letterSpacing: '-0.01em' }}>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-black text-tc-warm-dark tracking-[-0.01em]">
           기록{' '}
-          <span style={{ fontSize: 14, fontWeight: 400, color: 'var(--tc-warm-faint)' }}>
+          <span className="text-sm font-normal text-tc-warm-faint">
             {checkins.length}곳
           </span>
         </h2>
         {checkins.length > 0 && (
           <button
             onClick={onSortChange}
-            style={{
-              fontSize: 12,
-              fontWeight: 600,
-              color: 'var(--tc-warm-mid)',
-              background: 'var(--tc-card-empty)',
-              border: 'none',
-              borderRadius: 20,
-              padding: '5px 12px',
-              cursor: 'pointer',
-              letterSpacing: '0.01em',
-            }}
+            className="text-xs font-semibold text-tc-warm-mid bg-tc-card-empty border-none rounded-full px-3 py-[5px] cursor-pointer tracking-[0.01em]"
           >
             {sortOrder === 'desc' ? '최신순 ↓' : '오래된순 ↑'}
           </button>
@@ -71,65 +61,55 @@ export default function CheckinTimeline({
 
       {/* 빈 상태 */}
       {checkins.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '48px 0' }}>
-          <div style={{ fontSize: 48, marginBottom: 14 }}>🗺️</div>
-          <p style={{ fontSize: 16, fontWeight: 800, color: 'var(--tc-warm-dark)', marginBottom: 6 }}>
+        <div className="text-center py-12">
+          <div className="text-5xl mb-3.5">🗺️</div>
+          <p className="text-base font-extrabold text-tc-warm-dark mb-1.5">
             아직 체크인이 없어요
           </p>
-          <p style={{ fontSize: 13, color: 'var(--tc-warm-mid)' }}>
+          <p className="text-[13px] text-tc-warm-mid">
             아래 + 버튼을 눌러 첫 순간을 기록해보세요
           </p>
         </div>
       )}
 
       {/* 타임라인 */}
-      {sorted.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-          {sorted.map((checkin, index) => {
-            const currentDate = new Date(checkin.checked_in_at).toDateString();
-            const prevDate = index > 0 ? new Date(sorted[index - 1].checked_in_at).toDateString() : null;
-            const showDateHeader = currentDate !== prevDate;
+      {sorted.length > 0 && (() => {
+        // 날짜별 그룹핑
+        const groups: { dateKey: string; dateStr: string; items: typeof sorted }[] = [];
+        for (const checkin of sorted) {
+          const dateKey = new Date(checkin.checked_in_at).toDateString();
+          const last = groups[groups.length - 1];
+          if (last && last.dateKey === dateKey) {
+            last.items.push(checkin);
+          } else {
+            groups.push({ dateKey, dateStr: checkin.checked_in_at, items: [checkin] });
+          }
+        }
 
-            return (
-              <div key={checkin.id}>
+        return (
+          <div className="flex flex-col">
+            {groups.map((group, gi) => (
+              <div key={group.dateKey} className={gi > 0 ? 'mt-7' : ''}>
                 {/* 날짜 구분선 */}
-                {showDateHeader && (
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    marginTop: index > 0 ? 28 : 0,
-                    marginBottom: 12,
-                  }}>
-                    <div style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: '50%',
-                      background: '#FF6B47',
-                      flexShrink: 0,
-                    }} />
-                    <span style={{
-                      fontSize: 12,
-                      fontWeight: 700,
-                      color: 'var(--tc-warm-mid)',
-                      whiteSpace: 'nowrap',
-                      letterSpacing: '0.02em',
-                    }}>
-                      {formatDateHeader(checkin.checked_in_at)}
-                    </span>
-                    <div style={{ flex: 1, height: 1, background: 'var(--tc-dot)' }} />
-                  </div>
-                )}
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-2 h-2 rounded-full shrink-0 bg-[#FF6B47]" />
+                  <span className="text-xs font-bold text-tc-warm-mid whitespace-nowrap tracking-[0.02em]">
+                    {formatDateHeader(group.dateStr)}
+                  </span>
+                  <div className="flex-1 h-px bg-tc-dot" />
+                </div>
 
-                {/* 체크인 카드 */}
-                <div style={{ marginBottom: 10 }}>
-                  <CheckinListItem checkin={checkin} onEdit={onEdit} onDelete={onDelete} />
+                {/* 체크인 카드 그리드 */}
+                <div className="checkin-grid">
+                  {group.items.map((checkin) => (
+                    <CheckinListItem key={checkin.id} checkin={checkin} onEdit={onEdit} onDelete={onDelete} />
+                  ))}
                 </div>
               </div>
-            );
-          })}
-        </div>
-      )}
+            ))}
+          </div>
+        );
+      })()}
     </div>
   );
 }
