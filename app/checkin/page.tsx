@@ -11,6 +11,7 @@ import type { Trip, Checkin } from '@/types/database';
 import type { User } from '@supabase/supabase-js';
 import { useTrips } from './hooks/useTrips';
 import { useCheckins } from './hooks/useCheckins';
+import { useTripTagline } from './hooks/useTripTagline';
 import SideDrawer from './components/SideDrawer';
 import TripFormModal from '@/components/TripFormModal';
 import CheckinTimeline from './components/CheckinTimeline';
@@ -77,6 +78,7 @@ function CheckinPageInner() {
   }, [checkins, getCurrentPosition]);
 
   const selectedTrip = trips.find((t) => t.id === selectedTripId);
+  const { tagline, loading: taglineLoading, error: taglineError, refresh: refreshTagline } = useTripTagline(selectedTrip);
 
   const mapPhotos: MapPhoto[] = checkins
     .map((c) => ({
@@ -349,6 +351,81 @@ function CheckinPageInner() {
                 </div>
               );
             })()}
+
+            {selectedTrip && (
+              <div style={{
+                marginBottom: 16,
+                padding: '14px 16px',
+                background: 'linear-gradient(135deg, rgba(255,107,71,0.12), rgba(255,214,166,0.2))',
+                borderRadius: 16,
+                boxShadow: '0 4px 16px rgba(45,36,22,0.08)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                  <div style={{
+                    width: 34,
+                    height: 34,
+                    flexShrink: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: 9999,
+                    background: 'rgba(255,255,255,0.75)',
+                    fontSize: 18,
+                  }}>
+                    ✨
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{
+                      margin: 0,
+                      fontSize: 16,
+                      lineHeight: 1.5,
+                      fontWeight: 800,
+                      color: 'var(--tc-warm-dark)',
+                      letterSpacing: '-0.01em',
+                    }}>
+                      {taglineLoading ? '여행 분위기에 맞는 멘트를 고르는 중이에요...' : (tagline || taglineError)}
+                    </p>
+                  </div>
+                  <button
+                    onClick={refreshTagline}
+                    disabled={taglineLoading}
+                    title="문구 다시 만들기"
+                    style={{
+                      width: 32,
+                      height: 32,
+                      flexShrink: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'var(--tc-warm-mid)',
+                      background: 'rgba(255,255,255,0.8)',
+                      border: '1px solid rgba(132,107,77,0.18)',
+                      borderRadius: 10,
+                      cursor: taglineLoading ? 'not-allowed' : 'pointer',
+                      opacity: taglineLoading ? 0.5 : 1,
+                    }}
+                  >
+                    {taglineLoading ? (
+                      <div style={{
+                        width: 12,
+                        height: 12,
+                        border: '2px solid var(--tc-warm-mid)',
+                        borderTopColor: 'transparent',
+                        borderRadius: '50%',
+                        animation: 'spin 0.8s linear infinite',
+                      }} />
+                    ) : (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 2v6h-6" />
+                        <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+                        <path d="M3 22v-6h6" />
+                        <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* 지도 */}
             <div style={{ marginBottom: 24, borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 20px rgba(45,36,22,0.1)' }}>

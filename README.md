@@ -34,12 +34,16 @@ cp .env.local.example .env.local
 필요한 API 키:
 - **Supabase**: [https://supabase.com](https://supabase.com)에서 프로젝트 생성
 - **Google Maps**: [https://console.cloud.google.com](https://console.cloud.google.com)에서 Maps JavaScript API 키 발급
+- **Gemini**: [https://aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)에서 Gemini API 키 발급
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=...
+GEMINI_API_KEY=...
 ```
+
+`GEMINI_API_KEY`는 서버 전용 환경 변수입니다. 브라우저에서 직접 사용하지 말고, Next.js API 라우트에서만 호출하세요.
 
 ### 개발 서버 실행
 
