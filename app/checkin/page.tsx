@@ -338,10 +338,8 @@ function CheckinPageInner() {
                             }} />
                           ) : (
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M21 2v6h-6"/>
-                              <path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
-                              <path d="M3 22v-6h6"/>
-                              <path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+                              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                              <circle cx="12" cy="9" r="2.5"/>
                             </svg>
                           )}
                         </button>
@@ -355,35 +353,24 @@ function CheckinPageInner() {
             {selectedTrip && (
               <div style={{
                 marginBottom: 16,
-                padding: '14px 16px',
-                background: 'linear-gradient(135deg, rgba(255,107,71,0.12), rgba(255,214,166,0.2))',
-                borderRadius: 16,
-                boxShadow: '0 4px 16px rgba(45,36,22,0.08)',
+                padding: '12px 16px',
+                background: 'var(--tc-card-bg)',
+                borderRadius: 14,
+                boxShadow: '0 2px 8px rgba(45,36,22,0.06)',
+                borderLeft: '4px solid rgba(255,107,71,0.45)',
               }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                  <div style={{
-                    width: 34,
-                    height: 34,
-                    flexShrink: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: 9999,
-                    background: 'rgba(255,255,255,0.75)',
-                    fontSize: 18,
-                  }}>
-                    ✨
-                  </div>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{
                       margin: 0,
-                      fontSize: 16,
-                      lineHeight: 1.5,
-                      fontWeight: 800,
+                      fontSize: 14,
+                      lineHeight: 1.6,
+                      fontWeight: 500,
+                      fontStyle: 'italic',
                       color: 'var(--tc-warm-dark)',
-                      letterSpacing: '-0.01em',
                     }}>
-                      {taglineLoading ? '여행 분위기에 맞는 멘트를 고르는 중이에요...' : (tagline || taglineError)}
+                      {!taglineLoading && (tagline || taglineError) && <span style={{ marginRight: 4, fontStyle: 'normal' }}>✨</span>}
+                      {taglineLoading ? '여행 분위기에 맞는 문구를 만드는 중...' : (tagline || taglineError)}
                     </p>
                   </div>
                   <button
@@ -391,18 +378,19 @@ function CheckinPageInner() {
                     disabled={taglineLoading}
                     title="문구 다시 만들기"
                     style={{
-                      width: 32,
-                      height: 32,
+                      width: 28,
+                      height: 28,
                       flexShrink: 0,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       color: 'var(--tc-warm-mid)',
-                      background: 'rgba(255,255,255,0.8)',
-                      border: '1px solid rgba(132,107,77,0.18)',
-                      borderRadius: 10,
+                      background: 'var(--tc-card-empty)',
+                      border: '1px solid var(--tc-dot)',
+                      borderRadius: 8,
                       cursor: taglineLoading ? 'not-allowed' : 'pointer',
-                      opacity: taglineLoading ? 0.5 : 1,
+                      opacity: taglineLoading ? 0.4 : 1,
+                      transition: 'opacity 0.2s',
                     }}
                   >
                     {taglineLoading ? (
