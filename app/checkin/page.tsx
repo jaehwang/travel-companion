@@ -370,7 +370,7 @@ function CheckinPageInner() {
                       color: 'var(--tc-warm-dark)',
                     }}>
                       {!taglineLoading && (tagline || taglineError) && <span style={{ marginRight: 4, fontStyle: 'normal' }}>✨</span>}
-                      {taglineLoading ? '여행 분위기에 맞는 문구를 만드는 중...' : (tagline || taglineError)}
+                      {taglineLoading ? '두근, 두근...' : (tagline || taglineError)}
                     </p>
                   </div>
                   <button
