@@ -100,6 +100,7 @@ function CheckinPageInner() {
     } else {
       addCheckin(checkin);
     }
+    refreshTagline();
     setShowForm(false);
     setEditingCheckin(null);
   };
@@ -107,6 +108,7 @@ function CheckinPageInner() {
   const handleDeleteCheckin = async (id: string) => {
     try {
       await deleteCheckin(id);
+      refreshTagline();
     } catch (err) {
       alert(err instanceof Error ? err.message : '체크인 삭제에 실패했습니다.');
     }
