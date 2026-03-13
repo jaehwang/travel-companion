@@ -44,7 +44,7 @@ function CheckinPageInner() {
   const [mounted, setMounted] = useState(false);
   const [applyingPlace, setApplyingPlace] = useState(false);
   const locationPickerInitial = useRef<{ latitude: number; longitude: number } | null>(null);
-  const locationPickerCallback = useRef<((lat: number, lng: number) => void) | null>(null);
+  const locationPickerCallback = useRef<((lat: number, lng: number, place?: { name: string; place_id: string }) => void) | null>(null);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -506,8 +506,8 @@ function CheckinPageInner() {
       {showLocationPicker && (
         <LocationPicker
           initialLocation={locationPickerInitial.current || undefined}
-          onLocationSelect={(lat, lng) => {
-            locationPickerCallback.current?.(lat, lng);
+          onLocationSelect={(lat, lng, place) => {
+            locationPickerCallback.current?.(lat, lng, place);
             setShowLocationPicker(false);
           }}
           onClose={() => setShowLocationPicker(false)}
