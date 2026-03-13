@@ -16,6 +16,7 @@ import SideDrawer from './components/SideDrawer';
 import TripFormModal from '@/components/TripFormModal';
 import CheckinTimeline from './components/CheckinTimeline';
 import BottomBar from './components/BottomBar';
+import TodayCalendar from './components/TodayCalendar';
 
 function formatTripDate(dateStr: string | null | undefined): string | null {
   if (!dateStr) return null;
@@ -426,6 +427,8 @@ function CheckinPageInner() {
                 </p>
               )}
             </div>
+
+            <TodayCalendar />
 
             <CheckinTimeline
               checkins={checkins}
