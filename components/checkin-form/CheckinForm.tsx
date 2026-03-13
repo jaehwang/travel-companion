@@ -37,7 +37,7 @@ interface CheckinFormProps {
   onCancel?: () => void;
   onOpenLocationPicker?: (
     initial: { latitude: number; longitude: number } | null,
-    onSelect: (lat: number, lng: number) => void
+    onSelect: (lat: number, lng: number, place?: { name: string; place_id: string }) => void
   ) => void;
 }
 
@@ -148,8 +148,8 @@ export default function CheckinForm({
       const method = isEditMode ? 'PATCH' : 'POST';
       const body: Record<string, unknown> = {
         title: title.trim(),
-        place: place.trim() || undefined,
-        place_id: placeId || undefined,
+        place: place.trim() || null,
+        place_id: placeId || null,
         message: message.trim() || undefined,
         category: category || undefined,
         latitude: loc.location!.latitude,
@@ -257,23 +257,18 @@ export default function CheckinForm({
         <CheckinFormToolbar
           fileInputRef={photo.fileInputRef}
           photoPreviewUrl={photo.photoPreviewUrl}
-          hasPlaceFromSearch={!!place}
           selectedLocation={loc.location}
           hasCategory={!!category}
           checkedInAt={checkedInAt}
           toolbarBottom={toolbarBottom}
           onFileChange={photo.handleFileSelect}
-          onOpenPlaceSearch={() => {
-            setActivePanel('place-search');
-            placeSearch.reset();
-          }}
           onOpenLocationPicker={
             onOpenLocationPicker
               ? () =>
-                  onOpenLocationPicker(loc.location, (lat, lng) => {
+                  onOpenLocationPicker(loc.location, (lat, lng, place) => {
                     loc.setManualLocation(lat, lng);
-                    setPlace('');
-                    setPlaceId('');
+                    setPlace(place?.name ?? '');
+                    setPlaceId(place?.place_id ?? '');
                     setError(null);
                   })
               : undefined

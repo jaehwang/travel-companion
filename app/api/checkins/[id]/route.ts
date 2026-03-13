@@ -50,8 +50,8 @@ export async function PATCH(
     if (latitude !== undefined) updateData.latitude = latitude;
     if (longitude !== undefined) updateData.longitude = longitude;
     if (title !== undefined) updateData.title = title?.trim() || undefined;
-    if (place !== undefined) updateData.place = place?.trim() || undefined;
-    if (place_id !== undefined) updateData.place_id = place_id || undefined;
+    if (place !== undefined) updateData.place = place ? place.trim() || null : null;
+    if (place_id !== undefined) updateData.place_id = place_id || null;
     if (message !== undefined) updateData.message = message?.trim() || undefined;
     if (category !== undefined) updateData.category = category || undefined;
     if (photo_url !== undefined) updateData.photo_url = photo_url || undefined;

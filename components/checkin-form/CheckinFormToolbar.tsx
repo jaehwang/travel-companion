@@ -5,13 +5,11 @@ import { ChangeEvent } from 'react';
 interface CheckinFormToolbarProps {
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   photoPreviewUrl: string;
-  hasPlaceFromSearch: boolean;
   selectedLocation: { latitude: number; longitude: number } | null;
   hasCategory: boolean;
   checkedInAt: string;
   toolbarBottom: number;
   onFileChange: (e: ChangeEvent<HTMLInputElement>) => void;
-  onOpenPlaceSearch: () => void;
   onOpenLocationPicker?: () => void;
   onOpenCategory: () => void;
   onOpenTime: () => void;
@@ -85,13 +83,11 @@ function ToolbarBtn({
 export default function CheckinFormToolbar({
   fileInputRef,
   photoPreviewUrl,
-  hasPlaceFromSearch,
   selectedLocation,
   hasCategory,
   checkedInAt,
   toolbarBottom,
   onFileChange,
-  onOpenPlaceSearch,
   onOpenLocationPicker,
   onOpenCategory,
   onOpenTime,
@@ -130,13 +126,7 @@ export default function CheckinFormToolbar({
       <ToolbarBtn
         emoji="📍"
         label="장소"
-        active={!!(selectedLocation && hasPlaceFromSearch)}
-        onClick={onOpenPlaceSearch}
-      />
-      <ToolbarBtn
-        emoji="🗺️"
-        label="지도"
-        active={!!(selectedLocation && !hasPlaceFromSearch)}
+        active={!!selectedLocation}
         disabled={!onOpenLocationPicker}
         onClick={onOpenLocationPicker}
       />
