@@ -10,6 +10,11 @@ export default function LoginPage() {
       provider: 'google',
       options: {
         redirectTo: `${location.origin}/auth/callback`,
+        scopes: 'https://www.googleapis.com/auth/calendar.readonly',
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
       },
     });
   };
