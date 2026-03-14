@@ -22,13 +22,29 @@ function formatEventTime(event: CalendarEvent): string {
   return `${s.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}–${e.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}`;
 }
 
+function eventStartMs(event: CalendarEvent): number {
+  return new Date(event.start.dateTime ?? event.start.date!).getTime();
+}
+
+function eventEndMs(event: CalendarEvent): number {
+  // all-day: end.date는 다음 날 자정(exclusive)이므로 그대로 사용
+  return new Date(event.end.dateTime ?? event.end.date!).getTime();
+}
+
 function getNextEvent(events: CalendarEvent[]): CalendarEvent | null {
   const now = Date.now();
-  // 아직 끝나지 않은 일정 중 가장 빨리 시작하는 것
   const upcoming = events
-    .filter(e => e.start.dateTime) // 시간이 있는 일정만
-    .filter(e => new Date(e.end.dateTime!).getTime() > now)
-    .sort((a, b) => new Date(a.start.dateTime!).getTime() - new Date(b.start.dateTime!).getTime());
+    .filter(e => eventEndMs(e) > now)
+    .sort((a, b) => eventStartMs(a) - eventStartMs(b));
+  return upcoming[0] ?? null;
+}
+
+function getNextTimedEvent(events: CalendarEvent[]): CalendarEvent | null {
+  const now = Date.now();
+  const upcoming = events
+    .filter(e => e.start.dateTime)
+    .filter(e => eventEndMs(e) > now)
+    .sort((a, b) => eventStartMs(a) - eventStartMs(b));
   return upcoming[0] ?? null;
 }
 
@@ -38,6 +54,7 @@ export default function TodayCalendar({ tripEndDate }: { tripEndDate?: string })
   const [open, setOpen] = useState(false);
   const [advice, setAdvice] = useState<string | null>(null);
   const [adviceLoading, setAdviceLoading] = useState(false);
+  const [adviceTarget, setAdviceTarget] = useState<string | null>(null);
   const [tokenExpired, setTokenExpired] = useState(false);
 
   useEffect(() => {
@@ -50,6 +67,8 @@ export default function TodayCalendar({ tripEndDate }: { tripEndDate?: string })
 
     setEvents([]);
     setAdvice(null);
+    setAdviceTarget(null);
+    setOpen(false);
 
     fetch(`/api/calendar?timeMin=${start.toISOString()}&timeMax=${end.toISOString()}&maxResults=10`)
       .then(res => res.json())
@@ -67,16 +86,18 @@ export default function TodayCalendar({ tripEndDate }: { tripEndDate?: string })
   // 다음 일정 AI 조언
   useEffect(() => {
     if (events.length === 0) return;
-    const next = getNextEvent(events);
+    const next = getNextTimedEvent(events);
     if (!next) {
       setAdvice(null);
+      setAdviceTarget(null);
       return;
     }
 
     setAdviceLoading(true);
+    setAdviceTarget(formatEventDate(next));
 
     const minutesUntil = Math.round(
-      (new Date(next.start.dateTime!).getTime() - Date.now()) / 60000
+      (eventStartMs(next) - Date.now()) / 60000
     );
 
     const fetchAdvice = (userLat?: number, userLng?: number) => {
@@ -181,14 +202,8 @@ export default function TodayCalendar({ tripEndDate }: { tripEndDate?: string })
             {tripEndDate ? '여행 일정' : '오늘 일정'} {events.length}개
           </div>
           {advice && (
-            <div style={{
-              fontSize: 12,
-              color: 'var(--tc-warm-mid)',
-              marginTop: 2,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}>
+            <div style={{ fontSize: 12, color: 'var(--tc-warm-mid)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {adviceTarget && <span style={{ color: 'var(--tc-warm-faint)', marginRight: 4 }}>{adviceTarget}</span>}
               {advice}
             </div>
           )}
