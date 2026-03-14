@@ -2,6 +2,13 @@
 
 import type { PlacePrediction } from './hooks/usePlaceSearch';
 
+// 이 패널은 체크인의 `place` 필드(공식 장소명)를 채우기 위한 검색 화면이다.
+// `place`와 `title`(체크인 제목)의 차이:
+//   - title: 사용자가 직접 자유롭게 입력하는 체크인 제목 (예: "점심 먹은 곳")
+//   - place: 이 패널의 자동완성을 통해 선택한 경우에만 저장되는 Google Places 공식 장소명.
+//            장소 검색을 건너뛰면 null로 저장된다.
+// place를 선택하면 위도/경도도 함께 자동 반영된다(usePlaceSearch → onPlaceSelected 콜백).
+
 interface CheckinFormPlacePanelProps {
   searchQuery: string;
   onSearchQueryChange: (v: string) => void;
@@ -41,7 +48,10 @@ export default function CheckinFormPlacePanel({
           ← 뒤로
         </button>
 
-        {/* 검색 인풋 */}
+        {/* 검색 인풋
+            자동완성은 usePlaceSearch 훅이 담당한다.
+            입력값이 2자 미만이면 API 호출을 하지 않고(불필요한 요청 방지),
+            2자 이상이 되면 300ms 디바운스 후 Google Places Autocomplete API를 호출한다. */}
         <div style={{
           flex: 1,
           display: 'flex', alignItems: 'center', gap: 8,
@@ -95,7 +105,9 @@ export default function CheckinFormPlacePanel({
         </div>
       </div>
 
-      {/* 검색 결과 */}
+      {/* 검색 결과
+          항목 선택 시 onSelectPlace → usePlaceSearch.handleSelectPlace 로 전달되어
+          Places Details API로 정확한 위도/경도를 조회한 뒤 위치까지 함께 업데이트한다. */}
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {predictions.map((p) => (
           <button
@@ -110,6 +122,8 @@ export default function CheckinFormPlacePanel({
               display: 'block',
             }}
           >
+            {/* structured_formatting: Google Places API가 장소명(main_text)과
+                주소/지역(secondary_text)을 분리해서 내려주는 구조체 */}
             <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tc-warm-dark)', marginBottom: 3 }}>
               📍 {p.structured_formatting.main_text}
             </div>

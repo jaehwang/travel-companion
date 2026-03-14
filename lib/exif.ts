@@ -20,6 +20,12 @@ export interface PhotoMetadata {
 
 /**
  * 사진 파일에서 GPS 정보 추출
+ *
+ * 주의: iOS Safari에서 카메라 직접 촬영 또는 사진 라이브러리 선택 시
+ * 개인정보 보호 정책으로 인해 GPS EXIF가 제거된다.
+ * 이 함수가 null을 반환하면 Geolocation API 폴백이나 LocationPicker 수동 지정이 필요하다.
+ *
+ * exifr는 DMS(도/분/초) 형식을 decimal degrees로 자동 변환하여 반환한다.
  */
 export async function extractGPSFromPhoto(file: File): Promise<PhotoLocation | null> {
   try {
@@ -29,7 +35,7 @@ export async function extractGPSFromPhoto(file: File): Promise<PhotoLocation | n
     // GPS 데이터 확인
     if (!exifData) return null;
 
-    // latitude와 longitude 확인
+    // exifr가 변환한 decimal degrees 값 우선 사용. 없으면 raw GPS 필드 폴백.
     const latitude = exifData.latitude || exifData.GPSLatitude;
     const longitude = exifData.longitude || exifData.GPSLongitude;
 
@@ -115,6 +121,10 @@ export async function extractPhotoMetadata(file: File): Promise<PhotoMetadata> {
 
 /**
  * EXIF 데이터를 JSON 저장 가능한 형태로 단순화
+ *
+ * 전체 EXIF를 그대로 저장하면 ArrayBuffer, 중첩 객체 등으로 인해
+ * DB 레코드가 수백 KB에 달하거나 JSON 직렬화에 실패한다.
+ * primitive 값만 추출하고 바이너리/중첩 객체는 제외한다.
  */
 function simplifyExif(exif: any): Record<string, any> {
   const simplified: Record<string, any> = {};

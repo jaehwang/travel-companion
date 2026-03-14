@@ -1,5 +1,22 @@
 'use client';
 
+/**
+ * 체크인 메인 페이지
+ *
+ * 역할:
+ *   - 여행 목록 조회 및 선택, 체크인 CRUD, 지도/타임라인 렌더링을 조율하는 최상위 컨테이너
+ *
+ * LocationPicker 아키텍처:
+ *   - LocationPicker는 반드시 이 페이지 최상위(CheckinForm 바깥)에서 렌더링해야 한다.
+ *   - CheckinForm 내부에 두면 Google Maps APIProvider context 안에 중첩되고,
+ *     Google Maps SDK가 페이지에 주입하는 `transform` CSS 때문에
+ *     LocationPicker 내부의 `position: fixed` 지도가 iOS에서 뷰포트 기준이 아닌
+ *     transform 컨텍스트 기준으로 배치되어 화면 밖으로 어긋난다.
+ *   - 해결: CheckinForm은 `onOpenLocationPicker` 콜백만 받고, 실제 LocationPicker는
+ *     이 파일에서 직접 렌더링한다. LocationPicker 자체도 createPortal로 document.body에
+ *     붙여 stacking context를 완전히 우회한다.
+ */
+
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import CheckinForm from '@/components/checkin-form/CheckinForm';
@@ -34,6 +51,7 @@ function CheckinPageInner() {
   const [user, setUser] = useState<User | null>(null);
   const [selectedTripId, setSelectedTripId] = useState(searchParams.get('trip_id') ?? '');
   const [showForm, setShowForm] = useState(false);
+  // editingCheckin이 null이면 신규 체크인, 값이 있으면 수정 모드
   const [editingCheckin, setEditingCheckin] = useState<Checkin | null>(null);
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [showLocationPicker, setShowLocationPicker] = useState(false);
@@ -42,8 +60,20 @@ function CheckinPageInner() {
   const [tripFormMode, setTripFormMode] = useState<'create' | 'edit'>('create');
   const [editingTrip, setEditingTrip] = useState<Trip | undefined>();
   const [mapCenter, setMapCenter] = useState({ lat: 37.5665, lng: 126.978 });
+  // SideDrawer, BottomBar, TripFormModal은 SSR 환경(document 없음)에서 렌더링 불가 → 마운트 후에만 표시
   const [mounted, setMounted] = useState(false);
   const [applyingPlace, setApplyingPlace] = useState(false);
+
+  /**
+   * LocationPicker 연결용 ref 쌍
+   *
+   * state 대신 ref를 사용하는 이유:
+   *   CheckinForm이 onOpenLocationPicker 콜백을 호출할 때 onSelect 함수를 넘긴다.
+   *   이 onSelect는 CheckinForm 내부 클로저이므로, state로 저장하면 LocationPicker가
+   *   닫힌 뒤 호출될 때 stale closure 문제가 생긴다.
+   *   ref는 항상 최신 값을 가리키므로 안전하다.
+   *   또한 ref 변경은 리렌더링을 유발하지 않아 불필요한 렌더를 막는다.
+   */
   const locationPickerInitial = useRef<{ latitude: number; longitude: number } | null>(null);
   const locationPickerCallback = useRef<((lat: number, lng: number, place?: { name: string; place_id: string }) => void) | null>(null);
 
@@ -95,6 +125,12 @@ function CheckinPageInner() {
     }))
     .sort((a, b) => new Date(a.takenAt!).getTime() - new Date(b.takenAt!).getTime());
 
+  /**
+   * 체크인 저장 성공 핸들러
+   *
+   * editingCheckin 유무로 수정/신규를 구분하여 로컬 목록을 갱신한다.
+   * API 호출 자체는 CheckinForm이 담당하고, 성공 후 결과 checkin 객체를 받아 여기서 처리한다.
+   */
   const handleCheckinSuccess = (checkin: Checkin) => {
     if (editingCheckin) {
       updateCheckin(checkin);
@@ -126,6 +162,14 @@ function CheckinPageInner() {
     }
   };
 
+  /**
+   * 여행의 대표 장소(selectedTrip.place)를 해당 여행의 모든 체크인에 일괄 적용한다.
+   *
+   * 개별 체크인마다 장소를 직접 설정하기 번거로울 때 사용하는 편의 기능.
+   * 기존 체크인의 place 값을 덮어쓰므로 사용자 확인을 먼저 받는다.
+   * 서버 API(/api/trips/:id/apply-place)가 DB를 일괄 업데이트하고,
+   * 완료 후 reloadCheckins()로 최신 상태를 다시 불러온다.
+   */
   const handleBulkApplyPlace = async () => {
     if (!selectedTrip?.place || checkins.length === 0) return;
     const confirmed = window.confirm(
@@ -242,6 +286,7 @@ function CheckinPageInner() {
         style={{
           maxWidth: '100%',
           padding: '20px 16px',
+          // BottomBar 높이(약 80px) + iOS safe area를 확보해 콘텐츠가 가려지지 않도록 함
           paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))',
         }}
       >
@@ -266,12 +311,16 @@ function CheckinPageInner() {
                 tripName={selectedTrip?.title}
                 userAvatarUrl={user?.user_metadata?.avatar_url}
                 editingCheckin={editingCheckin ?? undefined}
+                // 수정 모드에서는 여행 기본 장소를 덮어쓰지 않는다
                 initialPlace={editingCheckin ? undefined : selectedTrip?.place}
                 initialPlaceId={editingCheckin ? undefined : selectedTrip?.place_id}
                 initialLatitude={editingCheckin ? undefined : selectedTrip?.latitude}
                 initialLongitude={editingCheckin ? undefined : selectedTrip?.longitude}
                 onSuccess={handleCheckinSuccess}
                 onCancel={() => { setShowForm(false); setEditingCheckin(null); }}
+                // LocationPicker를 직접 열지 않고 콜백으로 부모에게 위임한다.
+                // 이유: LocationPicker를 CheckinForm 내부(Google Maps context 안)에서
+                // 렌더링하면 iOS에서 fixed 위치가 transform 기준으로 어긋나는 문제가 생긴다.
                 onOpenLocationPicker={(initial, onSelect) => {
                   locationPickerInitial.current = initial;
                   locationPickerCallback.current = onSelect;
@@ -434,6 +483,7 @@ function CheckinPageInner() {
               checkins={checkins}
               sortOrder={sortOrder}
               onSortChange={() => setSortOrder((o) => (o === 'desc' ? 'asc' : 'desc'))}
+              // 수정 버튼 클릭 → editingCheckin 설정 후 폼 열기 (수정 모드)
               onEdit={(checkin) => { setEditingCheckin(checkin); setShowForm(true); }}
               onDelete={handleDeleteCheckin}
             />
@@ -476,6 +526,7 @@ function CheckinPageInner() {
         )}
       </div>
 
+      {/* mounted 체크: SideDrawer/BottomBar/TripFormModal은 document에 접근하므로 SSR에서 제외 */}
       {mounted && showDrawer && (
         <SideDrawer
           trips={trips}
@@ -506,6 +557,16 @@ function CheckinPageInner() {
         />
       )}
 
+      {/*
+        LocationPicker를 이 파일 최상위에서 렌더링하는 이유:
+        CheckinForm 안에 두면 Google Maps APIProvider의 transform context에 갇혀
+        iOS에서 fixed 모달 위치가 어긋난다. 여기서 렌더링하면 CheckinForm의
+        Google Maps context 바깥에 위치하므로 안전하다.
+        LocationPicker 내부에서도 createPortal로 document.body에 직접 붙인다.
+
+        locationPickerCallback.current에 CheckinForm이 넘긴 onSelect 클로저가 담겨 있어,
+        위치 확정 시 CheckinForm의 location 상태를 직접 업데이트한다.
+      */}
       {showLocationPicker && (
         <LocationPicker
           initialLocation={locationPickerInitial.current || undefined}

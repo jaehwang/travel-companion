@@ -23,8 +23,10 @@ interface MapProps {
   defaultZoom?: number;
 }
 
-// 지도 중심/줌 자동 조정을 담당하는 내부 컴포넌트
-// useMap() 훅은 APIProvider 내부에서만 동작하므로 별도 컴포넌트로 분리
+// 지도 중심/줌 자동 조정을 담당하는 내부 컴포넌트.
+// useMap() 훅은 <APIProvider> 트리 안에서만 유효한 context를 참조하기 때문에,
+// Map 컴포넌트 본체(APIProvider 바깥)에서 직접 호출하면 null을 반환한다.
+// 해결책으로 이 컴포넌트를 <GoogleMap> 자식으로 배치하여, APIProvider 안에서만 실행되도록 분리.
 function MapController({
   photos,
   defaultCenter,
@@ -46,6 +48,7 @@ function MapController({
       map.panTo({ lat: photos[0].latitude, lng: photos[0].longitude });
       map.setZoom(13);
     } else {
+      // 여러 마커가 모두 화면에 들어오도록 경계 계산 후 자동 줌 조정
       const bounds = new google.maps.LatLngBounds();
       photos.forEach(photo => {
         bounds.extend({ lat: photo.latitude, lng: photo.longitude });
@@ -95,9 +98,17 @@ export default function Map({
     <div className="relative" style={{ height, pointerEvents: 'auto', touchAction: 'pan-x pan-y' }}>
       <APIProvider apiKey={apiKey}>
         <GoogleMap
+          // controlled center/zoom 대신 default* 사용.
+          // controlled 방식(center/zoom prop)을 쓰면 React state와 지도를 항상 동기화해야 하는데,
+          // 사용자가 드래그/핀치로 지도를 움직일 때마다 state가 갱신되어야 하고,
+          // 그렇지 않으면 리렌더링 시 지도가 원래 위치로 튀어 돌아온다.
+          // default* 는 초기값만 지정하는 uncontrolled 방식이므로 이 문제가 없다.
           defaultCenter={defaultCenter}
           defaultZoom={defaultZoom}
           mapId="f61fd161984b7ef0b0aaa09b"
+          // 모바일에서 스크롤(페이지 이동)과 지도 패닝이 충돌하지 않도록 "greedy" 설정.
+          // 기본값("cooperative")은 단일 손가락 스와이프를 페이지 스크롤로 처리하기 때문에
+          // 지도를 움직이려면 두 손가락이 필요해 UX가 불편하다.
           gestureHandling="greedy"
           mapTypeControl={false}
           streetViewControl={false}
@@ -141,6 +152,8 @@ export default function Map({
 
           {/* InfoWindow (팝업) */}
           {selectedPhoto && (() => {
+            // photos 배열의 순서(=체크인 순서)를 기준으로 이전/다음 인덱스를 계산.
+            // id로 현재 선택된 항목의 위치를 찾아 hasPrev/hasNext 경계를 결정한다.
             const selectedIndex = photos.findIndex(p => p.id === selectedPhoto.id);
             const hasPrev = selectedIndex > 0;
             const hasNext = selectedIndex < photos.length - 1;
