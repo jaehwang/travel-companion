@@ -54,12 +54,14 @@ describe('CheckinListItem', () => {
   it('onEdit 핸들러가 제공되면 수정 버튼이 보인다', () => {
     const onEdit = jest.fn();
     render(<CheckinListItem checkin={baseCheckin} onEdit={onEdit} />);
+    fireEvent.click(screen.getByRole('button', { name: '더보기' }));
     expect(screen.getByText('수정')).toBeInTheDocument();
   });
 
   it('수정 버튼 클릭 시 onEdit이 체크인 객체와 함께 호출된다', () => {
     const onEdit = jest.fn();
     render(<CheckinListItem checkin={baseCheckin} onEdit={onEdit} />);
+    fireEvent.click(screen.getByRole('button', { name: '더보기' }));
     fireEvent.click(screen.getByText('수정'));
     expect(onEdit).toHaveBeenCalledWith(baseCheckin);
   });
@@ -68,6 +70,7 @@ describe('CheckinListItem', () => {
     window.confirm = jest.fn(() => true);
     const onDelete = jest.fn();
     render(<CheckinListItem checkin={baseCheckin} onDelete={onDelete} />);
+    fireEvent.click(screen.getByRole('button', { name: '더보기' }));
     fireEvent.click(screen.getByText('삭제'));
     expect(window.confirm).toHaveBeenCalled();
     expect(onDelete).toHaveBeenCalledWith('checkin-1');
@@ -77,6 +80,7 @@ describe('CheckinListItem', () => {
     window.confirm = jest.fn(() => false);
     const onDelete = jest.fn();
     render(<CheckinListItem checkin={baseCheckin} onDelete={onDelete} />);
+    fireEvent.click(screen.getByRole('button', { name: '더보기' }));
     fireEvent.click(screen.getByText('삭제'));
     expect(onDelete).not.toHaveBeenCalled();
   });
