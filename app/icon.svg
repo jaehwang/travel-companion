@@ -1,14 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect width="100" height="100" rx="22" fill="#EA580C"/>
-  <!-- Route line -->
-  <path d="M20 40 L50 40 L78 65" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-  <!-- Start point -->
-  <circle cx="20" cy="40" r="10" fill="white"/>
-  <circle cx="20" cy="40" r="5" fill="#EA580C"/>
-  <!-- Mid point -->
-  <circle cx="50" cy="40" r="8" fill="white" opacity="0.85"/>
-  <circle cx="50" cy="40" r="4" fill="#EA580C"/>
-  <!-- Destination map pin (teardrop) -->
-  <path d="M78 80 C71 72, 65 65, 65 57 A13 13 0 0 1 91 57 C91 65, 85 72, 78 80 Z" fill="white"/>
-  <circle cx="78" cy="56" r="5.5" fill="#EA580C"/>
+  <defs>
+    <linearGradient id="ga" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#F59E0B"/>
+      <stop offset="50%"  stop-color="#EA580C"/>
+      <stop offset="100%" stop-color="#9A3412"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="100" height="100" rx="22" fill="url(#ga)"/>
+
+  <!-- Start dot (bottom-left) -->
+  <circle cx="28" cy="72" r="10" fill="white" opacity="0.18"/>
+  <circle cx="28" cy="72" r="7.5" fill="white" opacity="0.95"/>
+  <circle cx="28" cy="72" r="3.5" fill="#F59E0B"/>
+
+  <!-- Curved path -->
+  <path d="M28,64 C28,28 72,64 72,28" fill="none" stroke="white" stroke-width="6" stroke-linecap="round" opacity="0.22"/>
+  <path d="M28,64 C28,28 72,64 72,28" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+
+  <!-- End dot (top-right) -->
+  <circle cx="72" cy="28" r="10" fill="white" opacity="0.18"/>
+  <circle cx="72" cy="28" r="7.5" fill="white" opacity="0.95"/>
+  <circle cx="72" cy="28" r="3.5" fill="#9A3412"/>
 </svg>
