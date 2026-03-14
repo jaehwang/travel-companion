@@ -39,13 +39,20 @@ function getNextEvent(events: CalendarEvent[]): CalendarEvent | null {
   return upcoming[0] ?? null;
 }
 
-function getNextTimedEvent(events: CalendarEvent[]): CalendarEvent | null {
+// 조언 대상: 아직 안 끝난 timed 일정 + 내일 이후 종일 일정
+function getAdviceEvents(events: CalendarEvent[]): CalendarEvent[] {
   const now = Date.now();
-  const upcoming = events
-    .filter(e => e.start.dateTime)
-    .filter(e => eventEndMs(e) > now)
-    .sort((a, b) => eventStartMs(a) - eventStartMs(b));
-  return upcoming[0] ?? null;
+  const tomorrow = new Date();
+  tomorrow.setHours(0, 0, 0, 0);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  return events
+    .filter(e => {
+      if (e.start.dateTime) return eventEndMs(e) > now;
+      return new Date(e.start.date!).getTime() >= tomorrow.getTime();
+    })
+    .sort((a, b) => eventStartMs(a) - eventStartMs(b))
+    .slice(0, 5);
 }
 
 export default function TodayCalendar({ tripEndDate }: { tripEndDate?: string }) {
@@ -54,7 +61,6 @@ export default function TodayCalendar({ tripEndDate }: { tripEndDate?: string })
   const [open, setOpen] = useState(false);
   const [advice, setAdvice] = useState<string | null>(null);
   const [adviceLoading, setAdviceLoading] = useState(false);
-  const [adviceTarget, setAdviceTarget] = useState<string | null>(null);
   const [tokenExpired, setTokenExpired] = useState(false);
 
   useEffect(() => {
@@ -67,7 +73,6 @@ export default function TodayCalendar({ tripEndDate }: { tripEndDate?: string })
 
     setEvents([]);
     setAdvice(null);
-    setAdviceTarget(null);
     setOpen(false);
 
     fetch(`/api/calendar?timeMin=${start.toISOString()}&timeMax=${end.toISOString()}&maxResults=10`)
@@ -83,34 +88,30 @@ export default function TodayCalendar({ tripEndDate }: { tripEndDate?: string })
       .finally(() => setLoading(false));
   }, [tripEndDate]);
 
-  // 다음 일정 AI 조언
+  // AI 조언
   useEffect(() => {
     if (events.length === 0) return;
-    const next = getNextTimedEvent(events);
-    if (!next) {
+    const adviceEvents = getAdviceEvents(events);
+    if (adviceEvents.length === 0) {
       setAdvice(null);
-      setAdviceTarget(null);
       return;
     }
 
     setAdviceLoading(true);
-    setAdviceTarget(formatEventDate(next));
-
-    const minutesUntil = Math.round(
-      (eventStartMs(next) - Date.now()) / 60000
-    );
+    const now = Date.now();
 
     const fetchAdvice = (userLat?: number, userLng?: number) => {
+      const payload = adviceEvents.map(e => ({
+        summary: e.summary ?? '일정',
+        location: e.location,
+        minutesUntil: Math.round((eventStartMs(e) - now) / 60000),
+        isAllDay: !e.start.dateTime,
+      }));
+
       fetch('/api/calendar/advice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          summary: next.summary ?? '일정',
-          location: next.location,
-          minutesUntil,
-          userLat,
-          userLng,
-        }),
+        body: JSON.stringify({ events: payload, userLat, userLng }),
       })
         .then(res => res.json())
         .then(data => { if (data.advice) setAdvice(data.advice); })
@@ -203,7 +204,6 @@ export default function TodayCalendar({ tripEndDate }: { tripEndDate?: string })
           </div>
           {advice && (
             <div style={{ fontSize: 12, color: 'var(--tc-warm-mid)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {adviceTarget && <span style={{ color: 'var(--tc-warm-faint)', marginRight: 4 }}>{adviceTarget}</span>}
               {advice}
             </div>
           )}
