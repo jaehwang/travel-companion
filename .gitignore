@@ -44,3 +44,8 @@ backup/
 
 pass.txt
 test-*.ts
+
+# Playwright
+test-results/
+playwright-report/
+tests/e2e/screenshots/
