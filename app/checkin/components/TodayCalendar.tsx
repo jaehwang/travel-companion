@@ -10,16 +10,13 @@ interface CalendarEvent {
   end: { dateTime?: string; date?: string };
 }
 
-function formatEventDate(event: CalendarEvent): string {
+function formatEventWhen(event: CalendarEvent): string {
   const d = new Date(event.start.dateTime ?? event.start.date!);
-  return d.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric', weekday: 'short' });
-}
-
-function formatEventTime(event: CalendarEvent): string {
-  if (!event.start.dateTime) return '종일';
+  const date = `${d.getMonth() + 1}/${d.getDate()}(${['일','월','화','수','목','금','토'][d.getDay()]})`;
+  if (!event.start.dateTime) return `${date} 종일`;
   const s = new Date(event.start.dateTime);
-  const e = new Date(event.end.dateTime!);
-  return `${s.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}–${e.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}`;
+  const startTime = s.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
+  return `${date} ${startTime}`;
 }
 
 function eventStartMs(event: CalendarEvent): number {
@@ -224,33 +221,30 @@ export default function TodayCalendar({ tripEndDate }: { tripEndDate?: string })
 
       {/* 이벤트 목록 */}
       {open && (
-        <div style={{ borderTop: '1px solid var(--color-border-light)', padding: '6px 0 8px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'max-content max-content 1fr', gap: '0 8px', alignItems: 'baseline' }}>
-            {events.map(event => (
-              <>
-                <span key={`d-${event.id}`} style={{ fontSize: 12, color: '#4285F4', fontWeight: 600, padding: '4px 0 4px 14px', whiteSpace: 'nowrap' }}>
-                  {formatEventDate(event)}
-                </span>
-                <span key={`t-${event.id}`} style={{ fontSize: 12, color: '#4285F4', whiteSpace: 'nowrap' }}>
-                  {formatEventTime(event)}
-                </span>
-                <span key={`s-${event.id}`} style={{ fontSize: 13, color: 'var(--tc-warm-dark)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 14 }}>
+        <div style={{ borderTop: '1px solid var(--color-border-light)', padding: '4px 0 8px' }}>
+          {events.map(event => (
+            <div key={event.id} style={{ display: 'grid', gridTemplateColumns: '90px 1fr', gap: '0 8px', padding: '4px 14px 4px 14px', alignItems: 'start' }}>
+              <span style={{ fontSize: 11, color: '#4285F4', fontWeight: 600, whiteSpace: 'nowrap', paddingTop: 1 }}>
+                {formatEventWhen(event)}
+              </span>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 13, color: 'var(--tc-warm-dark)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {event.summary ?? '(제목 없음)'}
-                  {event.location && (
-                    <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ fontSize: 11, color: '#4285F4', marginLeft: 6, textDecoration: 'none' }}
-                      onClick={e => e.stopPropagation()}
-                    >
-                      📍 {event.location}
-                    </a>
-                  )}
-                </span>
-              </>
-            ))}
-          </div>
+                </div>
+                {event.location && (
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ fontSize: 11, color: '#4285F4', textDecoration: 'none', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                    onClick={e => e.stopPropagation()}
+                  >
+                    📍 {event.location}
+                  </a>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
