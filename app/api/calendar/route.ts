@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 
 async function refreshGoogleToken(refreshToken: string): Promise<string | null> {
@@ -44,7 +45,10 @@ export async function GET(request: Request) {
   }
 
   let accessToken = session.provider_token;
-  const refreshToken = session.provider_refresh_token;
+  const cookieStore = await cookies();
+  const refreshToken = session.provider_refresh_token
+    ?? cookieStore.get('google_refresh_token')?.value
+    ?? null;
 
   if (!accessToken && !refreshToken) {
     return tokenExpiredResponse();
