@@ -3,6 +3,13 @@ import { GoogleGenAI } from '@google/genai';
 import { createClient } from '@/lib/supabase/server';
 import { humanizeDuration } from '@/lib/humanizeDuration';
 
+interface EventInput {
+  summary: string;
+  location?: string;
+  minutesUntil: number;
+  isAllDay?: boolean;
+}
+
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -29,6 +36,21 @@ async function geocode(address: string): Promise<{ lat: number; lng: number } | 
   }
 }
 
+function formatDistance(km: number): string {
+  return km < 1
+    ? `${Math.round(km * 1000)}m`
+    : `${km.toFixed(1)}km`;
+}
+
+function formatTime(minutesUntil: number, isAllDay: boolean): string {
+  if (isAllDay) {
+    const days = Math.ceil(minutesUntil / 60 / 24);
+    return days <= 1 ? '내일' : `${days}일 후`;
+  }
+  if (minutesUntil <= 0) return '진행 중';
+  return humanizeDuration(minutesUntil);
+}
+
 export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -37,47 +59,47 @@ export async function POST(request: Request) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return NextResponse.json({ error: 'Gemini not configured' }, { status: 503 });
 
-  const { summary, location, minutesUntil, userLat, userLng } = await request.json() as {
-    summary: string;
-    location?: string;
-    minutesUntil: number;
+  const { events, userLat, userLng } = await request.json() as {
+    events: EventInput[];
     userLat?: number;
     userLng?: number;
   };
 
-  // 거리 계산
-  let distanceKm: number | null = null;
-  if (location && userLat != null && userLng != null) {
-    const coords = await geocode(location);
-    if (coords) {
-      distanceKm = haversineKm(userLat, userLng, coords.lat, coords.lng);
-    }
+  if (!events || events.length === 0) {
+    return NextResponse.json({ error: 'No events' }, { status: 400 });
   }
 
-  // Gemini 프롬프트
-  const timePart = minutesUntil <= 0
-    ? '현재 진행 중인 일정'
-    : `${humanizeDuration(minutesUntil)} 시작`;
-  const distPart = distanceKm != null
-    ? `직선거리 약 ${distanceKm < 1 ? `${Math.round(distanceKm * 1000)}m` : `${distanceKm.toFixed(1)}km`}`
-    : location
-      ? `장소: ${location}`
-      : null;
+  // 각 이벤트에 대해 geocode + 거리 계산
+  const lines = await Promise.all(
+    events.map(async (e) => {
+      const timePart = formatTime(e.minutesUntil, e.isAllDay ?? false);
 
-  const contextLines = [`일정: ${summary}`, `시간: ${timePart}`];
-  if (distPart) contextLines.push(distPart);
+      let distPart = '-';
+      if (e.location && userLat != null && userLng != null) {
+        const coords = await geocode(e.location);
+        if (coords) {
+          distPart = formatDistance(haversineKm(userLat, userLng, coords.lat, coords.lng));
+        }
+      }
+
+      return `- ${timePart} / ${distPart} / ${e.summary}`;
+    })
+  );
 
   const prompt = [
     '너는 여행 중인 사용자를 돕는 친근한 AI 어시스턴트다.',
-    '다음 캘린더 일정 정보를 보고, 사용자에게 짧고 실용적인 한 줄 조언을 한국어로 줘라.',
+    '아래 일정 목록을 보고 사용자에게 짧고 실용적인 한 줄 조언을 한국어로 줘라.',
+    '',
     '조건:',
     '- 한 줄, 40자 이내',
+    '- 가장 급하거나 중요한 일정 위주로',
     '- 시간·거리 정보를 자연스럽게 녹여라',
-    '- 딱딱하지 않게, 말하듯 써라',
+    '- 말하듯 써라',
     '- 이모지 1개만 허용 (맨 앞)',
     '- 따옴표, 줄바꿈 금지',
     '',
-    ...contextLines,
+    '일정 목록 (남은 시간 / 거리 / 제목):',
+    ...lines,
   ].join('\n');
 
   const model = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash-lite';
