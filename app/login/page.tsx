@@ -26,14 +26,22 @@ export default function LoginPage() {
         {/* 로고 SVG */}
         <div style={{ marginBottom: 28 }}>
           <svg viewBox="0 0 100 100" style={{ width: 96, height: 96, margin: '0 auto', display: 'block' }} xmlns="http://www.w3.org/2000/svg">
-            <rect width="100" height="100" rx="22" fill="#FF6B47"/>
-            <path d="M20 40 L50 40 L78 65" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"/>
-            <circle cx="20" cy="40" r="10" fill="white"/>
-            <circle cx="20" cy="40" r="5" fill="#FF6B47"/>
-            <circle cx="50" cy="40" r="8" fill="white" opacity="0.85"/>
-            <circle cx="50" cy="40" r="4" fill="#FF6B47"/>
-            <path d="M78 80 C71 72, 65 65, 65 57 A13 13 0 0 1 91 57 C91 65, 85 72, 78 80 Z" fill="white"/>
-            <circle cx="78" cy="56" r="5.5" fill="#FF6B47"/>
+            <defs>
+              <linearGradient id="ga" x1="0" y1="1" x2="1" y2="0">
+                <stop offset="0%"   stopColor="#F59E0B"/>
+                <stop offset="50%"  stopColor="#EA580C"/>
+                <stop offset="100%" stopColor="#9A3412"/>
+              </linearGradient>
+            </defs>
+            <rect width="100" height="100" rx="22" fill="url(#ga)"/>
+            <circle cx="28" cy="72" r="10" fill="white" opacity="0.18"/>
+            <circle cx="28" cy="72" r="7.5" fill="white" opacity="0.95"/>
+            <circle cx="28" cy="72" r="3.5" fill="#F59E0B"/>
+            <path d="M28,64 C28,28 72,64 72,28" fill="none" stroke="white" strokeWidth="6" strokeLinecap="round" opacity="0.22"/>
+            <path d="M28,64 C28,28 72,64 72,28" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round"/>
+            <circle cx="72" cy="28" r="10" fill="white" opacity="0.18"/>
+            <circle cx="72" cy="28" r="7.5" fill="white" opacity="0.95"/>
+            <circle cx="72" cy="28" r="3.5" fill="#9A3412"/>
           </svg>
         </div>
 
