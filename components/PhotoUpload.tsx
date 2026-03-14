@@ -33,7 +33,8 @@ export default function PhotoUpload({ onUploadComplete, onUploadError }: PhotoUp
     setSelectedFile(file);
     setIsProcessing(true);
 
-    // 미리보기 생성
+    // Blob URL로 미리보기 생성. resetForm()에서 revokeObjectURL로 반드시 해제해야
+    // 브라우저 메모리 누수를 막을 수 있다.
     const preview = URL.createObjectURL(file);
     setPreviewUrl(preview);
 
@@ -55,12 +56,16 @@ export default function PhotoUpload({ onUploadComplete, onUploadError }: PhotoUp
     setUploadProgress(0);
 
     try {
-      // 이미지 압축 옵션
+      // EXIF 추출은 handleFileSelect에서 이미 완료된 상태.
+      // 압축은 반드시 EXIF 추출 후에 수행해야 한다 — browser-image-compression이
+      // 재인코딩 과정에서 GPS 메타데이터를 제거하기 때문.
+      //
+      // 1MB / 1920px: 모바일 네트워크 부담과 화질의 균형점.
       const options = {
-        maxSizeMB: 1, // 최대 1MB
-        maxWidthOrHeight: 1920, // 최대 1920px
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1920,
         useWebWorker: true,
-        initialQuality: 0.85, // 품질 85%
+        initialQuality: 0.85,
       };
 
       setUploadProgress(30);
@@ -112,9 +117,10 @@ export default function PhotoUpload({ onUploadComplete, onUploadError }: PhotoUp
     }
   };
 
-  // 폼 초기화
+  // 폼 초기화. previewUrl은 createObjectURL로 생성한 Blob URL이므로 반드시 revoke.
   const resetForm = () => {
     setSelectedFile(null);
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl('');
     setMetadata(null);
     setUploadProgress(0);

@@ -1,5 +1,24 @@
 'use client';
 
+/**
+ * CheckinForm - 체크인 생성/수정 폼
+ *
+ * 이 컴포넌트는 createPortal로 document.body에 직접 마운트되는 전체화면 모달이다.
+ * 즉 DOM 트리상으로는 부모와 분리되어 있지만, React 트리(이벤트 버블링, context)는
+ * 부모와 연결된 상태로 동작한다.
+ *
+ * LocationPicker 연결 방식 (onOpenLocationPicker 콜백 패턴):
+ *   이 컴포넌트는 LocationPicker를 직접 렌더링하지 않는다.
+ *   이유: CheckinForm 내부에서 LocationPicker를 렌더링하면 Google Maps APIProvider
+ *   context 안에 중첩되고, Google Maps SDK가 주입하는 `transform` CSS 때문에
+ *   iOS에서 LocationPicker의 `position: fixed` 지도가 transform 기준으로 배치되어
+ *   화면 밖으로 어긋난다.
+ *
+ *   대신 `onOpenLocationPicker(initial, onSelect)` 콜백을 부모(checkin/page.tsx)에 전달하고,
+ *   부모가 Google Maps context 바깥에서 LocationPicker를 직접 렌더링한다.
+ *   위치 선택 결과는 onSelect 클로저를 통해 이 컴포넌트의 상태로 돌아온다.
+ */
+
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useKeyboardHeight } from './hooks/useKeyboardHeight';
@@ -14,32 +33,70 @@ import CheckinFormToolbar from './CheckinFormToolbar';
 import CheckinFormTimePanel from './CheckinFormTimePanel';
 import type { Checkin } from '@/types/database';
 
+// ─── 타입 ─────────────────────────────────────────────────────────────────────
+
+/** 폼 내 활성 패널. 'main' 외의 패널은 슬라이드인 형태로 'main' 위에 표시된다. */
 type Panel = 'main' | 'place-search' | 'category' | 'time';
 
+// ─── 상수 ─────────────────────────────────────────────────────────────────────
+
+/** 하단 툴바 높이. 메인 패널의 스크롤 영역이 툴바에 가려지지 않도록 패딩에 사용한다. */
 const TOOLBAR_HEIGHT = 96;
 
+// ─── 유틸 ─────────────────────────────────────────────────────────────────────
+
+/** ISO 문자열을 datetime-local input이 요구하는 형식(YYYY-MM-DDTHH:mm)으로 변환한다. */
 const toDateTimeLocalValue = (isoString: string): string => {
   const d = new Date(isoString);
   const pad = (n: number) => n.toString().padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
+// ─── Props ────────────────────────────────────────────────────────────────────
+
 interface CheckinFormProps {
+  /** 체크인이 속할 여행 ID */
   tripId: string;
+  /** 헤더에 표시할 여행 이름 */
   tripName?: string;
+  /** 헤더 아바타 이미지 URL */
   userAvatarUrl?: string;
+  /**
+   * 수정할 체크인. undefined이면 신규 생성 모드.
+   * 이 값의 유무로 isEditMode가 결정되고, 초기 폼 값 및 API 엔드포인트가 달라진다.
+   */
   editingCheckin?: Checkin;
+  /**
+   * 신규 생성 시 여행의 대표 장소/좌표를 초기값으로 채운다.
+   * 수정 모드에서는 editingCheckin의 값을 사용하므로 이 props는 무시한다.
+   */
   initialPlace?: string | null;
   initialPlaceId?: string | null;
   initialLatitude?: number | null;
   initialLongitude?: number | null;
+  /**
+   * 저장 성공 시 호출. 서버에서 반환한 최신 Checkin 객체를 전달한다.
+   * 부모(page.tsx)는 이 값으로 로컬 목록을 갱신한다.
+   */
   onSuccess?: (checkin: Checkin) => void;
+  /** 취소 버튼 클릭 시 호출 */
   onCancel?: () => void;
+  /**
+   * LocationPicker를 열어달라는 요청을 부모에게 전달하는 콜백.
+   *
+   * @param initial - 지도 초기 위치 (현재 선택된 위치 또는 null)
+   * @param onSelect - 위치 선택 완료 후 부모가 호출할 콜백.
+   *                   이 클로저 안에서 이 컴포넌트의 location/place 상태를 업데이트한다.
+   *
+   * 이 prop이 undefined이면 툴바의 위치 버튼이 숨겨진다.
+   */
   onOpenLocationPicker?: (
     initial: { latitude: number; longitude: number } | null,
     onSelect: (lat: number, lng: number, place?: { name: string; place_id: string }) => void
   ) => void;
 }
+
+// ─── 컴포넌트 ─────────────────────────────────────────────────────────────────
 
 export default function CheckinForm({
   tripId,
@@ -66,6 +123,7 @@ export default function CheckinForm({
 
   const loc = useLocationSource();
 
+  // 소프트 키보드가 올라올 때 툴바 위치를 조정하기 위해 키보드 높이를 감지
   const toolbarBottom = useKeyboardHeight();
 
   const photo = usePhotoUpload({
@@ -74,6 +132,7 @@ export default function CheckinForm({
   });
 
   const placeSearch = usePlaceSearch({
+    // place-search 패널이 활성일 때만 검색 API를 호출하도록 활성화 플래그 전달
     isActive: activePanel === 'place-search',
     location: loc.location
       ? { lat: loc.location.latitude, lng: loc.location.longitude }
@@ -89,6 +148,7 @@ export default function CheckinForm({
     onError: setError,
   });
 
+  /** editingCheckin이 있으면 수정 모드, 없으면 신규 생성 모드 */
   const isEditMode = !!editingCheckin;
   const canSubmit =
     !!loc.location &&
@@ -97,7 +157,16 @@ export default function CheckinForm({
     !photo.isProcessingPhoto &&
     !photo.isUploadingPhoto;
 
-  // 수정 모드 초기화
+  // ─── 초기화 ───────────────────────────────────────────────────────────────
+
+  /**
+   * editingCheckin이 바뀔 때마다 폼 전체를 초기화한다.
+   *
+   * 수정 모드: editingCheckin의 값으로 채운다.
+   * 신규 모드: 빈 값으로 초기화하되, 여행 대표 장소/좌표(initial*)가 있으면 미리 채운다.
+   *   여행 대표 장소를 초기값으로 채우는 이유: 같은 여행의 체크인은 대부분 동일한
+   *   지역에 있으므로 매번 장소를 다시 입력하는 번거로움을 줄이기 위함이다.
+   */
   useEffect(() => {
     if (editingCheckin) {
       setTitle(editingCheckin.title || '');
@@ -130,6 +199,8 @@ export default function CheckinForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingCheckin]);
 
+  // ─── 제출 ─────────────────────────────────────────────────────────────────
+
   const handleSubmit = async () => {
     if (!loc.location) {
       setError('위치를 선택해주세요.');
@@ -144,6 +215,7 @@ export default function CheckinForm({
     setError(null);
 
     try {
+      // 수정: PATCH /api/checkins/:id, 신규: POST /api/checkins
       const url = isEditMode ? `/api/checkins/${editingCheckin!.id}` : '/api/checkins';
       const method = isEditMode ? 'PATCH' : 'POST';
       const body: Record<string, unknown> = {
@@ -157,6 +229,7 @@ export default function CheckinForm({
         photo_url: photo.photoUrl || undefined,
         photo_metadata: photo.photoMetadata || undefined,
       };
+      // trip_id는 신규 생성 시에만 전송. 수정 시 trip_id 변경은 지원하지 않는다.
       if (!isEditMode) body.trip_id = tripId;
       if (checkedInAt) body.checked_in_at = new Date(checkedInAt).toISOString();
 
@@ -178,6 +251,8 @@ export default function CheckinForm({
       setIsSubmitting(false);
     }
   };
+
+  // ─── 렌더링 ───────────────────────────────────────────────────────────────
 
   const content = (
     <div
@@ -262,6 +337,11 @@ export default function CheckinForm({
           checkedInAt={checkedInAt}
           toolbarBottom={toolbarBottom}
           onFileChange={photo.handleFileSelect}
+          /**
+           * 위치 버튼 클릭 시 onOpenLocationPicker 콜백을 통해 부모에게 LocationPicker 열기를 요청한다.
+           * onSelect 클로저 안에서 이 컴포넌트의 location/place 상태를 업데이트한다.
+           * onOpenLocationPicker가 undefined이면 위치 버튼 자체가 비활성화된다.
+           */
           onOpenLocationPicker={
             onOpenLocationPicker
               ? () =>
@@ -280,5 +360,10 @@ export default function CheckinForm({
     </div>
   );
 
+  /**
+   * createPortal로 document.body에 직접 붙인다.
+   * CheckinForm 자체도 Google Maps context 바깥에서 안전하게 렌더링되어야 하기 때문이다.
+   * (LocationPicker와 같은 이유: transform stacking context 우회)
+   */
   return createPortal(content, document.body);
 }

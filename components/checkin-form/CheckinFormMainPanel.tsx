@@ -36,9 +36,14 @@ interface CheckinFormMainPanelProps {
   isProcessingPhoto: boolean;
   isUploadingPhoto: boolean;
   photoPreviewUrl: string;
+  // photoMetadata: 사진 처리 플로우에서 추출한 EXIF 메타데이터.
+  // 위치 chip 표시 시 GPS 추출 여부를 구분하는 데 사용한다.
+  // (place명이 없어도 "GPS 추출됨" 라벨을 보여주기 위해 필요)
   photoMetadata: PhotoMetadata | null;
   onClearPhoto: () => void;
   selectedLocation: { latitude: number; longitude: number } | null;
+  // place: 장소 검색("장소 입력")으로 선택한 경우에만 저장되는 공식 장소명.
+  // 사용자가 직접 입력하는 체크인 제목(title)과는 다른 필드다.
   place: string;
   onClearLocation: () => void;
   category: string;
@@ -117,7 +122,12 @@ export default function CheckinFormMainPanel({
         }}
       />
 
-      {/* 사진 처리 중 */}
+      {/* 사진 처리 중
+          사진 업로드는 두 단계로 나뉜다:
+          1. isProcessingPhoto: EXIF 메타데이터(GPS 포함) 추출 단계.
+             압축 전 원본 파일에서 읽어야 한다 — 압축 과정에서 EXIF 블록이 제거될 수 있기 때문.
+          2. isUploadingPhoto: 압축 완료 후 Supabase Storage에 업로드하는 단계.
+          두 단계를 구분하여 사용자에게 진행 상태를 명확히 전달한다. */}
       {(isProcessingPhoto || isUploadingPhoto) && (
         <div style={{
           marginTop: 14,
@@ -171,7 +181,9 @@ export default function CheckinFormMainPanel({
         </div>
       )}
 
-      {/* 선택된 정보 chips */}
+      {/* 선택된 정보 chips
+          각 chip은 탭하면 해당 값을 초기화한다(clear 콜백 호출).
+          위치 chip: place명이 있으면 표시, 없으면 GPS 추출 여부나 좌표로 폴백 */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
         {selectedLocation && (
           <button
