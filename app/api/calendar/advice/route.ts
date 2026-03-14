@@ -80,9 +80,10 @@ export async function POST(request: Request) {
     ...contextLines,
   ].join('\n');
 
+  const model = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash-lite';
   const ai = new GoogleGenAI({ apiKey });
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash-lite',
+    model,
     contents: prompt,
   });
 
