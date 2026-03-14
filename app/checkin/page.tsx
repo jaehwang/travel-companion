@@ -428,7 +428,7 @@ function CheckinPageInner() {
               )}
             </div>
 
-            <TodayCalendar />
+            <TodayCalendar tripEndDate={selectedTrip?.end_date} />
 
             <CheckinTimeline
               checkins={checkins}
