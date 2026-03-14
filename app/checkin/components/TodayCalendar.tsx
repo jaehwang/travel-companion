@@ -200,7 +200,7 @@ export default function TodayCalendar({ tripEndDate }: { tripEndDate?: string })
             {tripEndDate ? '여행 일정' : '오늘 일정'} {events.length}개
           </div>
           {advice && (
-            <div style={{ fontSize: 12, color: 'var(--tc-warm-mid)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: 12, color: 'var(--tc-warm-mid)', marginTop: 2 }}>
               {advice}
             </div>
           )}
