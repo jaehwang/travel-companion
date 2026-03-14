@@ -213,7 +213,7 @@ input::-webkit-clear-button {
 .tc-checkin-card {
   background: var(--tc-card-bg);
   border-radius: 16px;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: 0 2px 12px rgba(45, 36, 22, 0.08);
   transition: box-shadow 0.2s ease;
 }

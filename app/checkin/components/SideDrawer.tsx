@@ -2,6 +2,7 @@
 
 import { createPortal } from 'react-dom';
 import type { Trip } from '@/types/database';
+import { DropdownMenu } from '@/components/DropdownMenu';
 
 function formatTripDate(dateStr: string | null | undefined): string | null {
   if (!dateStr) return null;
@@ -120,8 +121,8 @@ export default function SideDrawer({
                     background: isSelected ? 'rgba(255,107,71,0.07)' : 'transparent',
                   }}
                 >
-                  {/* 여행 선택 버튼 */}
-                  <div style={{ display: 'flex', alignItems: 'center', padding: '12px 20px 4px' }}>
+                  {/* 여행 선택 버튼 + 더보기 */}
+                  <div style={{ display: 'flex', alignItems: 'center', padding: '12px 12px 4px 20px' }}>
                     {isSelected && (
                       <div style={{
                         width: 4,
@@ -149,9 +150,16 @@ export default function SideDrawer({
                     >
                       {trip.title}
                     </button>
+                    <DropdownMenu
+                      align="right"
+                      items={[
+                        { label: '수정', onClick: () => { onClose(); onEditTrip(trip); } },
+                        { label: '삭제', onClick: () => { onDeleteTrip(trip.id); onClose(); }, variant: 'danger' },
+                      ]}
+                    />
                   </div>
 
-                  {/* 날짜 + 장소 + 수정/삭제 버튼 */}
+                  {/* 날짜 + 장소 */}
                   <div style={{ display: 'flex', alignItems: 'center', padding: '2px 20px 12px', paddingLeft: isSelected ? 34 : 20 }}>
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
                       {label && (
@@ -164,36 +172,6 @@ export default function SideDrawer({
                           📍 {trip.place}
                         </span>
                       )}
-                    </div>
-                    <div style={{ display: 'flex', gap: 6, marginLeft: 'auto' }}>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); onClose(); onEditTrip(trip); }}
-                        style={{
-                          fontSize: 11,
-                          color: 'var(--tc-warm-mid)',
-                          border: '1px solid var(--tc-dot)',
-                          borderRadius: 6,
-                          padding: '2px 8px',
-                          background: 'var(--tc-card-bg)',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        수정
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); onDeleteTrip(trip.id); onClose(); }}
-                        style={{
-                          fontSize: 11,
-                          color: '#EF4444',
-                          border: '1px solid #fca5a5',
-                          borderRadius: 6,
-                          padding: '2px 8px',
-                          background: 'var(--tc-card-bg)',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        삭제
-                      </button>
                     </div>
                   </div>
                 </div>

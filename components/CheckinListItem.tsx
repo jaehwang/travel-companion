@@ -1,6 +1,7 @@
 'use client';
 
 import type { Checkin } from '@/types/database';
+import { DropdownMenu } from '@/components/DropdownMenu';
 
 interface CheckinListItemProps {
   checkin: Checkin;
@@ -49,14 +50,25 @@ export function CheckinListItem({ checkin, onEdit, onDelete }: CheckinListItemPr
 
         {/* 본문 */}
         <div className="flex-1 p-[14px] pb-3">
-          {/* 상단 메타 — 카테고리 + 시간 */}
+          {/* 상단 메타 — 카테고리 + 시간 + 더보기 */}
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold tracking-[0.02em]" style={{ color: meta.color }}>
               {meta.icon} {meta.label}
             </span>
-            <span className="text-[11px] text-tc-warm-faint">
-              {formatTime(checkin.checked_in_at)}
-            </span>
+            <div className="flex items-center gap-1">
+              <span className="text-[11px] text-tc-warm-faint">
+                {formatTime(checkin.checked_in_at)}
+              </span>
+              {(onEdit || onDelete) && (
+                <DropdownMenu
+                  align="right"
+                  items={[
+                    ...(onEdit ? [{ label: '수정', onClick: () => onEdit(checkin) }] : []),
+                    ...(onDelete ? [{ label: '삭제', onClick: handleDelete, variant: 'danger' as const }] : []),
+                  ]}
+                />
+              )}
+            </div>
           </div>
 
           {/* 제목 */}
@@ -80,8 +92,8 @@ export function CheckinListItem({ checkin, onEdit, onDelete }: CheckinListItemPr
             </p>
           )}
 
-          {/* 하단 — 장소 링크 + 액션 */}
-          <div className="flex items-center justify-between mt-1">
+          {/* 하단 — 장소 링크 */}
+          <div className="flex items-center mt-1">
             <a
               href={mapsUrl}
               target="_blank"
@@ -90,26 +102,6 @@ export function CheckinListItem({ checkin, onEdit, onDelete }: CheckinListItemPr
             >
               📍 {checkin.place || '지도에서 보기'}
             </a>
-            {(onEdit || onDelete) && (
-              <div className="flex gap-2.5">
-                {onEdit && (
-                  <button
-                    onClick={() => onEdit(checkin)}
-                    className="text-xs text-tc-warm-mid bg-transparent border-none cursor-pointer py-0.5 hover:text-tc-warm-dark transition-colors"
-                  >
-                    수정
-                  </button>
-                )}
-                {onDelete && (
-                  <button
-                    onClick={handleDelete}
-                    className="text-xs text-[#EF4444] bg-transparent border-none cursor-pointer py-0.5 hover:text-red-600 transition-colors"
-                  >
-                    삭제
-                  </button>
-                )}
-              </div>
-            )}
           </div>
         </div>
       </div>
