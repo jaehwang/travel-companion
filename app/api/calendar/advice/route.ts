@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 import { createClient } from '@/lib/supabase/server';
+import { humanizeDuration } from '@/lib/humanizeDuration';
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371;
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
   // Gemini 프롬프트
   const timePart = minutesUntil <= 0
     ? '현재 진행 중인 일정'
-    : `${minutesUntil}분 후 시작`;
+    : `${humanizeDuration(minutesUntil)} 시작`;
   const distPart = distanceKm != null
     ? `직선거리 약 ${distanceKm < 1 ? `${Math.round(distanceKm * 1000)}m` : `${distanceKm.toFixed(1)}km`}`
     : location

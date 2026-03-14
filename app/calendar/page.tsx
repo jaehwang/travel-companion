@@ -33,13 +33,16 @@ export default function CalendarPage() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [tokenExpired, setTokenExpired] = useState(false);
 
   useEffect(() => {
     fetch('/api/calendar?maxResults=20')
       .then(res => res.json())
       .then(data => {
-        if (data.error) {
-          setError(data.error);
+        if (data.error === 'TOKEN_EXPIRED') {
+          setTokenExpired(true);
+        } else if (data.error) {
+          setError(data.message ?? data.error);
         } else {
           setEvents(data.items ?? []);
         }
@@ -62,6 +65,36 @@ export default function CalendarPage() {
           </div>
         )}
 
+        {tokenExpired && (
+          <div style={{
+            background: 'var(--color-danger-bg)',
+            border: '1px solid var(--color-danger-border)',
+            borderRadius: 'var(--radius-md)',
+            padding: '16px',
+            color: 'var(--color-danger)',
+            fontSize: 'var(--font-base)',
+          }}>
+            <div style={{ marginBottom: 10 }}>
+              Google 캘린더 접근 권한이 만료되었습니다.
+            </div>
+            <a
+              href="/login"
+              style={{
+                display: 'inline-block',
+                padding: '8px 16px',
+                background: '#4285F4',
+                color: 'white',
+                borderRadius: 8,
+                textDecoration: 'none',
+                fontWeight: 600,
+                fontSize: 'var(--font-sm)',
+              }}
+            >
+              Google로 다시 로그인
+            </a>
+          </div>
+        )}
+
         {error && (
           <div style={{
             background: 'var(--color-danger-bg)',
@@ -71,9 +104,7 @@ export default function CalendarPage() {
             color: 'var(--color-danger)',
             fontSize: 'var(--font-base)',
           }}>
-            {error === 'Google access token not found. Please re-login.'
-              ? 'Google 캘린더 접근 권한이 없습니다. 로그아웃 후 다시 로그인해주세요.'
-              : error}
+            {error}
           </div>
         )}
 
