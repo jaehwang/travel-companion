@@ -5,11 +5,16 @@ import { GET } from '../route';
 import { NextRequest } from 'next/server';
 
 const mockGetSession = jest.fn();
+const mockCookieGet = jest.fn().mockReturnValue(undefined);
 
 jest.mock('@/lib/supabase/server', () => ({
   createClient: jest.fn().mockResolvedValue({
     auth: { getSession: (...args: any[]) => mockGetSession(...args) },
   }),
+}));
+
+jest.mock('next/headers', () => ({
+  cookies: jest.fn().mockResolvedValue({ get: (...args: any[]) => mockCookieGet(...args) }),
 }));
 
 const mockFetch = jest.fn();
@@ -74,6 +79,7 @@ const SESSION_NO_TOKENS = {
 describe('GET /api/calendar', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockCookieGet.mockReturnValue(undefined);
     process.env.GOOGLE_CLIENT_ID = 'test-client-id';
     process.env.GOOGLE_CLIENT_SECRET = 'test-client-secret';
   });
@@ -176,6 +182,28 @@ describe('GET /api/calendar', () => {
     expect(res.status).toBe(401);
     const body = await res.json();
     expect(body.error).toBe('TOKEN_EXPIRED');
+  });
+
+  it('세션에 refresh_token 없어도 쿠키의 google_refresh_token으로 갱신한다', async () => {
+    mockGetSession.mockResolvedValue(SESSION_NO_TOKENS);
+    mockCookieGet.mockReturnValue({ value: 'cookie-refresh-token' });
+    const events = [{ id: '4', summary: '쿠키 테스트' }];
+
+    mockFetch
+      .mockResolvedValueOnce(mockRefreshSuccess('cookie-access-token'))
+      .mockResolvedValueOnce(mockCalendarResponse(events));
+
+    const res = await GET(makeRequest());
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.items).toEqual(events);
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining('calendar/v3/calendars/primary/events'),
+      expect.objectContaining({
+        headers: { Authorization: 'Bearer cookie-access-token' },
+      })
+    );
   });
 
   it('쿼리 파라미터가 Calendar API URL에 전달된다', async () => {
