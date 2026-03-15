@@ -67,6 +67,18 @@ export interface Checkin {
   updated_at: string;
 }
 
+export interface UserProfileSettings {
+  calendar_sync_enabled?: boolean;
+}
+
+export interface UserProfile {
+  id: string;
+  google_refresh_token?: string | null;
+  settings: UserProfileSettings;
+  created_at: string;
+  updated_at: string;
+}
+
 // Insert types (without auto-generated fields)
 export type TripFormData = Omit<TripInsert, 'user_id'>;
 
@@ -115,6 +127,11 @@ export interface Database {
         Row: Checkin;
         Insert: CheckinInsert;
         Update: Partial<CheckinInsert>;
+      };
+      user_profiles: {
+        Row: UserProfile;
+        Insert: { id: string; google_refresh_token?: string | null; settings?: UserProfileSettings };
+        Update: { google_refresh_token?: string | null; settings?: UserProfileSettings };
       };
     };
   };
