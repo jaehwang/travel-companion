@@ -17,20 +17,26 @@ interface DropdownMenuProps {
 
 export function DropdownMenu({ items, align = 'right', buttonStyle }: DropdownMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [menuPos, setMenuPos] = useState({ top: 0, left: 0, right: 0 });
+  const [menuPos, setMenuPos] = useState<{ top?: number; bottom?: number; left: number; right: number }>({ left: 0, right: 0 });
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const calcMenuPos = useCallback(() => {
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
+      const menuHeight = (items.length * 44) + 8; // 아이템당 minHeight 44px + 여유
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const showAbove = spaceBelow < menuHeight && rect.top > menuHeight;
+
       setMenuPos({
-        top: rect.bottom + 4,
+        ...(showAbove
+          ? { bottom: window.innerHeight - rect.top + 4 }
+          : { top: rect.bottom + 4 }),
         left: rect.left,
         right: window.innerWidth - rect.right,
       });
     }
-  }, []);
+  }, [items.length]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -77,8 +83,8 @@ export function DropdownMenu({ items, align = 'right', buttonStyle }: DropdownMe
           ref={menuRef}
           style={{
             position: 'fixed',
-            zIndex: 9999,
-            top: menuPos.top,
+            zIndex: 20000,
+            ...(menuPos.top !== undefined ? { top: menuPos.top } : { bottom: menuPos.bottom }),
             ...(align === 'right' ? { right: menuPos.right } : { left: menuPos.left }),
             background: 'var(--tc-card-bg)',
             border: '1px solid var(--tc-dot)',
