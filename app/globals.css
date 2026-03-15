@@ -163,6 +163,7 @@ input::-webkit-clear-button {
 .tc-trip-card {
   background: var(--tc-card-bg);
   box-shadow: 0 4px 20px rgba(45, 36, 22, 0.1);
+  position: relative;
   animation: tc-card-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
   transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
               box-shadow 0.22s ease;

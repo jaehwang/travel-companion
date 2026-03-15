@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import TripCreateButton from '@/components/TripCreateButton';
+import TripCard from '@/components/TripCard';
 import { fetchTrips } from '@/app/lib/fetchTrips';
 import { APP_NAME } from '@/lib/config';
 
@@ -14,17 +15,6 @@ const CARD_ACCENTS = [
   '#8B5CF6', // violet
   '#EC4899', // pink
 ];
-
-const formatTripDate = (dateStr?: string | null) => {
-  if (!dateStr) return null;
-  const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(dateStr);
-  const date = isDateOnly
-    ? (() => { const [y, m, d] = dateStr.split('-').map(Number); return new Date(y, m - 1, d); })()
-    : new Date(dateStr);
-  return new Intl.DateTimeFormat('ko-KR', {
-    year: 'numeric', month: 'long', day: 'numeric',
-  }).format(date);
-};
 
 export default async function Home() {
   const supabase = await createClient();
@@ -88,55 +78,14 @@ export default async function Home() {
           {/* 여행 카드 그리드 */}
           {trips.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-              {trips.map((trip, i) => {
-                const accent = CARD_ACCENTS[i % CARD_ACCENTS.length];
-                return (
-                  <Link
-                    key={trip.id}
-                    href={`/checkin?trip_id=${trip.id}`}
-                    className="tc-trip-card rounded-[20px] overflow-hidden no-underline flex flex-col"
-                    style={{ animationDelay: `${i * 0.07}s` }}
-                  >
-                    {/* 액센트 상단 스트립 */}
-                    <div className="h-[5px] shrink-0" style={{ background: accent }} />
-
-                    {/* 커버 사진 */}
-                    <div className="tc-card-photo-empty aspect-[4/3] overflow-hidden shrink-0">
-                      {trip.cover_photo_url ? (
-                        <img
-                          src={trip.cover_photo_url}
-                          alt={trip.title}
-                          className="w-full h-full object-cover block"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-[32px]">
-                          🗺️
-                        </div>
-                      )}
-                    </div>
-
-                    {/* 텍스트 영역 */}
-                    <div className="px-3 py-2.5 pb-3 flex-1 flex flex-col">
-                      <p 
-                        className="text-[10px] font-bold tracking-[0.06em] uppercase mb-1"
-                        style={{ color: accent }}
-                      >
-                        {formatTripDate(trip.start_date ?? trip.first_checkin_date) ?? '날짜 미정'}
-                      </p>
-
-                      <h3 className={`text-sm md:text-[15px] font-black text-tc-warm-dark overflow-hidden text-ellipsis whitespace-nowrap tracking-[-0.01em] ${trip.description ? 'mb-1' : ''}`}>
-                        {trip.title}
-                      </h3>
-
-                      {trip.description && (
-                        <p className="text-[11px] md:text-xs text-tc-warm-mid leading-[1.45] line-clamp-2 overflow-hidden flex-1">
-                          {trip.description}
-                        </p>
-                      )}
-                    </div>
-                  </Link>
-                );
-              })}
+              {trips.map((trip, i) => (
+                <TripCard
+                  key={trip.id}
+                  trip={trip}
+                  accent={CARD_ACCENTS[i % CARD_ACCENTS.length]}
+                  style={{ animationDelay: `${i * 0.07}s` }}
+                />
+              ))}
             </div>
           )}
         </section>
