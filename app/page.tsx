@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import LogoutButton from '@/components/LogoutButton';
 import TripCreateButton from '@/components/TripCreateButton';
 import { fetchTrips } from '@/app/lib/fetchTrips';
 
@@ -41,23 +40,29 @@ export default async function Home() {
     <main className="tc-page-bg">
       <div className="max-w-md md:max-w-3xl lg:max-w-5xl mx-auto px-4 py-6 md:py-10 pb-20">
 
-        {/* 상단 바 */}
-        <div className="flex justify-end items-center gap-3 mb-10">
-          <span className="text-[13px] md:text-sm text-tc-warm-mid">
-            {displayName}님 👋
-          </span>
-          <LogoutButton />
-        </div>
-
-        {/* 히어로 */}
-        <div className="tc-hero mb-12">
-          <div className="tc-plane text-5xl mb-3">✈️</div>
-          <h1 className="tc-brand text-[clamp(2.4rem,10vw,3.4rem)] md:text-6xl leading-[1.1] mb-2.5">
-            Travel<br />Companion
+        {/* 헤더 */}
+        <div className="flex items-center gap-3 mb-8">
+          <span className="text-3xl">✈️</span>
+          <h1 className="tc-brand text-2xl md:text-3xl leading-none flex-1">
+            Travel Companion
           </h1>
-          <p className="tc-hero-sub text-[15px] md:text-base text-tc-warm-mid">
-            나만의 여행 이야기를 기록하세요
-          </p>
+          <Link href="/settings" className="text-[13px] md:text-sm text-tc-warm-mid hover:underline shrink-0">
+            {displayName}님
+          </Link>
+          <Link href="/settings" className="shrink-0">
+            {user.user_metadata?.avatar_url ? (
+              <img
+                src={user.user_metadata.avatar_url}
+                alt={displayName}
+                referrerPolicy="no-referrer"
+                className="user-avatar"
+              />
+            ) : (
+              <div className="user-avatar flex items-center justify-center text-base">
+                👤
+              </div>
+            )}
+          </Link>
         </div>
 
         {/* 여행 목록 */}

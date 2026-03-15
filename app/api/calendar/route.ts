@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
+import type { UserProfile } from '@/types/database';
 
 async function refreshGoogleToken(refreshToken: string): Promise<string | null> {
   try {
@@ -45,10 +45,15 @@ export async function GET(request: Request) {
   }
 
   let accessToken = session.provider_token;
-  const cookieStore = await cookies();
-  const refreshToken = session.provider_refresh_token
-    ?? cookieStore.get('google_refresh_token')?.value
-    ?? null;
+  let refreshToken = session.provider_refresh_token ?? null;
+  if (!refreshToken) {
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('google_refresh_token')
+      .eq('id', session.user.id)
+      .single();
+    refreshToken = (profile as Pick<UserProfile, 'google_refresh_token'> | null)?.google_refresh_token ?? null;
+  }
 
   if (!accessToken && !refreshToken) {
     return tokenExpiredResponse();
@@ -70,8 +75,8 @@ export async function GET(request: Request) {
   // 1차 시도
   let response = accessToken ? await fetchCalendarEvents(accessToken, params) : null;
 
-  // 401이거나 accessToken이 없으면 refresh 시도
-  if ((!response || response.status === 401) && refreshToken) {
+  // 401(만료) 또는 403(scope 없음)이거나 accessToken이 없으면 refresh 시도
+  if ((!response || response.status === 401 || response.status === 403) && refreshToken) {
     const newToken = await refreshGoogleToken(refreshToken);
     if (newToken) {
       response = await fetchCalendarEvents(newToken, params);
@@ -79,7 +84,7 @@ export async function GET(request: Request) {
   }
 
   if (!response || !response.ok) {
-    if (!response || response.status === 401) {
+    if (!response || response.status === 401 || response.status === 403) {
       return tokenExpiredResponse();
     }
     const error = await response.json();

@@ -19,6 +19,7 @@
 
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import CheckinForm from '@/components/checkin-form/CheckinForm';
 import { LocationPicker } from '@/components/LocationPicker';
 import Map, { MapPhoto } from '@/components/Map';
@@ -192,11 +193,6 @@ function CheckinPageInner() {
     }
   };
 
-  const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    location.href = '/login';
-  };
 
   if (loading) {
     return (
@@ -253,7 +249,7 @@ function CheckinPageInner() {
 
           {/* 유저 영역 */}
           {user && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+            <Link href="/settings" style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
               {user.user_metadata?.avatar_url && (
                 <img
                   src={user.user_metadata.avatar_url}
@@ -262,21 +258,7 @@ function CheckinPageInner() {
                   referrerPolicy="no-referrer"
                 />
               )}
-              <button
-                onClick={handleLogout}
-                style={{
-                  fontSize: 13,
-                  color: 'var(--tc-warm-mid)',
-                  background: 'none',
-                  border: '1.5px solid var(--tc-dot)',
-                  borderRadius: 9999,
-                  padding: '5px 14px',
-                  cursor: 'pointer',
-                }}
-              >
-                로그아웃
-              </button>
-            </div>
+            </Link>
           )}
         </div>
       </header>

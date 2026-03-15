@@ -5,16 +5,17 @@ import { GET } from '../route';
 import { NextRequest } from 'next/server';
 
 const mockGetSession = jest.fn();
-const mockCookieGet = jest.fn().mockReturnValue(undefined);
+const mockProfileSelect = jest.fn();
 
 jest.mock('@/lib/supabase/server', () => ({
   createClient: jest.fn().mockResolvedValue({
     auth: { getSession: (...args: any[]) => mockGetSession(...args) },
+    from: jest.fn().mockReturnValue({
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      single: (...args: any[]) => mockProfileSelect(...args),
+    }),
   }),
-}));
-
-jest.mock('next/headers', () => ({
-  cookies: jest.fn().mockResolvedValue({ get: (...args: any[]) => mockCookieGet(...args) }),
 }));
 
 const mockFetch = jest.fn();
@@ -72,6 +73,7 @@ const SESSION_NO_TOKENS = {
     session: {
       provider_token: null,
       provider_refresh_token: null,
+      user: { id: 'test-user-id' },
     },
   },
 };
@@ -79,7 +81,7 @@ const SESSION_NO_TOKENS = {
 describe('GET /api/calendar', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockCookieGet.mockReturnValue(undefined);
+    mockProfileSelect.mockResolvedValue({ data: { google_refresh_token: null }, error: null });
     process.env.GOOGLE_CLIENT_ID = 'test-client-id';
     process.env.GOOGLE_CLIENT_SECRET = 'test-client-secret';
   });
@@ -184,13 +186,29 @@ describe('GET /api/calendar', () => {
     expect(body.error).toBe('TOKEN_EXPIRED');
   });
 
-  it('세션에 refresh_token 없어도 쿠키의 google_refresh_token으로 갱신한다', async () => {
-    mockGetSession.mockResolvedValue(SESSION_NO_TOKENS);
-    mockCookieGet.mockReturnValue({ value: 'cookie-refresh-token' });
-    const events = [{ id: '4', summary: '쿠키 테스트' }];
+  it('access token이 403(scope 없음)이면 refresh token으로 재시도한다', async () => {
+    mockGetSession.mockResolvedValue(SESSION_WITH_TOKEN);
+    mockProfileSelect.mockResolvedValue({ data: { google_refresh_token: 'db-refresh-token' }, error: null });
+    const events = [{ id: '5', summary: '403 재시도 테스트' }];
 
     mockFetch
-      .mockResolvedValueOnce(mockRefreshSuccess('cookie-access-token'))
+      .mockResolvedValueOnce({ ok: false, status: 403, json: async () => ({}) } as Response) // 1차: 403
+      .mockResolvedValueOnce(mockRefreshSuccess('new-token'))                                  // refresh 성공
+      .mockResolvedValueOnce(mockCalendarResponse(events));                                    // 2차: 성공
+
+    const res = await GET(makeRequest());
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.items).toEqual(events);
+  });
+
+  it('세션에 refresh_token 없어도 DB의 google_refresh_token으로 갱신한다', async () => {
+    mockGetSession.mockResolvedValue(SESSION_NO_TOKENS);
+    mockProfileSelect.mockResolvedValue({ data: { google_refresh_token: 'db-refresh-token' }, error: null });
+    const events = [{ id: '4', summary: 'DB 토큰 테스트' }];
+
+    mockFetch
+      .mockResolvedValueOnce(mockRefreshSuccess('db-access-token'))
       .mockResolvedValueOnce(mockCalendarResponse(events));
 
     const res = await GET(makeRequest());
@@ -201,7 +219,7 @@ describe('GET /api/calendar', () => {
     expect(mockFetch).toHaveBeenCalledWith(
       expect.stringContaining('calendar/v3/calendars/primary/events'),
       expect.objectContaining({
-        headers: { Authorization: 'Bearer cookie-access-token' },
+        headers: { Authorization: 'Bearer db-access-token' },
       })
     );
   });

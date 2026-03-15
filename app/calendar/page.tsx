@@ -75,10 +75,10 @@ export default function CalendarPage() {
             fontSize: 'var(--font-base)',
           }}>
             <div style={{ marginBottom: 10 }}>
-              Google 캘린더 접근 권한이 만료되었습니다.
+              Google Calendar가 연동되지 않았습니다. 설정에서 연동해 주세요.
             </div>
             <a
-              href="/login"
+              href="/settings"
               style={{
                 display: 'inline-block',
                 padding: '8px 16px',
@@ -90,7 +90,7 @@ export default function CalendarPage() {
                 fontSize: 'var(--font-sm)',
               }}
             >
-              Google로 다시 로그인
+              설정으로 이동
             </a>
           </div>
         )}

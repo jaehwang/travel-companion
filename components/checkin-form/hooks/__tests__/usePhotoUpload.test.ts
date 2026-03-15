@@ -11,7 +11,7 @@ const mockStorageFrom = jest.fn(() => ({
 }));
 
 jest.mock('@/lib/supabase', () => ({
-  supabase: { storage: { from: (...args: any[]) => mockStorageFrom(...args) } },
+  supabase: { storage: { from: (arg: unknown) => (mockStorageFrom as jest.Mock)(arg) } },
 }));
 
 const mockExtractPhotoMetadata = jest.fn();

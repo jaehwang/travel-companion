@@ -29,13 +29,9 @@ export async function GET(request: Request) {
     const { data: { session }, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
       if (session?.provider_refresh_token) {
-        cookieStore.set('google_refresh_token', session.provider_refresh_token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          maxAge: 60 * 60 * 24 * 180, // 6개월
-          path: '/',
-        });
+        await supabase
+          .from('user_profiles')
+          .upsert({ id: session.user.id, google_refresh_token: session.provider_refresh_token } as any);
       }
       return NextResponse.redirect(`${origin}${next}`);
     }
