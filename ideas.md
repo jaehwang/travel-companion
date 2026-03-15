@@ -16,6 +16,7 @@
 - 지도 + 체크인 타임라인 + 사진 갤러리 통합
 - 공개 URL로 공유 가능 (is_public = true인 여행)
 - SEO 최적화 (Server-side rendering)
+- 이미지 보안 및 만료 문제 → [todos/public_trip_security.md](todos/public_trip_security.md) 참고
 
 ## 여러 여행 묶기
 - 방법 A: 라벨(Label) 태그를 여행에 부여해 묶어서 조회
