@@ -27,6 +27,7 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import { createClient } from '@/lib/supabase/client';
 import type { Trip, Checkin } from '@/types/database';
 import type { User } from '@supabase/supabase-js';
+import { APP_NAME } from '@/lib/config';
 import { useTrips } from './hooks/useTrips';
 import { useCheckins } from './hooks/useCheckins';
 import { useTripTagline } from './hooks/useTripTagline';
@@ -244,7 +245,7 @@ function CheckinPageInner() {
             whiteSpace: 'nowrap',
             letterSpacing: '-0.01em',
           }}>
-            {selectedTrip ? selectedTrip.title : 'Travel Companion'}
+            {selectedTrip ? selectedTrip.title : APP_NAME}
           </span>
 
           {/* 유저 영역 */}
