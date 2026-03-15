@@ -11,8 +11,7 @@ test.describe('PWA 요건', () => {
     await page.goto('/');
   });
 
-  // TODO: app/manifest.ts 추가 후 활성화 (ideas.md 참고)
-  test.skip('웹 앱 매니페스트가 존재한다', async ({ page }) => {
+  test('웹 앱 매니페스트가 존재한다', async ({ page }) => {
     const manifestLink = page.locator('link[rel="manifest"]');
     await expect(manifestLink).toHaveCount(1);
   });

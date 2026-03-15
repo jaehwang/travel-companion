@@ -3,6 +3,7 @@
 import { createPortal } from 'react-dom';
 import type { Trip } from '@/types/database';
 import { DropdownMenu } from '@/components/DropdownMenu';
+import { APP_NAME } from '@/lib/config';
 
 function formatTripDate(dateStr: string | null | undefined): string | null {
   if (!dateStr) return null;
@@ -65,7 +66,7 @@ export default function SideDrawer({
           <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--tc-warm-faint)', letterSpacing: '0.08em', marginBottom: 2 }}>
             MY TRIPS
           </p>
-          <p className="tc-brand" style={{ fontSize: 20 }}>Travel Companion</p>
+          <p className="tc-brand" style={{ fontSize: 20 }}>{APP_NAME}</p>
         </div>
 
         {/* 새 여행 만들기 */}

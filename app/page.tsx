@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import TripCreateButton from '@/components/TripCreateButton';
 import { fetchTrips } from '@/app/lib/fetchTrips';
+import { APP_NAME } from '@/lib/config';
 
 
 const CARD_ACCENTS = [
@@ -43,7 +44,7 @@ export default async function Home() {
         {/* 헤더 */}
         <div className="flex items-center gap-3 mb-8">
           <h1 className="tc-brand text-2xl md:text-3xl leading-none flex-1">
-            Travel Companion
+            {APP_NAME}
           </h1>
           <Link href="/settings" className="shrink-0">
             {user.user_metadata?.avatar_url ? (
