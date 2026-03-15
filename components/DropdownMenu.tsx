@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 
 interface DropdownMenuItem {
   label: string;
@@ -11,34 +12,57 @@ interface DropdownMenuItem {
 interface DropdownMenuProps {
   items: DropdownMenuItem[];
   align?: 'right' | 'left';
+  buttonStyle?: React.CSSProperties;
 }
 
-export function DropdownMenu({ items, align = 'right' }: DropdownMenuProps) {
+export function DropdownMenu({ items, align = 'right', buttonStyle }: DropdownMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0, right: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const calcMenuPos = useCallback(() => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setMenuPos({
+        top: rect.bottom + 4,
+        left: rect.left,
+        right: window.innerWidth - rect.right,
+      });
+    }
+  }, []);
 
   useEffect(() => {
-    const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+    if (!isOpen) return;
+
+    const handleClose = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Node;
+      const insideButton = buttonRef.current?.contains(target);
+      const insideMenu = menuRef.current?.contains(target);
+      if (!insideButton && !insideMenu) {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleOutsideClick);
-    document.addEventListener('touchstart', handleOutsideClick);
-
+    document.addEventListener('mousedown', handleClose);
+    document.addEventListener('touchstart', handleClose);
     return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
-      document.removeEventListener('touchstart', handleOutsideClick);
+      document.removeEventListener('mousedown', handleClose);
+      document.removeEventListener('touchstart', handleClose);
     };
-  }, []);
+  }, [isOpen]);
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', display: 'inline-block' }}>
+    <>
       <button
-        onClick={(e) => { e.stopPropagation(); setIsOpen((prev) => !prev); }}
+        ref={buttonRef}
+        onClick={(e) => {
+          e.stopPropagation();
+          calcMenuPos();
+          setIsOpen((prev) => !prev);
+        }}
         className="text-tc-warm-mid hover:text-tc-warm-dark p-1 rounded"
-        style={{ background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1, ...buttonStyle }}
         aria-label="더보기"
       >
         <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true">
@@ -48,13 +72,14 @@ export function DropdownMenu({ items, align = 'right' }: DropdownMenuProps) {
         </svg>
       </button>
 
-      {isOpen && (
+      {isOpen && createPortal(
         <div
+          ref={menuRef}
           style={{
-            position: 'absolute',
-            zIndex: 100,
-            top: '100%',
-            ...(align === 'right' ? { right: 0 } : { left: 0 }),
+            position: 'fixed',
+            zIndex: 9999,
+            top: menuPos.top,
+            ...(align === 'right' ? { right: menuPos.right } : { left: menuPos.left }),
             background: 'var(--tc-card-bg)',
             border: '1px solid var(--tc-dot)',
             borderRadius: 10,
@@ -68,8 +93,8 @@ export function DropdownMenu({ items, align = 'right' }: DropdownMenuProps) {
               key={index}
               onClick={(e) => {
                 e.stopPropagation();
-                setIsOpen(false);
                 item.onClick();
+                setIsOpen(false);
               }}
               style={{
                 display: 'block',
@@ -89,8 +114,9 @@ export function DropdownMenu({ items, align = 'right' }: DropdownMenuProps) {
               {item.label}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   );
 }
