@@ -42,13 +42,9 @@ export default async function Home() {
 
         {/* 헤더 */}
         <div className="flex items-center gap-3 mb-8">
-          <span className="text-3xl">✈️</span>
           <h1 className="tc-brand text-2xl md:text-3xl leading-none flex-1">
             Travel Companion
           </h1>
-          <Link href="/settings" className="text-[13px] md:text-sm text-tc-warm-mid hover:underline shrink-0">
-            {displayName}님
-          </Link>
           <Link href="/settings" className="shrink-0">
             {user.user_metadata?.avatar_url ? (
               <img
