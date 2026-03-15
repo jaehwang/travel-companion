@@ -33,6 +33,20 @@ test.describe('PWA 요건', () => {
     const title = await page.title();
     expect(title.length).toBeGreaterThan(0);
   });
+
+  test('apple-mobile-web-app-capable 메타태그가 yes로 설정되어 있다', async ({ page }) => {
+    const meta = page.locator('meta[name="apple-mobile-web-app-capable"]');
+    await expect(meta).toHaveCount(1);
+    const content = await meta.getAttribute('content');
+    expect(content).toBe('yes');
+  });
+
+  test('apple-mobile-web-app-title 메타태그가 설정되어 있다', async ({ page }) => {
+    const meta = page.locator('meta[name="apple-mobile-web-app-title"]');
+    await expect(meta).toHaveCount(1);
+    const content = await meta.getAttribute('content');
+    expect(content?.length).toBeGreaterThan(0);
+  });
 });
 
 test.describe('페이지 응답 속도', () => {
