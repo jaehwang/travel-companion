@@ -173,6 +173,7 @@ export default function TodayCalendar({ tripEndDate }: { tripEndDate?: string })
       borderRadius: 14,
       boxShadow: '0 2px 8px rgba(45,36,22,0.06)',
       overflow: 'hidden',
+      borderLeft: '4px solid rgba(66,133,244,0.5)',
     }}>
       {/* 헤더 */}
       <button
