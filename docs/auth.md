@@ -114,6 +114,31 @@ middleware.ts             # 세션 갱신 + 인증 보호
 
 ---
 
+## iOS PWA 세션 유지 문제
+
+### 증상
+iOS PWA (홈 화면 추가) 에서 수십 분 후 재로그인 필요. Safari에서는 동일 현상 없음.
+
+### 원인
+- iOS PWA가 백그라운드로 가면 JavaScript 타이머 중단
+- Supabase access token 유효기간 1시간 → 백그라운드 중 자동 갱신 타이머 작동 안 함
+- 포그라운드 복귀 시 이미 만료된 토큰 → middleware가 `/login`으로 리다이렉트
+- Safari는 탭이 살아있는 한 타이머가 계속 실행되므로 영향 없음
+
+### 해결: SessionRefresher 컴포넌트
+`components/SessionRefresher.tsx` - `app/layout.tsx`에 전역 마운트
+
+```tsx
+// visibilitychange 이벤트로 포그라운드 복귀 시 세션 강제 갱신
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible') {
+    await supabase.auth.refreshSession();
+  }
+});
+```
+
+---
+
 ## 환경 변수 추가 없음
 - Supabase URL/Key는 이미 설정됨
 - Google OAuth 설정은 Supabase Dashboard에서 관리
