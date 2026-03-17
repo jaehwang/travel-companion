@@ -17,10 +17,7 @@ export async function signInWithGoogle() {
 
   if (error || !data.url) throw error;
 
-  console.log('OAuth redirect URI:', redirectUri);
   const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUri);
-
-  console.log('OAuth result:', result.type, result.type === 'success' ? result.url : '');
 
   if (result.type === 'success' && result.url) {
     const url = new URL(result.url);
@@ -40,12 +37,8 @@ export async function signInWithGoogle() {
     const refresh_token = url.searchParams.get('refresh_token') ??
                           hashParams.get('refresh_token');
 
-    console.log('Tokens found:', !!access_token, !!refresh_token);
     if (access_token && refresh_token) {
-      const { error: sessionError } = await supabase.auth.setSession({ access_token, refresh_token });
-      console.log('setSession result:', sessionError ?? 'OK');
-    } else {
-      console.log('No tokens in URL hash');
+      await supabase.auth.setSession({ access_token, refresh_token });
     }
   }
 }
