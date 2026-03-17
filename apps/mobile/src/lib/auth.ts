@@ -17,18 +17,35 @@ export async function signInWithGoogle() {
 
   if (error || !data.url) throw error;
 
+  console.log('OAuth redirect URI:', redirectUri);
   const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUri);
+
+  console.log('OAuth result:', result.type, result.type === 'success' ? result.url : '');
 
   if (result.type === 'success' && result.url) {
     const url = new URL(result.url);
+
+    // PKCE flow: code 파라미터로 세션 교환
+    const code = url.searchParams.get('code');
+    if (code) {
+      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+      if (exchangeError) throw exchangeError;
+      return;
+    }
+
+    // Implicit flow fallback: 토큰이 URL에 직접 포함된 경우
     const hashParams = new URLSearchParams(url.hash.slice(1));
     const access_token = url.searchParams.get('access_token') ??
                          hashParams.get('access_token');
     const refresh_token = url.searchParams.get('refresh_token') ??
                           hashParams.get('refresh_token');
 
+    console.log('Tokens found:', !!access_token, !!refresh_token);
     if (access_token && refresh_token) {
-      await supabase.auth.setSession({ access_token, refresh_token });
+      const { error: sessionError } = await supabase.auth.setSession({ access_token, refresh_token });
+      console.log('setSession result:', sessionError ?? 'OK');
+    } else {
+      console.log('No tokens in URL hash');
     }
   }
 }

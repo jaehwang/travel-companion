@@ -3,34 +3,8 @@ import { ActivityIndicator, BackHandler, Platform, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import type { WebViewNavigation } from 'react-native-webview';
 import { supabase } from '../lib/supabase';
-import type { Session } from '@supabase/supabase-js';
 
 const WEB_APP_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://travel-companion.vercel.app';
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL!;
-
-// Supabase가 localStorage에 세션을 저장하는 키
-// 형식: sb-{projectRef}-auth-token
-function getStorageKey(): string {
-  const projectRef = new URL(SUPABASE_URL).hostname.split('.')[0];
-  return `sb-${projectRef}-auth-token`;
-}
-
-// 웹 앱의 localStorage에 Supabase 세션을 주입하는 스크립트
-// injectedJavaScriptBeforeContentLoaded로 페이지 로드 전에 실행됨
-function buildInjectionScript(session: Session): string {
-  const storageKey = getStorageKey();
-  const sessionJson = JSON.stringify(session)
-    .replace(/\\/g, '\\\\')
-    .replace(/'/g, "\\'");
-  return `
-    (function() {
-      try {
-        localStorage.setItem('${storageKey}', '${sessionJson}');
-      } catch(e) {}
-    })();
-    true;
-  `;
-}
 
 type Props = {
   onSessionExpired: () => void;
@@ -38,11 +12,18 @@ type Props = {
 
 export default function WebAppScreen({ onSessionExpired }: Props) {
   const webViewRef = useRef<WebView>(null);
-  const [injectedScript, setInjectedScript] = useState<string | null>(null);
+  const [sourceUrl, setSourceUrl] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setInjectedScript(session ? buildInjectionScript(session) : 'true;');
+      if (session) {
+        // 서버 사이드 쿠키 설정 엔드포인트를 통해 로드
+        // 미들웨어가 쿠키를 확인하므로 localStorage 주입 대신 서버 쿠키를 직접 설정
+        const url = `${WEB_APP_URL}/api/mobile-session?access_token=${encodeURIComponent(session.access_token)}&refresh_token=${encodeURIComponent(session.refresh_token)}`;
+        setSourceUrl(url);
+      } else {
+        onSessionExpired();
+      }
     });
   }, []);
 
@@ -64,7 +45,7 @@ export default function WebAppScreen({ onSessionExpired }: Props) {
     }
   };
 
-  if (injectedScript === null) {
+  if (sourceUrl === null) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF8F0' }}>
         <ActivityIndicator size="large" color="#8B7355" />
@@ -75,8 +56,7 @@ export default function WebAppScreen({ onSessionExpired }: Props) {
   return (
     <WebView
       ref={webViewRef}
-      source={{ uri: `${WEB_APP_URL}/checkin` }}
-      injectedJavaScriptBeforeContentLoaded={injectedScript}
+      source={{ uri: sourceUrl }}
       onNavigationStateChange={handleNavigationChange}
       style={{ flex: 1 }}
       // iOS 안전 영역 자동 처리
