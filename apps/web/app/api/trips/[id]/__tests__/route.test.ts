@@ -21,19 +21,19 @@ const mockFrom = jest.fn();
 const mockGetUser = jest.fn();
 
 jest.mock('@/lib/supabase/server', () => ({
-  createApiClient: jest.fn().mockResolvedValue({
-    auth: { getUser: (...args: any[]) => mockGetUser(...args) },
-    from: (...args: any[]) => mockFrom(...args),
-  }),
+  getAuthenticatedClient: jest.fn().mockImplementation(async () => ({
+    supabase: { from: (...args: any[]) => mockFrom(...args) },
+    user: mockGetUser(),
+  })),
 }));
 
-const authedUser = { data: { user: { id: 'user-1' } }, error: null };
+const authedUser = { id: 'user-1' };
 const params = Promise.resolve({ id: 'trip-123' });
 
 describe('PATCH /api/trips/[id]', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetUser.mockResolvedValue(authedUser);
+    mockGetUser.mockReturnValue(authedUser);
   });
 
   it('title을 업데이트하고 수정된 여행을 반환한다', async () => {
@@ -97,7 +97,7 @@ describe('PATCH /api/trips/[id]', () => {
   });
 
   it('비인증 요청 시 401을 반환한다', async () => {
-    mockGetUser.mockResolvedValue({ data: { user: null }, error: null });
+    mockGetUser.mockReturnValue(null);
 
     const req = new NextRequest('http://localhost:3000/api/trips/trip-123', {
       method: 'PATCH',
@@ -112,7 +112,7 @@ describe('PATCH /api/trips/[id]', () => {
 describe('DELETE /api/trips/[id]', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetUser.mockResolvedValue(authedUser);
+    mockGetUser.mockReturnValue(authedUser);
   });
 
   it('여행을 정상 삭제하고 success를 반환한다', async () => {
@@ -140,7 +140,7 @@ describe('DELETE /api/trips/[id]', () => {
   });
 
   it('비인증 요청 시 401을 반환한다', async () => {
-    mockGetUser.mockResolvedValue({ data: { user: null }, error: null });
+    mockGetUser.mockReturnValue(null);
 
     const req = new NextRequest('http://localhost:3000/api/trips/trip-123', {
       method: 'DELETE',

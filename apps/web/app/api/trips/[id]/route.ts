@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createApiClient } from '@/lib/supabase/server';
+import { getAuthenticatedClient } from '@/lib/supabase/server';
 import type { TripInsert } from '@/types/database';
 
 // PATCH /api/trips/[id] - 여행 수정
@@ -8,8 +8,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createApiClient(request);
-    const { data: { user } } = await supabase.auth.getUser();
+    const { supabase, user } = await getAuthenticatedClient(request);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -66,8 +65,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createApiClient(request);
-    const { data: { user } } = await supabase.auth.getUser();
+    const { supabase, user } = await getAuthenticatedClient(request);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

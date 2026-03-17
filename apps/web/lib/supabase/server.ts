@@ -26,14 +26,15 @@ export async function createClient() {
   );
 }
 
-// Bearer 토큰 또는 쿠키 기반으로 클라이언트 생성
-// 모바일 앱에서 Authorization 헤더로 토큰을 보내는 경우 지원
-export async function createApiClient(request: Request) {
+// Bearer 토큰 또는 쿠키 기반으로 인증된 클라이언트와 유저를 반환
+// - Bearer 토큰: 모바일 앱에서 Authorization 헤더로 전달하는 경우
+// - 쿠키: 웹 앱에서 세션 쿠키로 인증하는 경우
+export async function getAuthenticatedClient(request: Request) {
   const authHeader = request.headers.get('Authorization');
   if (authHeader?.startsWith('Bearer ')) {
     const token = authHeader.slice(7);
     const { createClient: createSupabaseClient } = await import('@supabase/supabase-js');
-    return createSupabaseClient<Database>(
+    const supabase = createSupabaseClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
@@ -41,6 +42,10 @@ export async function createApiClient(request: Request) {
         auth: { persistSession: false },
       }
     );
+    const { data: { user } } = await supabase.auth.getUser(token);
+    return { supabase, user };
   }
-  return createClient();
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  return { supabase, user };
 }

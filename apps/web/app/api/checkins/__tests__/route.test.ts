@@ -23,18 +23,18 @@ const mockFrom = jest.fn();
 const mockGetUser = jest.fn();
 
 jest.mock('@/lib/supabase/server', () => ({
-  createApiClient: jest.fn().mockResolvedValue({
-    auth: { getUser: (...args: any[]) => mockGetUser(...args) },
-    from: (...args: any[]) => mockFrom(...args),
-  }),
+  getAuthenticatedClient: jest.fn().mockImplementation(async () => ({
+    supabase: { from: (...args: any[]) => mockFrom(...args) },
+    user: mockGetUser(),
+  })),
 }));
 
-const authedUser = { data: { user: { id: 'user-1' } }, error: null };
+const authedUser = { id: 'user-1' };
 
 describe('GET /api/checkins', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetUser.mockResolvedValue(authedUser);
+    mockGetUser.mockReturnValue(authedUser);
   });
 
   it('전체 체크인 목록을 반환한다', async () => {
@@ -61,7 +61,7 @@ describe('GET /api/checkins', () => {
   });
 
   it('비인증 요청 시 401을 반환한다', async () => {
-    mockGetUser.mockResolvedValue({ data: { user: null }, error: null });
+    mockGetUser.mockReturnValue(null);
 
     const req = new NextRequest('http://localhost:3000/api/checkins');
     const res = await GET(req);
@@ -73,7 +73,7 @@ describe('GET /api/checkins', () => {
 describe('POST /api/checkins', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetUser.mockResolvedValue(authedUser);
+    mockGetUser.mockReturnValue(authedUser);
   });
 
   const validBody = {
@@ -129,7 +129,7 @@ describe('POST /api/checkins', () => {
   });
 
   it('비인증 요청 시 401을 반환한다', async () => {
-    mockGetUser.mockResolvedValue({ data: { user: null }, error: null });
+    mockGetUser.mockReturnValue(null);
 
     const req = new NextRequest('http://localhost:3000/api/checkins', {
       method: 'POST',
