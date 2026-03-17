@@ -22,7 +22,7 @@ const mockFrom = jest.fn();
 const mockGetUser = jest.fn();
 
 jest.mock('@/lib/supabase/server', () => ({
-  createClient: jest.fn().mockResolvedValue({
+  createApiClient: jest.fn().mockResolvedValue({
     auth: { getUser: (...args: any[]) => mockGetUser(...args) },
     from: (...args: any[]) => mockFrom(...args),
   }),
@@ -53,7 +53,7 @@ describe('GET /api/trips', () => {
     });
 
     const req = new NextRequest('http://localhost:3000/api/trips');
-    const res = await GET();
+    const res = await GET(req);
     const body = await res.json();
 
     expect(res.status).toBe(200);
@@ -65,7 +65,8 @@ describe('GET /api/trips', () => {
   it('여행이 없으면 빈 배열을 반환한다', async () => {
     mockFrom.mockImplementation(() => createQueryBuilder({ data: [], error: null }));
 
-    const res = await GET();
+    const req = new NextRequest('http://localhost:3000/api/trips');
+    const res = await GET(req);
     const body = await res.json();
 
     expect(res.status).toBe(200);
@@ -75,7 +76,8 @@ describe('GET /api/trips', () => {
   it('Supabase 에러 시 500을 반환한다', async () => {
     mockFrom.mockReturnValue(createQueryBuilder({ data: null, error: new Error('DB error') }));
 
-    const res = await GET();
+    const req = new NextRequest('http://localhost:3000/api/trips');
+    const res = await GET(req);
 
     expect(res.status).toBe(500);
   });
@@ -83,7 +85,8 @@ describe('GET /api/trips', () => {
   it('비인증 요청 시 401을 반환한다', async () => {
     mockGetUser.mockResolvedValue({ data: { user: null }, error: null });
 
-    const res = await GET();
+    const req = new NextRequest('http://localhost:3000/api/trips');
+    const res = await GET(req);
 
     expect(res.status).toBe(401);
   });

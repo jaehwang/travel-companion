@@ -21,7 +21,7 @@ const mockFrom = jest.fn();
 const mockGetUser = jest.fn();
 
 jest.mock('@/lib/supabase/server', () => ({
-  createClient: jest.fn().mockResolvedValue({
+  createApiClient: jest.fn().mockResolvedValue({
     auth: { getUser: (...args: any[]) => mockGetUser(...args) },
     from: (...args: any[]) => mockFrom(...args),
   }),

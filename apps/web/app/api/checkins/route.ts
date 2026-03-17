@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createApiClient } from '@/lib/supabase/server';
 import type { CheckinInsert } from '@/types/database';
 
 // GET /api/checkins?trip_id={id} - 체크인 목록 조회
 export async function GET(request: Request) {
   try {
-    const supabase = await createClient();
+    const supabase = await createApiClient(request);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -46,7 +46,7 @@ export async function GET(request: Request) {
 // POST /api/checkins - 체크인 생성
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient();
+    const supabase = await createApiClient(request);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

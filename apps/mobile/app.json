@@ -2,6 +2,7 @@
   "expo": {
     "name": "Travel Companion",
     "slug": "travel-companion",
+    "scheme": "travel-companion",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -30,6 +31,7 @@
     },
     "plugins": [
       "expo-secure-store",
+      "expo-web-browser",
       [
         "expo-image-picker",
         {
