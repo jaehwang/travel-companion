@@ -1,5 +1,5 @@
 {
-  "name": "travel-companion",
+  "name": "@travel-companion/web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
