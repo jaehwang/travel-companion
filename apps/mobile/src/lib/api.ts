@@ -16,7 +16,9 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const headers = await getAuthHeaders();
-  const response = await fetch(`${API_URL}${path}`, {
+  const url = `${API_URL}${path}`;
+  console.log(`API request: ${options?.method ?? 'GET'} ${url}`);
+  const response = await fetch(url, {
     ...options,
     headers: {
       ...headers,
@@ -25,7 +27,10 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+    const text = await response.text().catch(() => 'no body');
+    console.error(`API ${response.status} ${path}:`, text.slice(0, 300));
+    let error: { error?: string } = {};
+    try { error = JSON.parse(text); } catch {}
     throw new Error(error.error || `API error: ${response.status}`);
   }
 

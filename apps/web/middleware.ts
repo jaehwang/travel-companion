@@ -34,7 +34,8 @@ export async function middleware(request: NextRequest) {
     pathname === '/' ||
     pathname.startsWith('/login') ||
     pathname.startsWith('/auth') ||
-    pathname.startsWith('/story');
+    pathname.startsWith('/story') ||
+    pathname.startsWith('/api/');
 
   // 비로그인 상태에서 보호된 경로 접근 시 /login으로 리다이렉트
   if (!user && !isPublicPath) {
