@@ -2,7 +2,7 @@
   "name": "travel-companion-monorepo",
   "private": true,
   "workspaces": [
-    "apps/*",
+    "apps/web",
     "packages/*"
   ],
   "scripts": {
