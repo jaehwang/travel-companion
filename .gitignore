@@ -16,6 +16,8 @@
 # next.js
 /.next/
 /out/
+apps/web/.next/
+apps/web/out/
 
 # production
 /build
@@ -49,3 +51,6 @@ test-*.ts
 test-results/
 playwright-report/
 tests/e2e/screenshots/
+apps/web/tests/e2e/screenshots/
+apps/web/playwright-report/
+apps/web/test-results/
