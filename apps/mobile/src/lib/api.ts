@@ -58,6 +58,10 @@ export async function updateTrip(id: string, tripData: Partial<TripFormData>): P
   return data.trip;
 }
 
+export async function deleteTrip(id: string): Promise<void> {
+  await apiFetch(`/api/trips/${id}`, { method: 'DELETE' });
+}
+
 export async function fetchTripTagline(tripId: string): Promise<string> {
   const data = await apiFetch<{ tagline: string }>(`/api/trips/${tripId}/tagline`);
   return data.tagline;

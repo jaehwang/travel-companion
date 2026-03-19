@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Trip, TripFormData } from '../../../../packages/shared/src/types';
-import { fetchTrips, createTrip, updateTrip } from '../lib/api';
+import { fetchTrips, createTrip, updateTrip, deleteTrip } from '../lib/api';
 
 export function useTrips() {
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -33,5 +33,10 @@ export function useTrips() {
     return trip;
   }, []);
 
-  return { trips, loading, error, reload: load, create, update };
+  const remove = useCallback(async (id: string): Promise<void> => {
+    await deleteTrip(id);
+    setTrips(prev => prev.filter(t => t.id !== id));
+  }, []);
+
+  return { trips, loading, error, reload: load, create, update, remove };
 }

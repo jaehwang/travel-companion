@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { DropdownMenu } from '@/components/DropdownMenu';
-import type { Trip } from '@/types/database';
+import TripFormModal from '@/components/TripFormModal';
+import type { Trip, TripFormData } from '@/types/database';
 
 interface TripCardProps {
   trip: Trip;
@@ -23,8 +25,11 @@ const formatTripDate = (dateStr?: string | null) => {
 };
 
 export default function TripCard({ trip, accent, style }: TripCardProps) {
+  const router = useRouter();
   const [isPublic, setIsPublic] = useState(trip.is_public);
   const [toggling, setToggling] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [currentTrip, setCurrentTrip] = useState(trip);
 
   const handleTogglePublic = async () => {
     if (toggling) return;
@@ -80,6 +85,29 @@ export default function TripCard({ trip, accent, style }: TripCardProps) {
     }
   };
 
+  const handleEdit = () => setShowEditModal(true);
+
+  const handleDelete = async () => {
+    if (!window.confirm(`"${currentTrip.title}"을(를) 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) return;
+    try {
+      const res = await fetch(`/api/trips/${currentTrip.id}`, { method: 'DELETE' });
+      if (res.ok) router.refresh();
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleUpdate = async (id: string, data: Partial<TripFormData>): Promise<Trip> => {
+    const res = await fetch(`/api/trips/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('수정에 실패했습니다.');
+    const { trip: updated } = await res.json();
+    return updated;
+  };
+
   const dropdownItems = [
     {
       label: isPublic ? '비공개로 전환' : '공개로 전환',
@@ -89,10 +117,22 @@ export default function TripCard({ trip, accent, style }: TripCardProps) {
       label: '스토리 링크 복사',
       onClick: handleCopyStoryLink,
     }] : []),
+    { label: '수정', onClick: handleEdit },
+    { label: '삭제', onClick: handleDelete, variant: 'danger' as const },
   ];
 
   return (
     <div style={style}>
+      {showEditModal && (
+        <TripFormModal
+          mode="edit"
+          initialTrip={currentTrip}
+          onSuccess={(updated) => { setCurrentTrip(updated); setIsPublic(updated.is_public); setShowEditModal(false); router.refresh(); }}
+          onCancel={() => setShowEditModal(false)}
+          onCreate={async () => { throw new Error('not used'); }}
+          onUpdate={handleUpdate}
+        />
+      )}
       {/* tc-trip-card CSS에 position:relative 있음 → 버튼 containing block으로 동작 */}
       <div className="tc-trip-card rounded-[20px] overflow-hidden flex flex-col">
         {/* 드롭다운: portal 방식이라 overflow-hidden에 클리핑 안 됨 */}

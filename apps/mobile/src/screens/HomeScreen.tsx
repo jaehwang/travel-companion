@@ -8,6 +8,9 @@ import {
   RefreshControl,
   Image,
   ActivityIndicator,
+  ActionSheetIOS,
+  Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -23,8 +26,9 @@ type NavigationProp = StackNavigationProp<AppStackParamList, 'Home'>;
 
 export default function HomeScreen() {
   const navigation = useNavigation<NavigationProp>();
-  const { trips, loading, error, reload, create } = useTrips();
+  const { trips, loading, error, reload, create, update, remove } = useTrips();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
 
@@ -52,10 +56,64 @@ export default function HomeScreen() {
     navigation.navigate('Trip', { trip });
   };
 
+  const handleUpdateTrip = async (data: TripFormData) => {
+    if (!editingTrip) return;
+    await update(editingTrip.id, data);
+    setEditingTrip(null);
+  };
+
+  const handleTogglePublic = async (trip: Trip) => {
+    try {
+      await update(trip.id, { is_public: !trip.is_public });
+    } catch {
+      Alert.alert('오류', '공개 설정 변경에 실패했습니다.');
+    }
+  };
+
+  const handleMenuPress = (trip: Trip) => {
+    const toggleLabel = trip.is_public ? '비공개로 전환' : '공개로 전환';
+    const options = [toggleLabel, '수정', '삭제', '취소'];
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        { options, destructiveButtonIndex: 2, cancelButtonIndex: 3 },
+        (index) => {
+          if (index === 0) handleTogglePublic(trip);
+          if (index === 1) setEditingTrip(trip);
+          if (index === 2) confirmDelete(trip);
+        },
+      );
+    } else {
+      Alert.alert(trip.title, undefined, [
+        { text: toggleLabel, onPress: () => handleTogglePublic(trip) },
+        { text: '수정', onPress: () => setEditingTrip(trip) },
+        { text: '삭제', style: 'destructive', onPress: () => confirmDelete(trip) },
+        { text: '취소', style: 'cancel' },
+      ]);
+    }
+  };
+
+  const confirmDelete = (trip: Trip) => {
+    Alert.alert('여행 삭제', `"${trip.title}"을(를) 삭제하시겠습니까?`, [
+      { text: '취소', style: 'cancel' },
+      {
+        text: '삭제',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await remove(trip.id);
+          } catch {
+            Alert.alert('오류', '삭제에 실패했습니다.');
+          }
+        },
+      },
+    ]);
+  };
+
   const renderTrip = ({ item }: { item: Trip }) => (
     <TripCard
       trip={item}
       onPress={() => handleTripPress(item)}
+      onMenuPress={() => handleMenuPress(item)}
     />
   );
 
@@ -125,6 +183,15 @@ export default function HomeScreen() {
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSubmit={handleCreateTrip}
+      />
+
+      {/* Edit Trip Modal */}
+      <TripFormModal
+        visible={!!editingTrip}
+        onClose={() => setEditingTrip(null)}
+        onSubmit={handleUpdateTrip}
+        mode="edit"
+        initialTrip={editingTrip ?? undefined}
       />
     </SafeAreaView>
   );

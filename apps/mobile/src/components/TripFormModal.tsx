@@ -16,12 +16,14 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { searchPlaces, getPlaceDetails } from '../lib/api';
 import type { PlacePrediction } from '../lib/api';
-import type { TripFormData } from '../../../../packages/shared/src/types';
+import type { Trip, TripFormData } from '../../../../packages/shared/src/types';
 
 interface TripFormModalProps {
   visible: boolean;
   onClose: () => void;
   onSubmit: (data: TripFormData) => Promise<void>;
+  mode?: 'create' | 'edit';
+  initialTrip?: Trip;
 }
 
 const formatDate = (date: Date | null): string => {
@@ -39,18 +41,24 @@ const formatDateDisplay = (date: Date | null): string => {
   }).format(date);
 };
 
-export default function TripFormModal({ visible, onClose, onSubmit }: TripFormModalProps) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
+const parseDate = (dateStr?: string): Date | null => {
+  if (!dateStr) return null;
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d);
+};
+
+export default function TripFormModal({ visible, onClose, onSubmit, mode = 'create', initialTrip }: TripFormModalProps) {
+  const [title, setTitle] = useState(initialTrip?.title ?? '');
+  const [description, setDescription] = useState(initialTrip?.description ?? '');
+  const [startDate, setStartDate] = useState<Date | null>(parseDate(initialTrip?.start_date));
+  const [endDate, setEndDate] = useState<Date | null>(parseDate(initialTrip?.end_date));
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
-  const [isPublic, setIsPublic] = useState(false);
-  const [place, setPlace] = useState('');
-  const [placeId, setPlaceId] = useState('');
-  const [placeLat, setPlaceLat] = useState<number | undefined>();
-  const [placeLng, setPlaceLng] = useState<number | undefined>();
+  const [isPublic, setIsPublic] = useState(initialTrip?.is_public ?? false);
+  const [place, setPlace] = useState(initialTrip?.place ?? '');
+  const [placeId, setPlaceId] = useState(initialTrip?.place_id ?? '');
+  const [placeLat, setPlaceLat] = useState<number | undefined>(initialTrip?.latitude ?? undefined);
+  const [placeLng, setPlaceLng] = useState<number | undefined>(initialTrip?.longitude ?? undefined);
   const [showPlaceSearch, setShowPlaceSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [predictions, setPredictions] = useState<PlacePrediction[]>([]);
@@ -59,6 +67,22 @@ export default function TripFormModal({ visible, onClose, onSubmit }: TripFormMo
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // initialTrip 변경 시 폼 초기화 (edit 모드에서 다른 여행 수정 시)
+  useEffect(() => {
+    if (visible) {
+      setTitle(initialTrip?.title ?? '');
+      setDescription(initialTrip?.description ?? '');
+      setStartDate(parseDate(initialTrip?.start_date));
+      setEndDate(parseDate(initialTrip?.end_date));
+      setIsPublic(initialTrip?.is_public ?? false);
+      setPlace(initialTrip?.place ?? '');
+      setPlaceId(initialTrip?.place_id ?? '');
+      setPlaceLat(initialTrip?.latitude ?? undefined);
+      setPlaceLng(initialTrip?.longitude ?? undefined);
+      setError(null);
+    }
+  }, [visible, initialTrip]);
 
   useEffect(() => {
     if (searchQuery.trim().length < 2) { setPredictions([]); return; }
@@ -190,9 +214,9 @@ export default function TripFormModal({ visible, onClose, onSubmit }: TripFormMo
             <View style={styles.header}>
               <View style={styles.headerLeft}>
                 <View style={styles.headerIcon}>
-                  <Text style={{ fontSize: 15 }}>✈️</Text>
+                  <Text style={{ fontSize: 15 }}>{mode === 'create' ? '✈️' : '✏️'}</Text>
                 </View>
-                <Text style={styles.headerTitle}>새 여행 만들기</Text>
+                <Text style={styles.headerTitle}>{mode === 'create' ? '새 여행 만들기' : '여행 수정'}</Text>
               </View>
               <View style={styles.headerButtons}>
                 <TouchableOpacity onPress={handleClose} style={styles.cancelButton}>
@@ -207,7 +231,7 @@ export default function TripFormModal({ visible, onClose, onSubmit }: TripFormMo
                     <ActivityIndicator color="#FFF" size="small" />
                   ) : (
                     <Text style={[styles.submitText, !canSubmit && styles.submitTextDisabled]}>
-                      만들기
+                      {mode === 'create' ? '만들기' : '저장'}
                     </Text>
                   )}
                 </TouchableOpacity>
