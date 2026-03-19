@@ -271,6 +271,11 @@ export default function TripScreen() {
           renderItem={({ item }) => (
             <CheckinCard
               checkin={item}
+              onEdit={(checkin) => navigation.navigate('CheckinForm', {
+                tripId: trip.id,
+                tripTitle: trip.title,
+                checkin,
+              })}
               onDelete={handleCheckinDelete}
             />
           )}

@@ -18,7 +18,7 @@ import type { RouteProp } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Location from 'expo-location';
 import { supabase } from '../lib/supabase';
-import { createCheckin } from '../lib/api';
+import { createCheckin, updateCheckin } from '../lib/api';
 import { usePhotoPicker } from '../components/PhotoPickerButton';
 import CheckinFormToolbar from '../components/CheckinFormToolbar';
 import CategorySelector from '../components/CategorySelector';
@@ -44,17 +44,18 @@ const CATEGORY_COLORS: Record<string, string> = {
 export default function CheckinFormScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<FormRouteProp>();
-  const { tripId, tripTitle, initialLatitude, initialLongitude, initialPlace, initialPlaceId, locationResult } = route.params;
+  const { tripId, tripTitle, initialLatitude, initialLongitude, initialPlace, initialPlaceId, locationResult, checkin: editingCheckin } = route.params;
+  const isEditMode = !!editingCheckin;
 
-  const [title, setTitle] = useState('');
-  const [message, setMessage] = useState('');
-  const [category, setCategory] = useState('');
-  const [latitude, setLatitude] = useState<number | undefined>(initialLatitude);
-  const [longitude, setLongitude] = useState<number | undefined>(initialLongitude);
-  const [place, setPlace] = useState(initialPlace || '');
-  const [placeId, setPlaceId] = useState(initialPlaceId || '');
-  const [photoUrl, setPhotoUrl] = useState('');
-  const [photoPreview, setPhotoPreview] = useState('');
+  const [title, setTitle] = useState(editingCheckin?.title ?? '');
+  const [message, setMessage] = useState(editingCheckin?.message ?? '');
+  const [category, setCategory] = useState(editingCheckin?.category ?? '');
+  const [latitude, setLatitude] = useState<number | undefined>(editingCheckin?.latitude ?? initialLatitude);
+  const [longitude, setLongitude] = useState<number | undefined>(editingCheckin?.longitude ?? initialLongitude);
+  const [place, setPlace] = useState(editingCheckin?.place ?? initialPlace ?? '');
+  const [placeId, setPlaceId] = useState(editingCheckin?.place_id ?? initialPlaceId ?? '');
+  const [photoUrl, setPhotoUrl] = useState(editingCheckin?.photo_url ?? '');
+  const [photoPreview, setPhotoPreview] = useState(editingCheckin?.photo_url ?? '');
   const [photoMetadata, setPhotoMetadata] = useState<Record<string, unknown> | null>(null);
   const [checkedInAt, setCheckedInAt] = useState<Date | null>(null);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -134,8 +135,7 @@ export default function CheckinFormScreen() {
     setIsSubmitting(true);
     setError(null);
     try {
-      await createCheckin({
-        trip_id: tripId,
+      const payload = {
         title: title.trim(),
         message: message.trim() || undefined,
         category: category || undefined,
@@ -149,7 +149,12 @@ export default function CheckinFormScreen() {
           height: photoMetadata.height as number | undefined,
         } : undefined,
         checked_in_at: checkedInAt ? checkedInAt.toISOString() : undefined,
-      });
+      };
+      if (isEditMode && editingCheckin) {
+        await updateCheckin(editingCheckin.id, payload);
+      } else {
+        await createCheckin({ trip_id: tripId, ...payload });
+      }
       navigation.goBack();
     } catch (err) {
       setError(err instanceof Error ? err.message : '체크인 저장에 실패했습니다.');
@@ -206,7 +211,7 @@ export default function CheckinFormScreen() {
                 <ActivityIndicator color="#FFF" size="small" />
               ) : (
                 <Text style={[styles.submitText, !canSubmit && styles.submitTextDisabled]}>
-                  체크인
+                  {isEditMode ? '저장' : '체크인'}
                 </Text>
               )}
             </TouchableOpacity>
