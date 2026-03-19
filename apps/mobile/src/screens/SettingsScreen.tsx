@@ -15,7 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { supabase } from '../lib/supabase';
 import { signOut } from '../lib/auth';
-import { getCalendarStatus, disconnectCalendar } from '../lib/api';
+import { fetchSettings, disconnectCalendar } from '../lib/api';
 import type { AppStackParamList } from '../navigation/AppNavigator';
 
 type NavigationProp = StackNavigationProp<AppStackParamList, 'Settings'>;
@@ -38,9 +38,9 @@ export default function SettingsScreen() {
       }
     });
 
-    // Check calendar status
-    getCalendarStatus()
-      .then(({ connected }) => setCalendarConnected(connected))
+    // Check calendar status via API
+    fetchSettings()
+      .then((settings) => setCalendarConnected(!!settings.calendar_sync_enabled))
       .catch(() => setCalendarConnected(false))
       .finally(() => setCalendarLoading(false));
   }, []);

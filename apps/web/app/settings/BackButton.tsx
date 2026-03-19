@@ -6,7 +6,7 @@ export default function BackButton() {
   const router = useRouter();
   return (
     <button
-      onClick={() => router.back()}
+      onClick={() => router.push('/')}
       style={{
         display: 'flex',
         alignItems: 'center',

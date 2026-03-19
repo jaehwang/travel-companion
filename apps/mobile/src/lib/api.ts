@@ -122,11 +122,26 @@ export async function getPlaceDetails(placeId: string): Promise<PlaceDetails> {
   return data.place;
 }
 
-// ── Calendar ───────────────────────────────────────────────────────────
+// ── Settings ────────────────────────────────────────────────────────────
 
-export async function getCalendarStatus(): Promise<{ connected: boolean }> {
-  return apiFetch<{ connected: boolean }>('/api/calendar');
+export interface UserSettings {
+  calendar_sync_enabled?: boolean;
 }
+
+export async function fetchSettings(): Promise<UserSettings> {
+  const data = await apiFetch<{ settings: UserSettings }>('/api/settings');
+  return data.settings;
+}
+
+export async function updateSettings(settings: Partial<UserSettings>): Promise<UserSettings> {
+  const data = await apiFetch<{ settings: UserSettings }>('/api/settings', {
+    method: 'PATCH',
+    body: JSON.stringify(settings),
+  });
+  return data.settings;
+}
+
+// ── Calendar ───────────────────────────────────────────────────────────
 
 export async function disconnectCalendar(): Promise<void> {
   await apiFetch('/api/calendar/disconnect', { method: 'POST' });

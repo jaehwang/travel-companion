@@ -18,11 +18,11 @@ export default async function SettingsPage({ searchParams }: Props) {
 
   const { data: profile } = await supabase
     .from('user_profiles')
-    .select('google_refresh_token')
+    .select('settings')
     .eq('id', user.id)
     .single();
 
-  const calendarConnected = !!(profile as any)?.google_refresh_token;
+  const calendarConnected = !!(profile as any)?.settings?.calendar_sync_enabled;
 
   const params = await searchParams;
   const calendarSuccess = params.calendar === 'connected';
