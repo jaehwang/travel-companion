@@ -161,6 +161,7 @@ export default function TripScreen() {
           showsHorizontalScrollIndicator={false}
           data={[null, ...dates]}
           keyExtractor={(item) => item ?? 'all'}
+          extraData={selectedDate}
           contentContainerStyle={styles.dateFilterContainer}
           renderItem={({ item: date }) => {
             const isActive = date === selectedDate;
