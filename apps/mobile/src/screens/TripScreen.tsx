@@ -30,10 +30,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 type NavigationProp = StackNavigationProp<AppStackParamList, 'Trip'>;
 type TripRouteProp = RouteProp<AppStackParamList, 'Trip'>;
 
-const MARKER_COLORS = [
-  '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6',
-  '#EC4899', '#14B8A6', '#F97316', '#6366F1', '#84CC16',
-];
+const MARKER_COLOR = '#3B82F6';
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -121,6 +118,19 @@ export default function TripScreen() {
     };
   }, [filteredCheckins, trip]);
 
+  // 같은 좌표에 여러 마커가 겹치면 가장 큰 번호만 표시
+  const dedupedMarkers = useMemo(() => {
+    const map = new Map<string, { checkin: typeof filteredCheckins[0]; index: number }>();
+    filteredCheckins.forEach((checkin, index) => {
+      const key = `${checkin.latitude.toFixed(5)},${checkin.longitude.toFixed(5)}`;
+      const existing = map.get(key);
+      if (!existing || index > existing.index) {
+        map.set(key, { checkin, index });
+      }
+    });
+    return Array.from(map.values());
+  }, [filteredCheckins]);
+
   // Polyline coordinates (sorted by time)
   const polylineCoords = useMemo(() => {
     return [...filteredCheckins]
@@ -186,7 +196,7 @@ export default function TripScreen() {
           style={styles.map}
           region={mapRegion}
         >
-          {filteredCheckins.map((checkin, index) => (
+          {dedupedMarkers.map(({ checkin, index }) => (
             <Marker
               key={checkin.id}
               coordinate={{
@@ -196,7 +206,7 @@ export default function TripScreen() {
               title={checkin.title || '체크인'}
               description={checkin.place || undefined}
             >
-              <View style={[styles.markerContainer, { backgroundColor: MARKER_COLORS[index % MARKER_COLORS.length] }]}>
+              <View style={[styles.markerContainer, { backgroundColor: MARKER_COLOR }]}>
                 <Text style={styles.markerText}>{index + 1}</Text>
               </View>
             </Marker>
