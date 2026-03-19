@@ -27,6 +27,10 @@ import type { Trip, Checkin, TripFormData } from '../../../../packages/shared/sr
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+type ListItem =
+  | { type: 'date'; date: string; label: string }
+  | { type: 'checkin'; checkin: Checkin };
+
 type NavigationProp = StackNavigationProp<AppStackParamList, 'Trip'>;
 type TripRouteProp = RouteProp<AppStackParamList, 'Trip'>;
 
@@ -50,6 +54,7 @@ export default function TripScreen() {
   const [showCreateTripModal, setShowCreateTripModal] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
   React.useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -82,15 +87,37 @@ export default function TripScreen() {
     return Array.from(dateSet).sort();
   }, [checkins]);
 
-  // Filter checkins by selected date
+  // Filter checkins by selected date and apply sort order
   const filteredCheckins = useMemo(() => {
-    if (!selectedDate) return checkins;
-    return checkins.filter(c => {
+    const filtered = !selectedDate ? checkins : checkins.filter(c => {
       const d = new Date(c.checked_in_at);
       const cDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       return cDate === selectedDate;
     });
-  }, [checkins, selectedDate]);
+    return [...filtered].sort((a, b) => {
+      const diff = new Date(b.checked_in_at).getTime() - new Date(a.checked_in_at).getTime();
+      return sortOrder === 'newest' ? diff : -diff;
+    });
+  }, [checkins, selectedDate, sortOrder]);
+
+  // Group checkins by date for date separators
+  const groupedData = useMemo((): ListItem[] => {
+    const result: ListItem[] = [];
+    let lastDate = '';
+    filteredCheckins.forEach(checkin => {
+      const d = new Date(checkin.checked_in_at);
+      const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      if (dateKey !== lastDate) {
+        lastDate = dateKey;
+        const label = new Intl.DateTimeFormat('ko-KR', {
+          year: 'numeric', month: 'long', day: 'numeric', weekday: 'short',
+        }).format(d);
+        result.push({ type: 'date', date: dateKey, label });
+      }
+      result.push({ type: 'checkin', checkin });
+    });
+    return result;
+  }, [filteredCheckins]);
 
   // Map region
   const mapRegion = useMemo(() => {
@@ -118,10 +145,13 @@ export default function TripScreen() {
     };
   }, [filteredCheckins, trip]);
 
-  // 같은 좌표에 여러 마커가 겹치면 가장 큰 번호만 표시
+  // 시간순(오래된 것 = 1번)으로 번호를 매기고, 같은 좌표에 여러 마커가 겹치면 가장 큰 번호만 표시
   const dedupedMarkers = useMemo(() => {
+    const sorted = [...filteredCheckins].sort(
+      (a, b) => new Date(a.checked_in_at).getTime() - new Date(b.checked_in_at).getTime()
+    );
     const map = new Map<string, { checkin: typeof filteredCheckins[0]; index: number }>();
-    filteredCheckins.forEach((checkin, index) => {
+    sorted.forEach((checkin, index) => {
       const key = `${checkin.latitude.toFixed(5)},${checkin.longitude.toFixed(5)}`;
       const existing = map.get(key);
       if (!existing || index > existing.index) {
@@ -225,7 +255,12 @@ export default function TripScreen() {
       {/* Checkin Count Header */}
       <View style={styles.checkinHeader}>
         <Text style={styles.checkinCount}>기록 {filteredCheckins.length}곳</Text>
-        <Text style={styles.sortLabel}>최신순</Text>
+        <TouchableOpacity
+          onPress={() => setSortOrder(prev => prev === 'newest' ? 'oldest' : 'newest')}
+          style={styles.sortButton}
+        >
+          <Text style={styles.sortLabel}>{sortOrder === 'newest' ? '최신순 ↓' : '오래된순 ↑'}</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -266,19 +301,30 @@ export default function TripScreen() {
         </View>
       ) : (
         <FlatList
-          data={filteredCheckins}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <CheckinCard
-              checkin={item}
-              onEdit={(checkin) => navigation.navigate('CheckinForm', {
-                tripId: trip.id,
-                tripTitle: trip.title,
-                checkin,
-              })}
-              onDelete={handleCheckinDelete}
-            />
-          )}
+          data={groupedData}
+          keyExtractor={(item) => item.type === 'date' ? `date-${item.date}` : item.checkin.id}
+          renderItem={({ item }) => {
+            if (item.type === 'date') {
+              return (
+                <View style={styles.dateSeparator}>
+                  <View style={styles.dateDot} />
+                  <Text style={styles.dateLabel}>{item.label}</Text>
+                  <View style={styles.dateLine} />
+                </View>
+              );
+            }
+            return (
+              <CheckinCard
+                checkin={item.checkin}
+                onEdit={(checkin) => navigation.navigate('CheckinForm', {
+                  tripId: trip.id,
+                  tripTitle: trip.title,
+                  checkin,
+                })}
+                onDelete={handleCheckinDelete}
+              />
+            );
+          }}
           ListHeaderComponent={renderHeader}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
@@ -458,10 +504,41 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#1F2937',
   },
+  sortButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: '#F5EEE6',
+  },
   sortLabel: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: '#8B7355',
     fontWeight: '600',
+  },
+  dateSeparator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 8,
+    gap: 8,
+  },
+  dateDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#F97316',
+    flexShrink: 0,
+  },
+  dateLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#9CA3AF',
+  },
+  dateLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E8E0D4',
   },
   centerContainer: {
     flex: 1,
