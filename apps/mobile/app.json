@@ -14,7 +14,10 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.travelcompanion.app"
+      "bundleIdentifier": "com.travelcompanion.app",
+      "config": {
+        "googleMapsApiKey": "AIzaSyBim6h0fQvS0M8y6GCt39_QdBTw9yYYRL0"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -24,12 +27,24 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "package": "com.travelcompanion.app",
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "config": {
+        "googleMaps": {
+          "apiKey": "YOUR_GOOGLE_MAPS_API_KEY"
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      "expo-dev-client",
+      [
+        "react-native-maps",
+        {
+          "iosGoogleMapsApiKey": "AIzaSyBim6h0fQvS0M8y6GCt39_QdBTw9yYYRL0"
+        }
+      ],
       "expo-secure-store",
       "expo-web-browser",
       [
