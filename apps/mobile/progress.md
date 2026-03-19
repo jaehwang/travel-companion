@@ -36,38 +36,21 @@
 ### 빌드 환경
 - `npx expo run:ios` 로 iOS 시뮬레이터 빌드 완료
 - CocoaPods 설치됨 (Homebrew)
-- `react-native-maps` podspec 이름 문제 해결: `ios/Podfile`에서 `react-native-google-maps` → `react-native-maps` 로 수정
-  - `expo prebuild` 재실행 시 다시 덮어씌워질 수 있음 → 수동으로 재적용 필요
+- Google Maps iOS SDK: `app.json` plugins에 `react-native-maps` 플러그인 + `iosGoogleMapsApiKey` 추가
+  - Podfile에 `react-native-maps/Google` subspec이 포함되어 Google Maps SDK 자동 설치됨
+  - `AppDelegate.swift`에 `GMSServices.provideAPIKey(...)` 자동 생성됨
 
 ---
 
-## 미해결 이슈
+## 해결된 이슈
 
-### 1. 지도 회색 (Google Maps 미표시)
-- **증상**: TripScreen, LocationPickerScreen의 지도가 회색 사각형으로 표시됨
-- **설정 상태**:
-  - `app.json`의 `ios.config.googleMapsApiKey` 설정됨
-  - Google Cloud Console에서 Maps SDK for iOS 활성화 완료
-- **의심 원인**:
-  - API 키의 iOS 앱 번들 ID 제한 (`com.travelcompanion.app`) 설정 여부 확인 필요
-  - Maps SDK for iOS 활성화 후 반영 지연 (수 분 소요 가능)
-  - `PROVIDER_GOOGLE` → Apple Maps(`PROVIDER_DEFAULT`)로 전환 검토 가능
-- **다음 조치**:
-  1. Google Cloud Console → API 키 → iOS 앱 제한 → 번들 ID `com.travelcompanion.app` 등록 여부 확인
-  2. 수 분 대기 후 재시도
-  3. 그래도 안 되면 `PROVIDER_GOOGLE` 제거하고 Apple Maps로 전환
+### ~~1. 지도 회색 (Google Maps 미표시)~~ ✅ 해결
+- **원인**: `app.json`에 `react-native-maps` config plugin이 없어 Podfile에 `react-native-maps/Google` subspec이 누락됨
+  - Google Maps SDK(`GoogleMaps` CocoaPod)가 설치되지 않아 `#if canImport(GoogleMaps)` 조건이 false
+  - `GMSServices.provideAPIKey()`가 실제로 호출되지 않았음
+- **해결**: `app.json` plugins에 `["react-native-maps", {"iosGoogleMapsApiKey": "..."}]` 추가 → `expo prebuild` + `pod install` + `expo run:ios`
 
-### 2. 이미지 미표시 (Supabase Storage)
-- **증상**: 여행 커버 사진, 체크인 사진 모두 안 보임. Google 아바타(외부 URL)는 정상 표시됨
-- **의심 원인**:
-  - Supabase Storage 버킷이 private이거나 RLS 정책으로 인증 필요
-  - `photo_url` 값이 전체 URL이 아닌 경로(path)만 저장된 경우
-  - 웹 앱에서는 Supabase 클라이언트로 signed URL 생성 후 표시하는 구조일 수 있음
-- **다음 조치**:
-  1. 웹 앱 `apps/web`에서 `photo_url`을 어떻게 처리하는지 확인
-  2. Supabase Dashboard → Storage → 버킷 public 여부 확인
-  3. `photo_url` 값이 전체 URL인지 로그로 확인
-  4. 필요 시 `getPublicUrl()` 또는 `createSignedUrl()` 래퍼 추가
+### ~~2. 이미지 미표시 (Supabase Storage)~~ ✅ 해결
 
 ---
 
