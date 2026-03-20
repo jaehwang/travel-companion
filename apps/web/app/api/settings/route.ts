@@ -9,11 +9,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { data: profile, error } = await supabase
+  const { data: profile, error } = await (supabase
     .from('user_profiles')
     .select('settings')
     .eq('id', user.id)
-    .single();
+    .single() as any);
 
   if (error) {
     return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
@@ -39,17 +39,16 @@ export async function PATCH(request: Request) {
   }
 
   // Fetch current settings first to merge
-  const { data: profile } = await supabase
+  const { data: profile } = await (supabase
     .from('user_profiles')
     .select('settings')
     .eq('id', user.id)
-    .single();
+    .single() as any);
 
   const current: UserProfileSettings = (profile?.settings as UserProfileSettings) ?? {};
   const updated: UserProfileSettings = { ...current, ...body };
 
-  const { error } = await supabase
-    .from('user_profiles')
+  const { error } = await (supabase.from('user_profiles') as any)
     .update({ settings: updated })
     .eq('id', user.id);
 
