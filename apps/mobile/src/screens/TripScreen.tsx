@@ -191,9 +191,6 @@ export default function TripScreen() {
 
   const renderHeader = () => (
     <View>
-      {/* Tagline Banner */}
-      <TripTaglineBanner tripId={trip.id} />
-
       {/* Date Filter */}
       {dates.length > 0 && (
         <FlatList
@@ -218,6 +215,9 @@ export default function TripScreen() {
           }}
         />
       )}
+
+      {/* Tagline */}
+      <TripTaglineBanner tripId={trip.id} />
 
       {/* Map */}
       <View style={styles.mapContainer}>

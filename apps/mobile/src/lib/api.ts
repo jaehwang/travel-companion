@@ -63,7 +63,9 @@ export async function deleteTrip(id: string): Promise<void> {
 }
 
 export async function fetchTripTagline(tripId: string): Promise<string> {
-  const data = await apiFetch<{ tagline: string }>(`/api/trips/${tripId}/tagline`);
+  const data = await apiFetch<{ tagline: string }>(`/api/trips/${tripId}/tagline`, {
+    method: 'POST',
+  });
   return data.tagline;
 }
 

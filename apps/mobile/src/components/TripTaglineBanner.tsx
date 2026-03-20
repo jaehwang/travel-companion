@@ -30,23 +30,31 @@ export default function TripTaglineBanner({ tripId }: TripTaglineBannerProps) {
 
   useEffect(() => { load(); }, [load]);
 
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="small" color="#F97316" />
-      </View>
-    );
-  }
-
-  if (!tagline) return null;
+  if (!loading && !tagline) return null;
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sparkle}>✨</Text>
-      <Text style={styles.text} numberOfLines={2}>{tagline}</Text>
-      <TouchableOpacity onPress={load} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-        <Text style={styles.refresh}>🔄</Text>
-      </TouchableOpacity>
+      <View style={styles.inner}>
+        <Text style={styles.text} numberOfLines={2}>
+          {loading ? (
+            <Text style={[styles.text, styles.loadingText]}>두근, 두근...</Text>
+          ) : (
+            <><Text style={styles.sparkle}>✨ </Text>{tagline}</>
+          )}
+        </Text>
+        <TouchableOpacity
+          onPress={load}
+          disabled={loading}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={[styles.refreshButton, loading && styles.refreshButtonDisabled]}
+        >
+          {loading ? (
+            <ActivityIndicator size="small" color="#B45309" />
+          ) : (
+            <Text style={styles.refreshIcon}>↺</Text>
+          )}
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -54,26 +62,59 @@ export default function TripTaglineBanner({ tripId }: TripTaglineBannerProps) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(249, 115, 22, 0.08)',
+    backgroundColor: '#FFFFFF',
     marginHorizontal: 16,
     marginVertical: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 12,
-    gap: 8,
+    borderRadius: 14,
+    borderLeftWidth: 4,
+    borderLeftColor: 'rgba(255, 107, 71, 0.45)',
+    shadowColor: '#2D2416',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 10,
+    zIndex: 10,
+  },
+  inner: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    gap: 10,
   },
   sparkle: {
-    fontSize: 16,
+    fontStyle: 'normal',
   },
   text: {
     flex: 1,
-    fontSize: 13,
-    color: '#92400E',
-    fontWeight: '500',
-    lineHeight: 18,
-  },
-  refresh: {
     fontSize: 14,
+    lineHeight: 22,
+    fontWeight: '500',
+    fontStyle: 'italic',
+    color: '#44403C',
+  },
+  loadingText: {
+    color: '#A8A29E',
+    fontStyle: 'italic',
+  },
+  refreshButton: {
+    width: 28,
+    height: 28,
+    flexShrink: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F5F0EB',
+    borderWidth: 1,
+    borderColor: '#E8E0D4',
+    borderRadius: 8,
+  },
+  refreshButtonDisabled: {
+    opacity: 0.4,
+  },
+  refreshIcon: {
+    fontSize: 16,
+    color: '#B45309',
+    lineHeight: 18,
   },
 });

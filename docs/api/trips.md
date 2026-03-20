@@ -121,7 +121,7 @@
 ## POST /api/trips/[id]/tagline
 Gemini AI를 사용해 여행 한 줄 소개(tagline)를 자동 생성.
 
-**인증**: 필요
+**인증**: 필요 (Bearer 토큰 또는 쿠키)
 **외부 의존**: `GEMINI_API_KEY` 환경변수 필요
 
 **요청 Body**: 없음
@@ -129,6 +129,11 @@ Gemini AI를 사용해 여행 한 줄 소개(tagline)를 자동 생성.
 **응답 200**
 ```json
 { "tagline": "봄바람 맞으며 걷는 제주의 하루" }
+```
+
+**응답 502** (Gemini 빈 응답)
+```json
+{ "error": "Gemini returned an empty tagline" }
 ```
 
 **응답 503** (Gemini 미설정)

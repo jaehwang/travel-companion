@@ -6,7 +6,7 @@ import { NextRequest } from 'next/server';
 
 const mockGenerateContent = jest.fn();
 const mockFrom = jest.fn();
-const mockGetUser = jest.fn();
+const mockGetUser: jest.Mock & { _user?: any } = jest.fn();
 
 function createQueryBuilder(resolvedValue: { data: any; error: any }) {
   const builder: any = {
@@ -29,13 +29,15 @@ jest.mock('@google/genai', () => ({
 }));
 
 jest.mock('@/lib/supabase/server', () => ({
-  createClient: jest.fn().mockResolvedValue({
-    auth: { getUser: (...args: any[]) => mockGetUser(...args) },
-    from: (...args: any[]) => mockFrom(...args),
-  }),
+  getAuthenticatedClient: jest.fn().mockImplementation(async () => ({
+    supabase: {
+      from: (...args: any[]) => mockFrom(...args),
+    },
+    user: mockGetUser._user,
+  })),
 }));
 
-const authedUser = { data: { user: { id: 'user-1' } }, error: null };
+const authedUser = { id: 'user-1' };
 const params = Promise.resolve({ id: 'trip-123' });
 
 describe('POST /api/trips/[id]/tagline', () => {
@@ -44,7 +46,7 @@ describe('POST /api/trips/[id]/tagline', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     process.env.GEMINI_API_KEY = 'test-key';
-    mockGetUser.mockResolvedValue(authedUser);
+    mockGetUser._user = authedUser;
   });
 
   afterAll(() => {
@@ -122,7 +124,7 @@ describe('POST /api/trips/[id]/tagline', () => {
   });
 
   it('비인증 요청 시 401을 반환한다', async () => {
-    mockGetUser.mockResolvedValue({ data: { user: null }, error: null });
+    mockGetUser._user = null;
 
     const req = new NextRequest('http://localhost:3000/api/trips/trip-123/tagline', {
       method: 'POST',
