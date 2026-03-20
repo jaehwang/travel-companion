@@ -70,6 +70,25 @@ describe('GET /api/places/autocomplete', () => {
     expect(body.predictions).toEqual(mockPredictions);
   });
 
+  it('응답 형상이 문서와 일치한다', async () => {
+    jest.spyOn(global, 'fetch').mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue({ status: 'OK', predictions: mockPredictions }),
+    } as any);
+
+    const res = await GET(makeRequest({ input: '경복궁' }));
+    const body = await res.json();
+
+    expect(body).toHaveProperty('predictions');
+    expect(Array.isArray(body.predictions)).toBe(true);
+    const prediction = body.predictions[0];
+    expect(prediction).toHaveProperty('place_id');
+    expect(prediction).toHaveProperty('description');
+    expect(prediction).toHaveProperty('structured_formatting');
+    expect(typeof prediction.place_id).toBe('string');
+    expect(typeof prediction.description).toBe('string');
+  });
+
   it('ZERO_RESULTS 상태는 빈 predictions를 반환한다', async () => {
     jest.spyOn(global, 'fetch').mockResolvedValue({
       ok: true,

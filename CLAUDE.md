@@ -62,6 +62,16 @@
 - 함수형 컴포넌트 + Hooks
 - 컴포넌트 기반 아키텍처
 
+## API 문서
+
+웹 앱의 REST API 문서는 `docs/api/` 에 Markdown으로 관리합니다.
+
+- **위치**: `docs/api/README.md` (인덱스), `docs/api/trips.md`, `docs/api/checkins.md` 등
+- **업데이트 원칙**: `apps/web/app/api/` 하위 Route Handler를 추가/수정할 때 아래를 함께 업데이트한다
+  1. `docs/api/` 해당 문서 (엔드포인트, 요청/응답 형상)
+  2. `apps/web/app/api/**/__tests__/route.test.ts` 응답 형상 검증 어설션 (문서에 명시된 필드가 실제 응답에 존재하는지 확인)
+- **용도**: 모바일 앱 개발 시 백엔드 인터페이스 참조
+
 ## 참고 사항
 - 사용자는 여행을 자주 다니며 사진을 많이 찍음
 - 실제 사용자의 니즈를 반영한 실용적인 앱 지향

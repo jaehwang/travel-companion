@@ -31,6 +31,30 @@ jest.mock('@/lib/supabase/server', () => ({
 
 const authedUser = { id: 'user-1' };
 
+// 문서(docs/api/checkins.md)에 명시된 전체 필드를 포함한 픽스처
+const fullCheckin = {
+  id: 'checkin-uuid',
+  trip_id: 'trip-uuid',
+  title: '성산일출봉',
+  place: '성산일출봉',
+  place_id: 'ChIJLU7jZClu5kcR4PcOOO6p3I0',
+  message: '일출이 아름다웠다',
+  category: 'attraction',
+  latitude: 33.4585,
+  longitude: 126.9422,
+  photo_url: 'https://example.com/photo.jpg',
+  photo_metadata: { width: 1920, height: 1080 },
+  checked_in_at: '2026-01-01T06:00:00Z',
+  created_at: '2026-01-01T06:00:00Z',
+  updated_at: '2026-01-01T06:00:00Z',
+};
+
+const CHECKIN_DOC_FIELDS = [
+  'id', 'trip_id', 'title', 'place', 'place_id',
+  'message', 'category', 'latitude', 'longitude',
+  'photo_url', 'photo_metadata', 'checked_in_at', 'created_at',
+];
+
 describe('GET /api/checkins', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -49,6 +73,23 @@ describe('GET /api/checkins', () => {
 
     expect(res.status).toBe(200);
     expect(body.checkins).toEqual(checkins);
+  });
+
+  it('응답 형상이 문서와 일치한다', async () => {
+    mockFrom.mockReturnValue(createQueryBuilder({ data: [fullCheckin], error: null }));
+
+    const req = new NextRequest('http://localhost:3000/api/checkins');
+    const res = await GET(req);
+    const body = await res.json();
+
+    expect(body).toHaveProperty('checkins');
+    expect(Array.isArray(body.checkins)).toBe(true);
+    const checkin = body.checkins[0];
+    for (const field of CHECKIN_DOC_FIELDS) {
+      expect(checkin).toHaveProperty(field);
+    }
+    expect(typeof checkin.latitude).toBe('number');
+    expect(typeof checkin.longitude).toBe('number');
   });
 
   it('Supabase 에러 시 500을 반환한다', async () => {
@@ -96,6 +137,24 @@ describe('POST /api/checkins', () => {
 
     expect(res.status).toBe(201);
     expect(body.checkin).toEqual(createdCheckin);
+  });
+
+  it('응답 형상이 문서와 일치한다', async () => {
+    mockFrom.mockReturnValue(createQueryBuilder({ data: fullCheckin, error: null }));
+
+    const req = new NextRequest('http://localhost:3000/api/checkins', {
+      method: 'POST',
+      body: JSON.stringify(validBody),
+    });
+    const res = await POST(req);
+    const body = await res.json();
+
+    expect(body).toHaveProperty('checkin');
+    for (const field of CHECKIN_DOC_FIELDS) {
+      expect(body.checkin).toHaveProperty(field);
+    }
+    expect(typeof body.checkin.latitude).toBe('number');
+    expect(typeof body.checkin.longitude).toBe('number');
   });
 
   it('trip_id 누락 시 400을 반환한다', async () => {

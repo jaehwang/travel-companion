@@ -30,6 +30,28 @@ jest.mock('@/lib/supabase/server', () => ({
 const authedUser = { id: 'user-1' };
 const params = Promise.resolve({ id: 'trip-123' });
 
+// 문서(docs/api/trips.md)에 명시된 전체 필드를 포함한 픽스처
+const fullTrip = {
+  id: 'trip-123',
+  title: '수정된 여행',
+  description: '3박 4일',
+  start_date: '2026-01-01',
+  end_date: '2026-01-04',
+  is_public: false,
+  place: '제주도',
+  place_id: 'ChIJhxwf_LyifDUR5t5IAzpHmKY',
+  latitude: 33.4996,
+  longitude: 126.5312,
+  user_id: 'user-1',
+  created_at: '2026-01-01T00:00:00Z',
+};
+
+const TRIP_DOC_FIELDS = [
+  'id', 'title', 'description', 'start_date', 'end_date',
+  'is_public', 'place', 'place_id', 'latitude', 'longitude',
+  'user_id', 'created_at',
+];
+
 describe('PATCH /api/trips/[id]', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -62,6 +84,23 @@ describe('PATCH /api/trips/[id]', () => {
     const res = await PATCH(req, { params });
 
     expect(res.status).toBe(200);
+  });
+
+  it('응답 형상이 문서와 일치한다', async () => {
+    mockFrom.mockReturnValue(createQueryBuilder({ data: fullTrip, error: null }));
+
+    const req = new NextRequest('http://localhost:3000/api/trips/trip-123', {
+      method: 'PATCH',
+      body: JSON.stringify({ title: '수정된 여행' }),
+    });
+    const res = await PATCH(req, { params });
+    const body = await res.json();
+
+    expect(body).toHaveProperty('trip');
+    for (const field of TRIP_DOC_FIELDS) {
+      expect(body.trip).toHaveProperty(field);
+    }
+    expect(typeof body.trip.is_public).toBe('boolean');
   });
 
   it('빈 title로 수정 시 400을 반환한다', async () => {

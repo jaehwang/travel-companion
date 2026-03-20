@@ -30,6 +30,30 @@ jest.mock('@/lib/supabase/server', () => ({
 const authedUser = { id: 'user-1' };
 const params = Promise.resolve({ id: 'checkin-123' });
 
+// 문서(docs/api/checkins.md)에 명시된 전체 필드를 포함한 픽스처
+const fullCheckin = {
+  id: 'checkin-123',
+  trip_id: 'trip-uuid',
+  title: '수정된 제목',
+  place: '경복궁',
+  place_id: 'ChIJhxwf_LyifDUR5t5IAzpHmKY',
+  message: '멋진 곳',
+  category: 'attraction',
+  latitude: 37.5796,
+  longitude: 126.977,
+  photo_url: 'https://example.com/photo.jpg',
+  photo_metadata: { width: 1920, height: 1080 },
+  checked_in_at: '2026-01-01T10:00:00Z',
+  created_at: '2026-01-01T10:00:00Z',
+  updated_at: '2026-01-02T10:00:00Z',
+};
+
+const CHECKIN_DOC_FIELDS = [
+  'id', 'trip_id', 'title', 'place', 'place_id',
+  'message', 'category', 'latitude', 'longitude',
+  'photo_url', 'photo_metadata', 'checked_in_at', 'created_at',
+];
+
 describe('PATCH /api/checkins/[id]', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -49,6 +73,24 @@ describe('PATCH /api/checkins/[id]', () => {
 
     expect(res.status).toBe(200);
     expect(body.checkin).toEqual(updated);
+  });
+
+  it('응답 형상이 문서와 일치한다', async () => {
+    mockFrom.mockReturnValue(createQueryBuilder({ data: fullCheckin, error: null }));
+
+    const req = new NextRequest('http://localhost:3000/api/checkins/checkin-123', {
+      method: 'PATCH',
+      body: JSON.stringify({ title: '수정된 제목' }),
+    });
+    const res = await PATCH(req, { params });
+    const body = await res.json();
+
+    expect(body).toHaveProperty('checkin');
+    for (const field of CHECKIN_DOC_FIELDS) {
+      expect(body.checkin).toHaveProperty(field);
+    }
+    expect(typeof body.checkin.latitude).toBe('number');
+    expect(typeof body.checkin.longitude).toBe('number');
   });
 
   it('여러 필드를 동시에 업데이트한다', async () => {
