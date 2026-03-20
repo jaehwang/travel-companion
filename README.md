@@ -90,10 +90,20 @@ GOOGLE_CLIENT_ID=...        # Google Calendar 연동 시
 GOOGLE_CLIENT_SECRET=...    # Google Calendar 연동 시
 ```
 
-**모바일** (`apps/mobile/.env`):
+**모바일** — 환경별로 파일을 분리합니다:
+
+`apps/mobile/.env.development` (시뮬레이터용):
 ```
 EXPO_PUBLIC_SUPABASE_URL=...
 EXPO_PUBLIC_SUPABASE_ANON_KEY=...
+EXPO_PUBLIC_API_URL=http://localhost:3000
+```
+
+`apps/mobile/.env.production` (실기기/배포용):
+```
+EXPO_PUBLIC_SUPABASE_URL=...
+EXPO_PUBLIC_SUPABASE_ANON_KEY=...
+EXPO_PUBLIC_API_URL=https://PRODUCTION_URL
 ```
 
 API 키 발급:
@@ -108,8 +118,11 @@ API 키 발급:
 npm run dev                          # 루트에서
 cd apps/web && npm run dev           # 또는 직접
 
-# 모바일 (iOS)
-cd apps/mobile && npx expo run:ios --device
+# 모바일 (iOS 시뮬레이터 — development)
+cd apps/mobile && npx expo run:ios
+
+# 모바일 (iPhone 실기기 — production URL 사용)
+cd apps/mobile && NODE_ENV=production npx expo run:ios --device
 ```
 
 ## 테스트

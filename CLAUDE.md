@@ -24,6 +24,12 @@
 - **이미지 처리**: exifr (EXIF 데이터 추출)
 - **배포**: Vercel (자동 배포)
 
+### 모바일 앱 환경 변수
+- `apps/mobile/.env.development` — 시뮬레이터용 (로컬 서버 URL)
+- `apps/mobile/.env.production` — 실기기/배포용 (`https://PRODUCTION_URL`)
+- 시뮬레이터: `npx expo run:ios`
+- 실기기: `NODE_ENV=production npx expo run:ios --device`
+
 ### 백엔드
 - **데이터베이스**: Supabase PostgreSQL
 - **스토리지**: Supabase Storage (이미지 저장)
