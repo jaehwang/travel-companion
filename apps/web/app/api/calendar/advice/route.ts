@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
-import { createClient } from '@/lib/supabase/server';
 import { humanizeDuration } from '@/lib/humanizeDuration';
 
 interface EventInput {
@@ -52,8 +51,8 @@ function formatTime(minutesUntil: number, isAllDay: boolean): string {
 }
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { getAuthenticatedClient } = await import('@/lib/supabase/server');
+  const { user } = await getAuthenticatedClient(request);
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const apiKey = process.env.GEMINI_API_KEY;

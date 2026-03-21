@@ -149,6 +149,32 @@ export async function updateSettings(settings: Partial<UserSettings>): Promise<U
 
 // ── Calendar ───────────────────────────────────────────────────────────
 
+export interface CalendarEvent {
+  id: string;
+  summary?: string;
+  location?: string;
+  start: { dateTime?: string; date?: string };
+  end: { dateTime?: string; date?: string };
+}
+
+export async function fetchCalendarEvents(timeMin: string, timeMax?: string, maxResults = 10): Promise<CalendarEvent[]> {
+  let path = `/api/calendar?timeMin=${encodeURIComponent(timeMin)}&maxResults=${maxResults}`;
+  if (timeMax) path += `&timeMax=${encodeURIComponent(timeMax)}`;
+  const data = await apiFetch<{ items?: CalendarEvent[]; error?: string }>(path);
+  if (data.error) throw new Error(data.error);
+  return data.items ?? [];
+}
+
+export async function fetchCalendarAdvice(
+  events: { summary: string; location?: string; minutesUntil: number; isAllDay?: boolean }[],
+): Promise<string | null> {
+  const data = await apiFetch<{ advice?: string }>('/api/calendar/advice', {
+    method: 'POST',
+    body: JSON.stringify({ events }),
+  });
+  return data.advice ?? null;
+}
+
 export async function disconnectCalendar(): Promise<void> {
   await apiFetch('/api/calendar/disconnect', { method: 'POST' });
 }

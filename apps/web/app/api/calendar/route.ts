@@ -37,20 +37,35 @@ function tokenExpiredResponse() {
 }
 
 export async function GET(request: Request) {
-  const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const authHeader = request.headers.get('Authorization');
+  const isBearerAuth = authHeader?.startsWith('Bearer ');
 
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  let supabase;
+  let userId: string | undefined;
+  let accessToken: string | null | undefined;
+  let refreshToken: string | null = null;
+
+  if (isBearerAuth) {
+    const { getAuthenticatedClient } = await import('@/lib/supabase/server');
+    const { supabase: authSupabase, user } = await getAuthenticatedClient(request);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    supabase = authSupabase;
+    userId = user.id;
+    accessToken = null; // Bearer 토큰 인증 시 provider_token 없음
+  } else {
+    supabase = await createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    userId = session.user?.id;
+    accessToken = session.provider_token;
+    refreshToken = session.provider_refresh_token ?? null;
   }
 
-  let accessToken = session.provider_token;
-  let refreshToken = session.provider_refresh_token ?? null;
-  if (!refreshToken) {
+  if (!refreshToken && userId) {
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('google_refresh_token')
-      .eq('id', session.user.id)
+      .eq('id', userId)
       .single();
     refreshToken = (profile as Pick<UserProfile, 'google_refresh_token'> | null)?.google_refresh_token ?? null;
   }

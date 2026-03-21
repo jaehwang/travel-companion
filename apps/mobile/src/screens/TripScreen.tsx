@@ -20,6 +20,7 @@ import { useCheckins } from '../hooks/useCheckins';
 import { useTrips } from '../hooks/useTrips';
 import CheckinCard from '../components/CheckinCard';
 import TripTaglineBanner from '../components/TripTaglineBanner';
+import TodayCalendarSection from '../components/TodayCalendarSection';
 import SideDrawer from '../components/SideDrawer';
 import TripFormModal from '../components/TripFormModal';
 import type { AppStackParamList } from '../navigation/AppNavigator';
@@ -251,6 +252,9 @@ export default function TripScreen() {
           )}
         </MapView>
       </View>
+
+      {/* Today Calendar */}
+      <TodayCalendarSection tripEndDate={trip.end_date ?? undefined} />
 
       {/* Checkin Count Header */}
       <View style={styles.checkinHeader}>

@@ -5,11 +5,10 @@ import { POST } from '../route';
 
 // ─── Mocks ───
 
-const mockGetUser = jest.fn();
+const mockGetAuthenticatedClient = jest.fn();
 jest.mock('@/lib/supabase/server', () => ({
-  createClient: jest.fn().mockResolvedValue({
-    auth: { getUser: (...args: any[]) => mockGetUser(...args) },
-  }),
+  createClient: jest.fn(),
+  getAuthenticatedClient: (...args: any[]) => mockGetAuthenticatedClient(...args),
 }));
 
 const mockGenerateContent = jest.fn();
@@ -19,7 +18,7 @@ jest.mock('@google/genai', () => ({
   })),
 }));
 
-const authedUser = { data: { user: { id: 'user-1' } }, error: null };
+const authedUser = { supabase: {}, user: { id: 'user-1' } };
 
 // ─── Helpers ───
 
@@ -48,7 +47,7 @@ describe('POST /api/calendar/advice', () => {
       NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: 'test-maps-key',
     };
     jest.clearAllMocks();
-    mockGetUser.mockResolvedValue(authedUser);
+    mockGetAuthenticatedClient.mockResolvedValue(authedUser);
   });
 
   afterEach(() => {
@@ -58,7 +57,7 @@ describe('POST /api/calendar/advice', () => {
 
   describe('인증 및 설정 검사', () => {
     it('비인증 요청 시 401을 반환한다', async () => {
-      mockGetUser.mockResolvedValue({ data: { user: null }, error: null });
+      mockGetAuthenticatedClient.mockResolvedValue({ supabase: {}, user: null });
 
       const res = await POST(makeRequest({ events: sampleEvents }));
       expect(res.status).toBe(401);
