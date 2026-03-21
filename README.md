@@ -34,8 +34,7 @@ travel-companion/
 │   │   ├── components/            # React 컴포넌트
 │   │   ├── hooks/                 # 커스텀 훅
 │   │   ├── lib/                   # 유틸리티
-│   │   ├── tests/e2e/             # Playwright E2E 테스트
-│   │   └── docs/api/              # API 문서 (Markdown)
+│   │   └── tests/e2e/             # Playwright E2E 테스트
 │   └── mobile/                    # Expo iOS 앱
 │       ├── src/
 │       │   ├── screens/           # 화면 컴포넌트
@@ -44,8 +43,11 @@ travel-companion/
 │       │   ├── hooks/             # 커스텀 훅
 │       │   └── lib/               # 유틸리티 (Supabase 등)
 │       └── App.tsx
-└── packages/
-    └── shared/                    # 공통 TypeScript 타입
+├── packages/
+│   └── shared/                    # 공통 TypeScript 타입
+└── docs/
+    ├── api/                       # REST API 문서 (Markdown)
+    └── ui/                        # UI/화면 설계 문서 (Markdown)
 ```
 
 ## 기술 스택
@@ -170,13 +172,18 @@ E2E 테스트 파일 위치 (`apps/web/tests/e2e/`):
 
 ## API 문서
 
-웹 앱의 REST API 명세는 `apps/web/docs/api/`에 Markdown으로 관리합니다.
+웹 앱의 REST API 명세와 UI 설계 문서는 `docs/`에 Markdown으로 관리합니다.
 
-- [API 개요](apps/web/docs/api/README.md)
-- [Trips API](apps/web/docs/api/trips.md)
-- [Checkins API](apps/web/docs/api/checkins.md)
-- [Places API](apps/web/docs/api/places.md)
-- [Calendar API](apps/web/docs/api/calendar.md)
+**API 문서** (`docs/api/`):
+- [API 개요](docs/api/README.md)
+- [Trips API](docs/api/trips.md)
+- [Checkins API](docs/api/checkins.md)
+- [Places API](docs/api/places.md)
+- [Calendar API](docs/api/calendar.md)
+
+**UI 문서** (`docs/ui/`):
+- [Web 앱 UI](docs/ui/web.md)
+- [Mobile 앱 UI](docs/ui/mobile.md)
 
 ## 배포
 

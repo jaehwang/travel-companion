@@ -20,8 +20,8 @@
 - **프레임워크**: Next.js 15 (App Router)
 - **언어**: TypeScript
 - **UI**: React + Tailwind CSS
-- **지도**: Mapbox / Google Maps API
-- **이미지 처리**: exifr (EXIF 데이터 추출)
+- **지도**: Google Maps API
+- **이미지 처리**: exifr (EXIF 데이터 추출), browser-image-compression
 - **배포**: Vercel (자동 배포)
 
 ### 모바일 앱 환경 변수
@@ -33,8 +33,7 @@
 ### 백엔드
 - **데이터베이스**: Supabase PostgreSQL
 - **스토리지**: Supabase Storage (이미지 저장)
-- **인증**: Supabase Auth (선택적)
-- **실시간**: Supabase Realtime (선택적)
+- **인증**: Supabase Auth (Google OAuth, 필수)
 
 ## 개발 우선순위
 1. 사진에서 GPS 정보 추출 프로토타입
@@ -68,7 +67,9 @@
 - 함수형 컴포넌트 + Hooks
 - 컴포넌트 기반 아키텍처
 
-## API 문서
+## 문서
+
+### API 문서 (`docs/api/`)
 
 웹 앱의 REST API 문서는 `docs/api/` 에 Markdown으로 관리합니다.
 
@@ -77,6 +78,13 @@
   1. `docs/api/` 해당 문서 (엔드포인트, 요청/응답 형상)
   2. `apps/web/app/api/**/__tests__/route.test.ts` 응답 형상 검증 어설션 (문서에 명시된 필드가 실제 응답에 존재하는지 확인)
 - **용도**: 모바일 앱 개발 시 백엔드 인터페이스 참조
+
+### UI 문서 (`docs/ui/`)
+
+웹/모바일 앱의 화면 구조, 컴포넌트, 훅, API 연계 방식을 Markdown으로 관리합니다.
+
+- **위치**: `docs/ui/web.md` (웹 앱), `docs/ui/mobile.md` (모바일 앱)
+- **업데이트 원칙**: 화면/컴포넌트/훅을 추가·변경할 때 해당 문서를 함께 업데이트한다
 
 ## 참고 사항
 - 사용자는 여행을 자주 다니며 사진을 많이 찍음
