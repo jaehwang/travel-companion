@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,11 +10,13 @@ import {
   ActivityIndicator,
   Dimensions,
 } from 'react-native';
+import * as Location from 'expo-location';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RouteProp } from '@react-navigation/native';
-import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { supabase } from '../lib/supabase';
 import { useCheckins } from '../hooks/useCheckins';
 import { useTrips } from '../hooks/useTrips';
@@ -56,6 +58,7 @@ export default function TripScreen() {
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const mapRef = useRef<MapView>(null);
 
   React.useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -162,12 +165,17 @@ export default function TripScreen() {
     return Array.from(map.values());
   }, [filteredCheckins]);
 
-  // Polyline coordinates (sorted by time)
-  const polylineCoords = useMemo(() => {
-    return [...filteredCheckins]
-      .sort((a, b) => new Date(a.checked_in_at).getTime() - new Date(b.checked_in_at).getTime())
-      .map(c => ({ latitude: c.latitude, longitude: c.longitude }));
-  }, [filteredCheckins]);
+  const handleMyLocation = useCallback(async () => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') return;
+    const loc = await Location.getCurrentPositionAsync({});
+    mapRef.current?.animateToRegion({
+      latitude: loc.coords.latitude,
+      longitude: loc.coords.longitude,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01,
+    }, 500);
+  }, []);
 
   const handleSelectTrip = (t: Trip) => {
     setTrip(t);
@@ -223,6 +231,7 @@ export default function TripScreen() {
       {/* Map */}
       <View style={styles.mapContainer}>
         <MapView
+          ref={mapRef}
           provider={PROVIDER_GOOGLE}
           style={styles.map}
           region={mapRegion}
@@ -242,15 +251,10 @@ export default function TripScreen() {
               </View>
             </Marker>
           ))}
-          {polylineCoords.length > 1 && (
-            <Polyline
-              coordinates={polylineCoords}
-              strokeColor="#3B82F6"
-              strokeWidth={2}
-              lineDashPattern={[6, 4]}
-            />
-          )}
         </MapView>
+        <TouchableOpacity style={styles.myLocationButton} onPress={handleMyLocation}>
+          <Ionicons name="navigate" size={18} color="#3B82F6" />
+        </TouchableOpacity>
       </View>
 
       {/* Today Calendar */}
@@ -476,6 +480,22 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1,
+  },
+  myLocationButton: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
   markerContainer: {
     width: 28,
