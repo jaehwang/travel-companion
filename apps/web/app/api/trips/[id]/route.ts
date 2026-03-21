@@ -15,7 +15,7 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
-    const { title, description, start_date, end_date, is_public, place, place_id, latitude, longitude } = body;
+    const { title, description, start_date, end_date, is_public, place, place_id, latitude, longitude, is_frequent } = body;
 
     if (title !== undefined && (!title || typeof title !== 'string' || title.trim().length === 0)) {
       return NextResponse.json(
@@ -34,6 +34,7 @@ export async function PATCH(
     if (place_id !== undefined) updateData.place_id = place_id || null;
     if (latitude !== undefined) updateData.latitude = latitude ?? null;
     if (longitude !== undefined) updateData.longitude = longitude ?? null;
+    if (is_frequent !== undefined) updateData.is_frequent = is_frequent;
 
     const { data, error } = await (supabase.from('trips') as any)
       .update(updateData)

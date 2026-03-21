@@ -167,6 +167,20 @@ export default function TripCard({ trip, accent, style }: TripCardProps) {
               )}
             </div>
 
+            {/* 자주 가는 곳 뱃지 */}
+            {currentTrip.is_frequent && (
+              <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 10 }}>
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 3,
+                  padding: '2px 7px', borderRadius: 9999,
+                  fontSize: 10, fontWeight: 700,
+                  background: 'rgba(245, 158, 11, 0.92)', color: 'white',
+                }}>
+                  ⭐ 자주 가는 곳
+                </span>
+              </div>
+            )}
+
             {/* 공개/비공개 뱃지 */}
             <div style={{ position: 'absolute', bottom: 8, left: 8, zIndex: 10 }}>
               {isPublic ? (

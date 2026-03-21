@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import TripCreateButton from '@/components/TripCreateButton';
 import TripCard from '@/components/TripCard';
+import QuickCheckinButton from '@/components/QuickCheckinButton';
 import { fetchTrips } from '@/app/lib/fetchTrips';
 import { APP_NAME } from '@/lib/config';
 
@@ -51,6 +52,9 @@ export default async function Home() {
             )}
           </Link>
         </div>
+
+        {/* 빠른 체크인 */}
+        <QuickCheckinButton />
 
         {/* 여행 목록 */}
         <section>

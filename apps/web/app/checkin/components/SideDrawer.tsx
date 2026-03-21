@@ -147,8 +147,14 @@ export default function SideDrawer({
                         fontWeight: isSelected ? 800 : 500,
                         color: isSelected ? '#FF6B47' : 'var(--tc-warm-dark)',
                         letterSpacing: '-0.01em',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
                       }}
                     >
+                      {trip.is_frequent && (
+                        <span style={{ fontSize: 13, flexShrink: 0 }} title="자주 가는 곳">⭐</span>
+                      )}
                       {trip.title}
                     </button>
                     <DropdownMenu

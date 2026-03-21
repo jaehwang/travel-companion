@@ -179,6 +179,33 @@ export async function disconnectCalendar(): Promise<void> {
   await apiFetch('/api/calendar/disconnect', { method: 'POST' });
 }
 
+// ── Nearby Checkins ────────────────────────────────────────────────────
+
+export interface NearbyCheckin {
+  id: string;
+  trip_id: string;
+  trip_title: string;
+  title?: string;
+  place?: string;
+  latitude: number;
+  longitude: number;
+  category?: string;
+  photo_url?: string;
+  checked_in_at: string;
+  distance: number;
+}
+
+export async function fetchNearbyCheckins(
+  lat: number,
+  lng: number,
+  radius = 1000,
+): Promise<NearbyCheckin[]> {
+  const data = await apiFetch<{ checkins: NearbyCheckin[] }>(
+    `/api/checkins/nearby?lat=${lat}&lng=${lng}&radius=${radius}`,
+  );
+  return data.checkins;
+}
+
 // ── Storage (direct Supabase) ──────────────────────────────────────────
 
 export async function uploadPhoto(

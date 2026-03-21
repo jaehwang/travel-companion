@@ -16,6 +16,7 @@
       "start_date": "2026-01-01",
       "end_date": "2026-01-04",
       "is_public": false,
+      "is_frequent": false,
       "place": "제주도",
       "place_id": "google_place_id",
       "latitude": 33.4996,
@@ -44,6 +45,7 @@
   "start_date": "2026-01-01",    // 선택 (ISO date string)
   "end_date": "2026-01-04",      // 선택
   "is_public": false,             // 선택 (기본값: false)
+  "is_frequent": false,           // 선택 (기본값: false) — 빠른 체크인 노출 여부
   "place": "제주도",              // 선택 (장소 이름)
   "place_id": "google_place_id", // 선택
   "latitude": 33.4996,           // 선택
@@ -71,6 +73,7 @@
   "start_date": "2026-01-01",
   "end_date": "2026-01-04",
   "is_public": true,
+  "is_frequent": true,
   "place": "제주도",
   "place_id": "google_place_id",
   "latitude": 33.4996,

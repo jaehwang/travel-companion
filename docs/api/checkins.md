@@ -114,3 +114,44 @@ GET /api/checkins?trip_id=uuid
 ```json
 { "success": true }
 ```
+
+---
+
+## GET /api/checkins/nearby
+현재 위치 주변의 체크인 목록 조회. `is_frequent = true`로 설정된 여행의 체크인만 반환. 빠른 체크인 기능에서 사용.
+
+**인증**: 필요
+
+**Query Parameters**
+| 파라미터 | 필수 | 설명 |
+|---------|------|------|
+| `lat` | 필수 | 현재 위도 |
+| `lng` | 필수 | 현재 경도 |
+| `radius` | 선택 | 검색 반경 (미터, 기본값: 1000) |
+
+**예시**
+```
+GET /api/checkins/nearby?lat=37.5665&lng=126.9780&radius=1000
+```
+
+**응답 200**
+```json
+{
+  "checkins": [
+    {
+      "id": "uuid",
+      "trip_id": "uuid",
+      "trip_title": "주차",
+      "title": "지하3층",
+      "place": null,
+      "category": "other",
+      "checked_in_at": "2026-03-21T10:00:00Z",
+      "distance": 45.3
+    }
+  ]
+}
+```
+
+- `distance`: 현재 위치로부터의 거리 (미터, Haversine 공식)
+- 결과는 `checked_in_at` 기준 내림차순 정렬 (가장 최근 체크인 우선)
+- `trip_title`: 체크인이 속한 여행의 제목 (JOIN 포함)

@@ -12,17 +12,24 @@
 **파일**: `apps/web/app/page.tsx`
 
 **기능**
+- 빠른 체크인 버튼 (상단) — 현재 위치의 가장 최근 체크인 상태 표시
 - 사용자의 여행 목록을 카드 그리드로 표시
 - 각 카드: 커버 사진, 여행 제목, 첫 체크인 날짜
 - 여행 카드 클릭 → `/checkin?trip_id={id}` 이동
 
 **디자인**
+- 빠른 체크인 버튼: 주황색 테두리 카드, 현재 체크인 상태 (`[여행명]: [장소] · [시간 전]`) 표시
+  - 위치 확인 중: "현재 위치 확인 중..." (회색)
+  - 체크인 있음: `주차: 지하3층 · 10분 전` (주황색)
+  - 없음: "자주 가는 곳을 빠르게 기록" (회색)
 - 반응형 카드 그리드 (모바일 1열, 태블릿 2열, 데스크톱 3열)
+- `is_frequent = true` 여행 카드 좌측 상단에 `⭐ 자주 가는 곳` 앰버색 뱃지
 - 다크 모드 지원 (`dark:bg-gray-900`)
 - 커버 사진 없을 경우 회색 플레이스홀더
 
 **백엔드 연계**
 - `lib/fetchTrips.ts` → `GET /api/trips`
+- `QuickCheckinButton`: `navigator.geolocation` → `GET /api/checkins/nearby`
 
 **보안**
 - 미들웨어(`middleware.ts`)에서 Supabase 세션 확인
@@ -88,6 +95,7 @@
 
 **SideDrawer** (`app/checkin/components/SideDrawer.tsx`)
 - 여행 목록 표시 및 선택
+- `is_frequent = true` 여행은 제목 앞에 ⭐ 아이콘 표시
 - 여행 신규 생성 / 수정 / 삭제
 - ActionSheet 스타일 메뉴
 
@@ -263,6 +271,7 @@ checkin/page.tsx
 | POST | `/api/checkins` | 체크인 생성 |
 | PATCH | `/api/checkins/[id]` | 체크인 수정 |
 | DELETE | `/api/checkins/[id]` | 체크인 삭제 |
+| GET | `/api/checkins/nearby` | 현재 위치 주변 체크인 (`?lat=&lng=&radius=`) |
 | GET | `/api/places/autocomplete` | 장소 자동완성 (Google Places 프록시) |
 | GET | `/api/places/details` | 장소 상세 (Google Places 프록시) |
 | GET | `/api/settings` | 사용자 설정 조회 |

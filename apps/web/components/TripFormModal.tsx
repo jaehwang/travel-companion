@@ -28,6 +28,7 @@ export default function TripFormModal({
   const [startDate, setStartDate] = useState(initialTrip?.start_date ?? '');
   const [endDate, setEndDate] = useState(initialTrip?.end_date ?? '');
   const [isPublic, setIsPublic] = useState(initialTrip?.is_public ?? false);
+  const [isFrequent, setIsFrequent] = useState(initialTrip?.is_frequent ?? false);
   const [place, setPlace] = useState(initialTrip?.place ?? '');
   const [placeId, setPlaceId] = useState(initialTrip?.place_id ?? '');
   const [placeLat, setPlaceLat] = useState<number | undefined>(initialTrip?.latitude ?? undefined);
@@ -62,6 +63,7 @@ export default function TripFormModal({
         start_date: startDate || undefined,
         end_date: endDate || undefined,
         is_public: isPublic,
+        is_frequent: isFrequent,
         place: place.trim() || null,
         place_id: placeId || null,
         latitude: placeLat ?? null,
@@ -307,7 +309,7 @@ export default function TripFormModal({
               borderRadius: 14,
               padding: '14px 16px',
               boxShadow: '0 2px 8px rgba(45,36,22,0.06)',
-              marginBottom: 20,
+              marginBottom: 10,
             }}>
               <div>
                 <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--tc-warm-dark)', marginBottom: 2 }}>공개 여행</p>
@@ -334,6 +336,46 @@ export default function TripFormModal({
                   backgroundColor: 'white',
                   top: 2,
                   left: isPublic ? 22 : 2,
+                  transition: 'left 0.2s',
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                }} />
+              </label>
+            </div>
+
+            {/* 자주 가는 곳 토글 */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              background: 'var(--tc-card-bg)',
+              borderRadius: 14,
+              padding: '14px 16px',
+              boxShadow: '0 2px 8px rgba(45,36,22,0.06)',
+              marginBottom: 20,
+            }}>
+              <div>
+                <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--tc-warm-dark)', marginBottom: 2 }}>⭐ 자주 가는 곳</p>
+                <p style={{ fontSize: 12, color: 'var(--tc-warm-faint)' }}>빠른 체크인 목록에 표시됩니다</p>
+              </div>
+              <label style={{ position: 'relative', display: 'inline-block', width: 51, height: 31, cursor: 'pointer', flexShrink: 0 }}>
+                <input
+                  type="checkbox"
+                  checked={isFrequent}
+                  onChange={(e) => setIsFrequent(e.target.checked)}
+                  style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }}
+                />
+                <span style={{
+                  position: 'absolute', inset: 0,
+                  borderRadius: 15.5,
+                  backgroundColor: isFrequent ? '#F59E0B' : 'var(--tc-dot)',
+                  transition: 'background-color 0.2s',
+                  boxShadow: isFrequent ? '0 2px 8px rgba(245,158,11,0.4)' : 'none',
+                }} />
+                <span style={{
+                  position: 'absolute',
+                  width: 27, height: 27,
+                  borderRadius: '50%',
+                  backgroundColor: 'white',
+                  top: 2,
+                  left: isFrequent ? 22 : 2,
                   transition: 'left 0.2s',
                   boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
                 }} />

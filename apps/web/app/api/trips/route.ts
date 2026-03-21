@@ -79,7 +79,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { title, description, start_date, end_date, is_public, place, place_id, latitude, longitude } = body;
+    const { title, description, start_date, end_date, is_public, place, place_id, latitude, longitude, is_frequent } = body;
 
     if (!title || typeof title !== 'string' || title.trim().length === 0) {
       return NextResponse.json(
@@ -94,6 +94,7 @@ export async function POST(request: Request) {
       start_date,
       end_date,
       is_public: is_public ?? false,
+      is_frequent: is_frequent ?? false,
       user_id: user.id,
       place: place?.trim() || null,
       place_id: place_id || null,

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,12 +15,26 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
+import * as Location from 'expo-location';
 import { supabase } from '../lib/supabase';
+import { fetchNearbyCheckins } from '../lib/api';
 import { useTrips } from '../hooks/useTrips';
 import TripCard from '../components/TripCard';
 import TripFormModal from '../components/TripFormModal';
+import QuickCheckinSheet from '../components/QuickCheckinSheet';
 import type { AppStackParamList } from '../navigation/AppNavigator';
 import type { Trip, TripFormData } from '../../../../packages/shared/src/types';
+import type { NearbyCheckin } from '../lib/api';
+
+function formatRelativeTime(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return '방금 전';
+  if (minutes < 60) return `${minutes}분 전`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}시간 전`;
+  return `${Math.floor(hours / 24)}일 전`;
+}
 
 type NavigationProp = StackNavigationProp<AppStackParamList, 'Home'>;
 
@@ -31,14 +45,32 @@ export default function HomeScreen() {
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
+  const [showQuickCheckin, setShowQuickCheckin] = useState(false);
+  const [lastCheckin, setLastCheckin] = useState<NearbyCheckin | null>(null);
+  const [checkinLoading, setCheckinLoading] = useState(true);
 
   // Load user avatar
-  React.useEffect(() => {
+  useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user?.user_metadata?.avatar_url) {
         setAvatarUrl(user.user_metadata.avatar_url);
       }
     });
+  }, []);
+
+  // Load current nearby checkin for status display
+  useEffect(() => {
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') return;
+        const loc = await Location.getCurrentPositionAsync({});
+        const checkins = await fetchNearbyCheckins(loc.coords.latitude, loc.coords.longitude);
+        if (checkins.length > 0) setLastCheckin(checkins[0]);
+      } catch { /* silent */ } finally {
+        setCheckinLoading(false);
+      }
+    })();
   }, []);
 
   const onRefresh = useCallback(async () => {
@@ -136,6 +168,28 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* 빠른 체크인 */}
+      <TouchableOpacity
+        style={styles.quickCheckinBtn}
+        onPress={() => setShowQuickCheckin(true)}
+      >
+        <Text style={styles.quickCheckinIcon}>⚡</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.quickCheckinLabel}>빠른 체크인</Text>
+          <Text
+            style={[styles.quickCheckinStatus, lastCheckin ? { color: '#F97316' } : undefined]}
+            numberOfLines={1}
+          >
+            {checkinLoading
+              ? '현재 위치 확인 중...'
+              : lastCheckin
+                ? `${lastCheckin.trip_title}: ${lastCheckin.title || lastCheckin.place || '(이름 없음)'} · ${formatRelativeTime(lastCheckin.checked_in_at)}`
+                : '자주 가는 곳을 빠르게 기록'}
+          </Text>
+        </View>
+        <Text style={styles.quickCheckinArrow}>›</Text>
+      </TouchableOpacity>
+
       {/* Section Header */}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>내 여행</Text>
@@ -192,6 +246,12 @@ export default function HomeScreen() {
         onSubmit={handleUpdateTrip}
         mode="edit"
         initialTrip={editingTrip ?? undefined}
+      />
+
+      <QuickCheckinSheet
+        visible={showQuickCheckin}
+        onClose={() => setShowQuickCheckin(false)}
+        onCheckedIn={(checkin) => setLastCheckin(checkin)}
       />
     </SafeAreaView>
   );
@@ -310,5 +370,40 @@ const styles = StyleSheet.create({
   emptySubtitle: {
     fontSize: 14,
     color: '#9CA3AF',
+  },
+  quickCheckinBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 20,
+    marginBottom: 16,
+    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#FED7AA',
+    shadowColor: '#F97316',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 2,
+    gap: 12,
+  },
+  quickCheckinIcon: {
+    fontSize: 24,
+  },
+  quickCheckinLabel: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#1F2937',
+    marginBottom: 2,
+  },
+  quickCheckinStatus: {
+    fontSize: 12,
+    color: '#9CA3AF',
+  },
+  quickCheckinArrow: {
+    fontSize: 20,
+    color: '#D1D5DB',
+    fontWeight: '300',
   },
 });

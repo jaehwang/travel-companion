@@ -51,6 +51,15 @@ export default function TripCard({ trip, onPress, onMenuPress }: TripCardProps) 
           </View>
         )}
 
+        {/* 자주 가는 곳 뱃지 */}
+        {trip.is_frequent && (
+          <View style={styles.frequentBadgeContainer}>
+            <View style={styles.frequentBadge}>
+              <Text style={styles.badgeText}>⭐ 자주 가는 곳</Text>
+            </View>
+          </View>
+        )}
+
         {/* Public/Private Badge */}
         <View style={styles.badgeContainer}>
           <View style={[styles.badge, trip.is_public ? styles.badgePublic : styles.badgePrivate]}>
@@ -119,6 +128,17 @@ const styles = StyleSheet.create({
   },
   coverEmoji: {
     fontSize: 48,
+  },
+  frequentBadgeContainer: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+  },
+  frequentBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+    backgroundColor: 'rgba(245, 158, 11, 0.92)',
   },
   badgeContainer: {
     position: 'absolute',

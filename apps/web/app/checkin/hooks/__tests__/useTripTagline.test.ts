@@ -15,6 +15,7 @@ const MOCK_TRIP: Trip = {
   start_date: '2025-04-01T00:00:00.000Z',
   end_date: '2025-04-03T00:00:00.000Z',
   is_public: false,
+  is_frequent: false,
   user_id: 'user-1',
   created_at: '2025-04-01T00:00:00.000Z',
   updated_at: '2025-04-01T00:00:00.000Z',

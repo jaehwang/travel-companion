@@ -55,6 +55,7 @@ export default function TripFormModal({ visible, onClose, onSubmit, mode = 'crea
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
   const [isPublic, setIsPublic] = useState(initialTrip?.is_public ?? false);
+  const [isFrequent, setIsFrequent] = useState(initialTrip?.is_frequent ?? false);
   const [place, setPlace] = useState(initialTrip?.place ?? '');
   const [placeId, setPlaceId] = useState(initialTrip?.place_id ?? '');
   const [placeLat, setPlaceLat] = useState<number | undefined>(initialTrip?.latitude ?? undefined);
@@ -76,6 +77,7 @@ export default function TripFormModal({ visible, onClose, onSubmit, mode = 'crea
       setStartDate(parseDate(initialTrip?.start_date));
       setEndDate(parseDate(initialTrip?.end_date));
       setIsPublic(initialTrip?.is_public ?? false);
+      setIsFrequent(initialTrip?.is_frequent ?? false);
       setPlace(initialTrip?.place ?? '');
       setPlaceId(initialTrip?.place_id ?? '');
       setPlaceLat(initialTrip?.latitude ?? undefined);
@@ -104,6 +106,7 @@ export default function TripFormModal({ visible, onClose, onSubmit, mode = 'crea
     setTitle(''); setDescription('');
     setStartDate(null); setEndDate(null);
     setIsPublic(false);
+    setIsFrequent(false);
     setPlace(''); setPlaceId(''); setPlaceLat(undefined); setPlaceLng(undefined);
     setShowPlaceSearch(false); setSearchQuery(''); setPredictions([]);
     setError(null);
@@ -144,6 +147,7 @@ export default function TripFormModal({ visible, onClose, onSubmit, mode = 'crea
         start_date: formatDate(startDate) || undefined,
         end_date: formatDate(endDate) || undefined,
         is_public: isPublic,
+        is_frequent: isFrequent,
         place: place.trim() || null,
         place_id: placeId || null,
         latitude: placeLat ?? null,
@@ -340,6 +344,20 @@ export default function TripFormModal({ visible, onClose, onSubmit, mode = 'crea
                   value={isPublic}
                   onValueChange={setIsPublic}
                   trackColor={{ false: '#E8E0D4', true: '#FF6B47' }}
+                  thumbColor="#FFFFFF"
+                />
+              </View>
+
+              {/* 자주 가는 곳 토글 */}
+              <View style={styles.publicRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.publicLabel}>⭐ 자주 가는 곳</Text>
+                  <Text style={styles.publicDesc}>빠른 체크인 목록에 표시됩니다</Text>
+                </View>
+                <Switch
+                  value={isFrequent}
+                  onValueChange={setIsFrequent}
+                  trackColor={{ false: '#E8E0D4', true: '#F59E0B' }}
                   thumbColor="#FFFFFF"
                 />
               </View>

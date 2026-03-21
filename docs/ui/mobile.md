@@ -54,6 +54,7 @@ type AppStackParamList = {
 **파일**: `apps/mobile/src/screens/HomeScreen.tsx`
 
 **기능**
+- 빠른 체크인 버튼 (헤더 바로 아래) — 현재 위치의 가장 최근 체크인 상태 표시
 - 사용자의 여행 목록 표시 (`FlatList`)
 - 여행 생성 버튼 (상단 우측)
 - 여행 카드 Long Press → ActionSheetIOS (iOS) / Alert (Android) 메뉴
@@ -63,7 +64,13 @@ type AppStackParamList = {
 
 **디자인**
 - 상단 헤더: 앱 타이틀, 사용자 아바타
+- 빠른 체크인 버튼: 주황색 테두리 카드
+  - 마운트 시 `expo-location` + `fetchNearbyCheckins`로 현재 상태 로드
+  - 상태 텍스트: `[여행명]: [장소] · [시간 전]` (주황색) / 없으면 "자주 가는 곳을 빠르게 기록" (회색)
+  - 탭 → `QuickCheckinSheet` 열림
+  - 체크인 완료 시 `onCheckedIn` 콜백으로 상태 즉시 갱신
 - 여행 카드: 커버 사진 (없으면 회색 플레이스홀더), 제목, 첫 체크인 날짜
+- `is_frequent = true` 여행 카드 사진 좌측 상단에 `⭐ 자주 가는 곳` 앰버색 뱃지
 - 빈 상태: "여행을 추가해보세요" 안내
 
 **백엔드 연계**
@@ -71,6 +78,7 @@ type AppStackParamList = {
 - `createTrip` → `POST /api/trips`
 - `updateTrip` → `PATCH /api/trips/[id]`
 - `deleteTrip` → `DELETE /api/trips/[id]`
+- `fetchNearbyCheckins(lat, lng)` → `GET /api/checkins/nearby`
 
 ---
 
@@ -278,7 +286,8 @@ await signInWithGoogle();
 
 - 여행 카드 표시
 - 커버 사진, 제목, 첫 체크인 날짜
-- 공개/비공개 배지
+- 공개/비공개 배지 (사진 좌측 하단)
+- `is_frequent = true`이면 `⭐ 자주 가는 곳` 앰버색 배지 (사진 좌측 상단)
 
 ### PhotoPickerButton (`src/components/PhotoPickerButton.tsx`)
 
@@ -310,6 +319,15 @@ await signInWithGoogle();
 
 - 여행 생성/수정 모달
 - 제목, 설명, 시작일/종료일, 장소 입력
+- "⭐ 자주 가는 곳" Switch 토글 (`is_frequent`) — 빠른 체크인 기능에서 해당 여행의 체크인 노출 여부 제어
+
+### QuickCheckinSheet (`src/components/QuickCheckinSheet.tsx`)
+
+- 빠른 체크인용 바텀 시트 모달
+- 현재 위치 기반으로 `is_frequent = true` 여행의 주변 체크인 목록 로드
+- 체크인을 여행별로 그룹핑: 그룹 헤더에 여행명 + "현재: [장소] · [시간 전]" 표시
+- 각 항목에 거리 및 체크인 버튼 (현재 위치 항목은 주황색 강조)
+- 체크인 완료 시 `onCheckedIn(checkin)` 콜백 호출
 
 ### SideDrawer (`src/components/SideDrawer.tsx`)
 
@@ -364,6 +382,7 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
 | `fetchCalendarAdvice()` | POST | `/api/calendar/advice` |
 | `disconnectCalendar()` | POST | `/api/calendar/disconnect` |
 | `uploadPhoto(uri)` | — | Supabase Storage 직접 업로드 |
+| `fetchNearbyCheckins(lat, lng, radius?)` | GET | `/api/checkins/nearby` |
 
 ### supabase.ts (`src/lib/supabase.ts`)
 
