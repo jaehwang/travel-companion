@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   RefreshControl,
   Image,
   ActivityIndicator,
+  Dimensions,
 } from 'react-native';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
@@ -36,6 +37,7 @@ type NavigationProp = StackNavigationProp<AppStackParamList, 'Trip'>;
 type TripRouteProp = RouteProp<AppStackParamList, 'Trip'>;
 
 const MARKER_COLOR = '#3B82F6';
+const MAP_SIZE = Dimensions.get('window').width - 32; // mapSection marginHorizontal 16 * 2
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -55,6 +57,17 @@ const formatTripDate = (dateStr: string | null | undefined): string | null => {
   }).format(date);
 };
 
+const formatCheckinTime = (dateStr: string): string => {
+  return new Intl.DateTimeFormat('ko-KR', {
+    month: 'numeric',
+    day: 'numeric',
+    weekday: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  }).format(new Date(dateStr));
+};
+
 export default function TripScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<TripRouteProp>();
@@ -66,10 +79,12 @@ export default function TripScreen() {
   const [showCreateTripModal, setShowCreateTripModal] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [selectedCheckinId, setSelectedCheckinId] = useState<string | null>(null);
   const mapRef = useRef<MapView>(null);
+  const mapReadyRef = useRef(false);
 
 
-  React.useEffect(() => {
+  useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user?.user_metadata?.avatar_url) {
         setAvatarUrl(user.user_metadata.avatar_url);
@@ -142,6 +157,42 @@ export default function TripScreen() {
       longitudeDelta: lngDelta,
     };
   }, [filteredCheckins, trip]);
+
+  const sortedCheckins = useMemo(() => {
+    return [...checkins].sort(
+      (a, b) => new Date(a.checked_in_at).getTime() - new Date(b.checked_in_at).getTime()
+    );
+  }, [checkins]);
+
+  const selectedCheckin = useMemo(
+    () => sortedCheckins.find(c => c.id === selectedCheckinId) ?? null,
+    [sortedCheckins, selectedCheckinId]
+  );
+
+  // checkins 로드 시 지도 영역 맞춤 (팝업이 열려 있지 않을 때만)
+  useEffect(() => {
+    if (mapReadyRef.current && !selectedCheckinId) {
+      mapRef.current?.animateToRegion(mapRegion, 500);
+    }
+  }, [mapRegion]);
+
+  // 마커 선택 시 지도 애니메이션
+  useEffect(() => {
+    if (!selectedCheckin) return;
+    const timer = setTimeout(() => {
+      mapRef.current?.animateToRegion({
+        latitude: selectedCheckin.latitude + 0.003,
+        longitude: selectedCheckin.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      }, 400);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [selectedCheckin]);
+
+  const handleMarkerPress = useCallback((checkin: Checkin) => {
+    setSelectedCheckinId(checkin.id);
+  }, []);
 
   // 시간순(오래된 것 = 1번)으로 번호를 매기고, 같은 좌표에 여러 마커가 겹치면 가장 큰 번호만 표시
   const dedupedMarkers = useMemo(() => {
@@ -224,32 +275,78 @@ export default function TripScreen() {
       <TripTaglineBanner tripId={trip.id} />
 
       {/* Map */}
-      <View style={styles.mapContainer}>
-        <MapView
-          ref={mapRef}
-          provider={PROVIDER_GOOGLE}
-          style={styles.map}
-          region={mapRegion}
-        >
-          {dedupedMarkers.map(({ checkin, index }) => (
-            <Marker
-              key={checkin.id}
-              coordinate={{
-                latitude: checkin.latitude,
-                longitude: checkin.longitude,
-              }}
-              title={checkin.title || '체크인'}
-              description={checkin.place || undefined}
-            >
-              <View style={[styles.markerContainer, { backgroundColor: MARKER_COLOR }]}>
-                <Text style={styles.markerText}>{index + 1}</Text>
+      <View style={styles.mapSection}>
+        <View style={styles.mapContainer}>
+          <MapView
+            ref={mapRef}
+            provider={PROVIDER_GOOGLE}
+            style={styles.map}
+            initialRegion={mapRegion}
+            onMapReady={() => { mapReadyRef.current = true; }}
+          >
+            {dedupedMarkers.map(({ checkin, index }) => (
+              <Marker
+                key={checkin.id}
+                coordinate={{
+                  latitude: checkin.latitude,
+                  longitude: checkin.longitude,
+                }}
+                onPress={() => handleMarkerPress(checkin)}
+              >
+                <View style={[styles.markerContainer, { backgroundColor: MARKER_COLOR }]}>
+                  <Text style={styles.markerText}>{index + 1}</Text>
+                </View>
+              </Marker>
+            ))}
+          </MapView>
+          <TouchableOpacity style={styles.myLocationButton} onPress={handleMyLocation}>
+            <Ionicons name="navigate" size={18} color="#3B82F6" />
+          </TouchableOpacity>
+          {(() => {
+            if (!selectedCheckin) return null;
+            const selectedIndex = sortedCheckins.findIndex(c => c.id === selectedCheckinId);
+            const hasPrev = selectedIndex > 0;
+            const hasNext = selectedIndex < sortedCheckins.length - 1;
+            return (
+              <View style={styles.markerInfoCard}>
+                <TouchableOpacity style={styles.markerInfoClose} onPress={() => setSelectedCheckinId(null)}>
+                  <Text style={styles.markerInfoCloseText}>✕</Text>
+                </TouchableOpacity>
+                {selectedCheckin.photo_url && (
+                  <Image
+                    source={{ uri: selectedCheckin.photo_url }}
+                    style={styles.markerInfoPhoto}
+                    resizeMode="cover"
+                  />
+                )}
+                {selectedCheckin.title && (
+                  <Text style={styles.markerInfoTitle}>{selectedCheckin.title}</Text>
+                )}
+                <Text style={styles.markerInfoTime}>{formatCheckinTime(selectedCheckin.checked_in_at)}</Text>
+                {selectedCheckin.place && (
+                  <Text style={styles.markerInfoPlace}>📍 {selectedCheckin.place}</Text>
+                )}
+                <View style={styles.markerInfoNav}>
+                  <TouchableOpacity
+                    style={[styles.markerInfoNavBtn, !hasPrev && styles.markerInfoNavBtnDisabled]}
+                    onPress={() => hasPrev && setSelectedCheckinId(sortedCheckins[selectedIndex - 1].id)}
+                    disabled={!hasPrev}
+                  >
+                    <Text style={[styles.markerInfoNavBtnText, !hasPrev && styles.markerInfoNavBtnTextDisabled]}>← 이전</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.markerInfoNavCount}>{selectedIndex + 1} / {sortedCheckins.length}</Text>
+                  <TouchableOpacity
+                    style={[styles.markerInfoNavBtn, !hasNext && styles.markerInfoNavBtnDisabled]}
+                    onPress={() => hasNext && setSelectedCheckinId(sortedCheckins[selectedIndex + 1].id)}
+                    disabled={!hasNext}
+                  >
+                    <Text style={[styles.markerInfoNavBtnText, !hasNext && styles.markerInfoNavBtnTextDisabled]}>다음 →</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </Marker>
-          ))}
-        </MapView>
-        <TouchableOpacity style={styles.myLocationButton} onPress={handleMyLocation}>
-          <Ionicons name="navigate" size={18} color="#3B82F6" />
-        </TouchableOpacity>
+            );
+          })()}
+        </View>
       </View>
 
       {/* Today Calendar */}
@@ -466,13 +563,105 @@ const styles = StyleSheet.create({
     color: '#8B7355',
     marginTop: 2,
   },
-  mapContainer: {
+  mapSection: {
     marginHorizontal: 16,
     marginVertical: 8,
+  },
+  mapContainer: {
     borderRadius: 16,
     overflow: 'hidden',
-    height: 220,
+    height: MAP_SIZE,
     backgroundColor: '#E5E7EB',
+  },
+  markerInfoCard: {
+    position: 'absolute',
+    left: Math.round(MAP_SIZE * 0.14),
+    right: Math.round(MAP_SIZE * 0.14),
+    top: 12,
+    height: Math.round(MAP_SIZE * 0.65),
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    padding: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+    overflow: 'hidden',
+  },
+  markerInfoClose: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#1F2937',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  markerInfoCloseText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    lineHeight: 16,
+  },
+  markerInfoPhoto: {
+    width: '100%',
+    height: Math.round(MAP_SIZE * 0.65 * 0.50),
+    borderRadius: 6,
+    marginBottom: 5,
+  },
+  markerInfoTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 1,
+    paddingRight: 20,
+  },
+  markerInfoTime: {
+    fontSize: 11,
+    color: '#6B7280',
+    marginBottom: 1,
+  },
+  markerInfoPlace: {
+    fontSize: 11,
+    color: '#4285F4',
+    marginBottom: 5,
+  },
+  markerInfoNav: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    paddingTop: 5,
+    marginTop: 2,
+  },
+  markerInfoNavBtn: {
+    flex: 1,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    backgroundColor: '#4285F4',
+    borderRadius: 4,
+    alignItems: 'center',
+  },
+  markerInfoNavBtnDisabled: {
+    backgroundColor: '#E5E7EB',
+  },
+  markerInfoNavBtnText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#FFFFFF',
+  },
+  markerInfoNavBtnTextDisabled: {
+    color: '#9CA3AF',
+  },
+  markerInfoNavCount: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginHorizontal: 8,
   },
   map: {
     flex: 1,
