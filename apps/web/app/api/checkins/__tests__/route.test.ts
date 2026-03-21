@@ -52,7 +52,7 @@ const fullCheckin = {
 const CHECKIN_DOC_FIELDS = [
   'id', 'trip_id', 'title', 'place', 'place_id',
   'message', 'category', 'latitude', 'longitude',
-  'photo_url', 'photo_metadata', 'checked_in_at', 'created_at',
+  'photo_url', 'photo_metadata', 'checked_in_at', 'created_at', 'updated_at',
 ];
 
 describe('GET /api/checkins', () => {

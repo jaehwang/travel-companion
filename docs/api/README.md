@@ -13,9 +13,6 @@
 ### 웹 (쿠키)
 Supabase Auth가 자동으로 쿠키를 관리합니다.
 
-### 모바일 → 웹 세션 연동
-모바일에서 Supabase 토큰을 웹 쿠키 세션으로 변환하려면 `GET /api/mobile-session` 사용.
-
 ### API 직접 호출 (Bearer Token)
 ```
 Authorization: Bearer <supabase_access_token>
@@ -46,4 +43,3 @@ Authorization: Bearer <supabase_access_token>
 | [story.md](./story.md) | 공개 여행 스토리 조회 (인증 불필요) |
 | [settings.md](./settings.md) | 사용자 설정 |
 | [calendar.md](./calendar.md) | Google Calendar 연동 |
-| [mobile-session.md](./mobile-session.md) | 모바일 세션 연동 |
