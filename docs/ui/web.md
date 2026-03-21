@@ -272,7 +272,6 @@ checkin/page.tsx
 | POST | `/api/calendar/connect` | Google Calendar OAuth 연동 |
 | POST | `/api/calendar/disconnect` | Google Calendar 연동 해제 |
 | GET | `/api/story/[id]` | 공개 여행 스토리 조회 |
-| GET | `/api/mobile-session` | 모바일 토큰으로 서버 쿠키 세션 설정 후 `/checkin` 리다이렉트 |
 | GET | `/api/places/nearby` | 현재 위치 주변 장소 검색 (`?latitude=&longitude=&type=`) |
 | POST | `/api/trips/[id]/apply-place` | 여행 장소를 해당 여행의 모든 체크인에 일괄 적용 |
 

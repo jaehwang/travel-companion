@@ -241,33 +241,7 @@ await signInWithGoogle();
 
 ---
 
-### 2.6 WebAppScreen (웹앱 하이브리드)
-
-**파일**: `apps/mobile/src/screens/WebAppScreen.tsx`
-
-**기능**
-- 웹 앱 전체를 WebView로 표시하는 하이브리드 화면
-- Supabase 세션 토큰을 `/api/mobile-session` 엔드포인트에 전달해 서버 쿠키 세션 설정 후 로드
-- 세션 만료 감지: 웹 앱이 `/login`으로 리다이렉트하면 `onSessionExpired()` 콜백 호출 → 모바일 로그아웃
-- Android 뒤로가기 버튼으로 웹 히스토리 탐색
-
-**인터페이스**
-```typescript
-type Props = {
-  onSessionExpired: () => void;
-};
-```
-
-**인증 흐름**
-```
-Supabase getSession() → access_token + refresh_token
-  → GET /api/mobile-session?access_token=...&refresh_token=...
-  → 서버 쿠키 설정 → /checkin 리다이렉트 → WebView 로드
-```
-
----
-
-### 2.8 SettingsScreen (설정)
+### 2.6 SettingsScreen (설정)
 
 **파일**: `apps/mobile/src/screens/SettingsScreen.tsx`
 
