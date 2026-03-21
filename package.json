@@ -5,6 +5,9 @@
     "apps/web",
     "packages/*"
   ],
+  "optionalDependencies": {
+    "lightningcss-linux-x64-gnu": "1.30.2"
+  },
   "scripts": {
     "dev": "npm run dev --workspace=apps/web",
     "build": "npm run build --workspace=apps/web",
