@@ -188,22 +188,29 @@ export async function uploadPhoto(
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error('Not authenticated');
 
-  const response = await fetch(fileUri);
-  const blob = await response.blob();
+  const arrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.onload = () => resolve(xhr.response);
+    xhr.onerror = () => reject(new Error('파일 읽기 실패'));
+    xhr.responseType = 'arraybuffer';
+    xhr.open('GET', fileUri);
+    xhr.send();
+  });
 
-  const filePath = `checkins/${session.user.id}/${Date.now()}_${fileName}`;
+  const filePath = `photos/${Date.now()}_${fileName}`;
   const { error } = await supabase.storage
-    .from('photos')
-    .upload(filePath, blob, {
+    .from('trip-photos')
+    .upload(filePath, arrayBuffer, {
       contentType: 'image/jpeg',
       upsert: false,
     });
 
   if (error) throw error;
 
-  const { data: urlData } = supabase.storage
-    .from('photos')
-    .getPublicUrl(filePath);
+  const { data: signedData, error: signedError } = await supabase.storage
+    .from('trip-photos')
+    .createSignedUrl(filePath, 31536000); // 1년
+  if (signedError) throw signedError;
 
-  return urlData.publicUrl;
+  return signedData.signedUrl;
 }
