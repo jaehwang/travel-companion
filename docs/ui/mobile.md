@@ -80,7 +80,8 @@ type AppStackParamList = {
 
 **기능**
 - 여행의 체크인 지도 표시 (react-native-maps)
-- 여행 정보 배너 (TripTaglineBanner)
+- 여행 정보 카드 (description, 날짜, 장소 — 값이 있을 때만 표시)
+- AI 태그라인 배너 (TripTaglineBanner)
 - 오늘의 일정 섹션 (TodayCalendarSection)
 - 날짜별 그룹핑된 체크인 타임라인
 - 체크인 카드 탭 → 수정, Long Press → 삭제
@@ -88,26 +89,28 @@ type AppStackParamList = {
 
 **디자인**
 - 상단: 여행 제목 헤더 + 설정 아이콘
-- 지도: 화면 상단 약 40% 차지
-  - 체크인 마커 표시 (같은 좌표 중복 제거, 최신 마커만)
-  - 지도 영역은 체크인 좌표 기반 자동 조정
-- 여행 정보 배너: AI Tagline, 여행 기간, 대표 장소
+- 여행 정보 카드 (웹 앱과 동일한 구조)
+  - 📅 시작일 ~ 종료일 (start_date 없으면 첫 체크인 날짜 사용)
+  - 여행 설명 (description)
+  - 📍 대표 장소 (place)
+  - description/날짜/장소 모두 없으면 카드 미표시
+- AI Tagline 배너
+- 지도: 체크인 마커 표시 (같은 좌표 중복 제거), 우하단 현재 위치 버튼
 - 날짜 구분자 + 체크인 카드 리스트
 - 하단: 체크인 추가 FAB 버튼
 
 **지도 영역 계산**
 ```typescript
-// 체크인 좌표로 바운드 계산
 const mapRegion = useMemo(() => {
-  const lats = checkins.map(c => c.latitude);
-  const lngs = checkins.map(c => c.longitude);
+  const lats = filteredCheckins.map(c => c.latitude);
+  const lngs = filteredCheckins.map(c => c.longitude);
   return {
-    latitude: (max(lats) + min(lats)) / 2,
-    longitude: (max(lngs) + min(lngs)) / 2,
-    latitudeDelta: (max(lats) - min(lats)) * 1.5 || 0.05,
-    longitudeDelta: (max(lngs) - min(lngs)) * 1.5 || 0.05,
+    latitude: (Math.min(...lats) + Math.max(...lats)) / 2,
+    longitude: (Math.min(...lngs) + Math.max(...lngs)) / 2,
+    latitudeDelta: Math.max((Math.max(...lats) - Math.min(...lats)) * 1.5, 0.01),
+    longitudeDelta: Math.max((Math.max(...lngs) - Math.min(...lngs)) * 1.5, 0.01),
   };
-}, [checkins]);
+}, [filteredCheckins, trip]);
 ```
 
 **리스트 데이터 구조**

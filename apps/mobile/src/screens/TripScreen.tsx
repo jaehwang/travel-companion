@@ -8,7 +8,6 @@ import {
   RefreshControl,
   Image,
   ActivityIndicator,
-  Dimensions,
 } from 'react-native';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,7 +27,6 @@ import TripFormModal from '../components/TripFormModal';
 import type { AppStackParamList } from '../navigation/AppNavigator';
 import type { Trip, Checkin, TripFormData } from '../../../../packages/shared/src/types';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 type ListItem =
   | { type: 'date'; date: string; label: string }
@@ -46,6 +44,17 @@ const formatDate = (dateString: string) => {
   }).format(date);
 };
 
+const formatTripDate = (dateStr: string | null | undefined): string | null => {
+  if (!dateStr) return null;
+  const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(dateStr);
+  const date = isDateOnly
+    ? (() => { const [y, m, d] = dateStr.split('-').map(Number); return new Date(y, m - 1, d); })()
+    : new Date(dateStr);
+  return new Intl.DateTimeFormat('ko-KR', {
+    year: 'numeric', month: 'long', day: 'numeric', weekday: 'short',
+  }).format(date);
+};
+
 export default function TripScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<TripRouteProp>();
@@ -56,9 +65,9 @@ export default function TripScreen() {
   const [showDrawer, setShowDrawer] = useState(false);
   const [showCreateTripModal, setShowCreateTripModal] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const mapRef = useRef<MapView>(null);
+
 
   React.useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -81,28 +90,13 @@ export default function TripScreen() {
     setRefreshing(false);
   }, [reload]);
 
-  // Get unique dates from checkins
-  const dates = useMemo(() => {
-    const dateSet = new Set<string>();
-    checkins.forEach(c => {
-      const d = new Date(c.checked_in_at);
-      dateSet.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
-    });
-    return Array.from(dateSet).sort();
-  }, [checkins]);
-
-  // Filter checkins by selected date and apply sort order
+  // Sort checkins by sort order
   const filteredCheckins = useMemo(() => {
-    const filtered = !selectedDate ? checkins : checkins.filter(c => {
-      const d = new Date(c.checked_in_at);
-      const cDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      return cDate === selectedDate;
-    });
-    return [...filtered].sort((a, b) => {
+    return [...checkins].sort((a, b) => {
       const diff = new Date(b.checked_in_at).getTime() - new Date(a.checked_in_at).getTime();
       return sortOrder === 'newest' ? diff : -diff;
     });
-  }, [checkins, selectedDate, sortOrder]);
+  }, [checkins, sortOrder]);
 
   // Group checkins by date for date separators
   const groupedData = useMemo((): ListItem[] => {
@@ -180,7 +174,6 @@ export default function TripScreen() {
   const handleSelectTrip = (t: Trip) => {
     setTrip(t);
     setShowDrawer(false);
-    setSelectedDate(null);
   };
 
   const handleCreateTrip = async (data: TripFormData) => {
@@ -198,31 +191,33 @@ export default function TripScreen() {
     }
   };
 
-  const renderHeader = () => (
+  const renderHeader = () => {
+    const earliest = checkins.length > 0
+      ? [...checkins].sort((a, b) => new Date(a.checked_in_at).getTime() - new Date(b.checked_in_at).getTime())[0]
+      : null;
+    const startSrc = trip.start_date || earliest?.checked_in_at || null;
+    const endSrc = trip.end_date || null;
+    const hasPlace = !!trip.place;
+    const hasTripInfo = !!(trip.description || startSrc || hasPlace);
+
+    return (
     <View>
-      {/* Date Filter */}
-      {dates.length > 0 && (
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={[null, ...dates]}
-          keyExtractor={(item) => item ?? 'all'}
-          extraData={selectedDate}
-          contentContainerStyle={styles.dateFilterContainer}
-          renderItem={({ item: date }) => {
-            const isActive = date === selectedDate;
-            return (
-              <TouchableOpacity
-                onPress={() => setSelectedDate(date)}
-                style={[styles.dateChip, isActive && styles.dateChipActive]}
-              >
-                <Text style={[styles.dateChipText, isActive && styles.dateChipTextActive]}>
-                  {date ? formatDate(date) : '📅 전체'}
-                </Text>
-              </TouchableOpacity>
-            );
-          }}
-        />
+      {/* Trip Info */}
+      {hasTripInfo && (
+        <View style={styles.tripInfoCard}>
+          {trip.description && (
+            <Text style={styles.tripDescription}>{trip.description}</Text>
+          )}
+          {startSrc && (
+            <Text style={styles.tripMeta}>
+              📅 {formatTripDate(startSrc)}
+              {endSrc && endSrc !== trip.start_date ? ` ~ ${formatTripDate(endSrc)}` : ''}
+            </Text>
+          )}
+          {hasPlace && (
+            <Text style={styles.tripMeta}>📍 {trip.place}</Text>
+          )}
+        </View>
       )}
 
       {/* Tagline */}
@@ -272,6 +267,7 @@ export default function TripScreen() {
       </View>
     </View>
   );
+};
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -445,30 +441,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dateFilterContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    gap: 8,
-  },
-  dateChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 999,
+  tripInfoCard: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 4,
+    padding: 12,
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E8E0D4',
+    borderRadius: 14,
+    borderLeftWidth: 4,
+    borderLeftColor: '#FF6B47',
+    shadowColor: '#2D2416',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  dateChipActive: {
-    backgroundColor: '#F97316',
-    borderColor: '#F97316',
+  tripDescription: {
+    fontSize: 14,
+    color: '#3D2B1F',
+    marginBottom: 4,
   },
-  dateChipText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#6B7280',
-  },
-  dateChipTextActive: {
-    color: '#FFFFFF',
+  tripMeta: {
+    fontSize: 12,
+    color: '#8B7355',
+    marginTop: 2,
   },
   mapContainer: {
     marginHorizontal: 16,
