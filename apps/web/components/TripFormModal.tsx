@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { Trip, TripFormData } from '@/types/database';
-import { usePlaceSearch } from '@/components/checkin-form/hooks/usePlaceSearch';
-import CheckinFormPlacePanel from '@/components/checkin-form/CheckinFormPlacePanel';
+import { LocationPicker } from '@/components/LocationPicker';
 
 interface TripFormModalProps {
   mode: 'create' | 'edit';
@@ -33,22 +32,9 @@ export default function TripFormModal({
   const [placeId, setPlaceId] = useState(initialTrip?.place_id ?? '');
   const [placeLat, setPlaceLat] = useState<number | undefined>(initialTrip?.latitude ?? undefined);
   const [placeLng, setPlaceLng] = useState<number | undefined>(initialTrip?.longitude ?? undefined);
-  const [showPlaceSearch, setShowPlaceSearch] = useState(false);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const placeSearch = usePlaceSearch({
-    isActive: showPlaceSearch,
-    onPlaceSelected: (lat, lng, name, pid) => {
-      setPlace(name);
-      setPlaceId(pid);
-      setPlaceLat(lat);
-      setPlaceLng(lng);
-      setShowPlaceSearch(false);
-      placeSearch.reset();
-    },
-    onError: setError,
-  });
 
   const canSubmit = !!title.trim() && !submitting;
 
@@ -88,23 +74,34 @@ export default function TripFormModal({
     setPlaceLng(undefined);
   };
 
+  if (showLocationPicker) {
+    return (
+      <LocationPicker
+        initialLocation={placeLat != null && placeLng != null ? { latitude: placeLat, longitude: placeLng } : undefined}
+        onLocationSelect={(lat, lng, selectedPlace) => {
+          setPlaceLat(lat);
+          setPlaceLng(lng);
+          if (selectedPlace) {
+            setPlace(selectedPlace.name);
+            setPlaceId(selectedPlace.place_id);
+          } else {
+            setPlace(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+            setPlaceId('');
+          }
+          setShowLocationPicker(false);
+        }}
+        onClose={() => setShowLocationPicker(false)}
+      />
+    );
+  }
+
   return createPortal(
     <div style={{
       position: 'fixed', inset: 0, zIndex: 10001,
       backgroundColor: 'var(--tc-bg)',
       display: 'flex', flexDirection: 'column',
     }}>
-      {showPlaceSearch ? (
-        <CheckinFormPlacePanel
-          searchQuery={placeSearch.searchQuery}
-          onSearchQueryChange={placeSearch.setSearchQuery}
-          predictions={placeSearch.predictions}
-          searchingPlaces={placeSearch.searchingPlaces}
-          onSelectPlace={placeSearch.handleSelectPlace}
-          onBack={() => { setShowPlaceSearch(false); placeSearch.reset(); }}
-        />
-      ) : (
-        <>
+      <>
           {/* 헤더 */}
           <div style={{
             display: 'flex', alignItems: 'center',
@@ -282,7 +279,7 @@ export default function TripFormModal({
                 </div>
               ) : (
                 <button
-                  onClick={() => { setShowPlaceSearch(true); placeSearch.reset(); }}
+                  onClick={() => setShowLocationPicker(true)}
                   style={{
                     width: '100%', textAlign: 'left',
                     display: 'flex', alignItems: 'center', gap: 10,
@@ -393,8 +390,7 @@ export default function TripFormModal({
               </div>
             )}
           </div>
-        </>
-      )}
+      </>
     </div>,
     document.body
   );
