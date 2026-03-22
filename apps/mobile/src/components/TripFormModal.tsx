@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,12 +11,10 @@ import {
   Platform,
   KeyboardAvoidingView,
   Switch,
-  FlatList,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { searchPlaces, getPlaceDetails } from '../lib/api';
-import type { PlacePrediction } from '../lib/api';
 import type { Trip, TripFormData } from '../../../../packages/shared/src/types';
+import LocationPickerContent from './LocationPickerContent';
 
 interface TripFormModalProps {
   visible: boolean;
@@ -60,14 +58,9 @@ export default function TripFormModal({ visible, onClose, onSubmit, mode = 'crea
   const [placeId, setPlaceId] = useState(initialTrip?.place_id ?? '');
   const [placeLat, setPlaceLat] = useState<number | undefined>(initialTrip?.latitude ?? undefined);
   const [placeLng, setPlaceLng] = useState<number | undefined>(initialTrip?.longitude ?? undefined);
-  const [showPlaceSearch, setShowPlaceSearch] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [predictions, setPredictions] = useState<PlacePrediction[]>([]);
-  const [searching, setSearching] = useState(false);
-  const [loadingPlace, setLoadingPlace] = useState(false);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // initialTrip 변경 시 폼 초기화 (edit 모드에서 다른 여행 수정 시)
   useEffect(() => {
@@ -86,51 +79,15 @@ export default function TripFormModal({ visible, onClose, onSubmit, mode = 'crea
     }
   }, [visible, initialTrip]);
 
-  useEffect(() => {
-    if (searchQuery.trim().length < 2) { setPredictions([]); return; }
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(async () => {
-      setSearching(true);
-      try {
-        setPredictions(await searchPlaces(searchQuery.trim()));
-      } catch {
-        setPredictions([]);
-      } finally {
-        setSearching(false);
-      }
-    }, 300);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [searchQuery]);
-
   const reset = () => {
     setTitle(''); setDescription('');
     setStartDate(null); setEndDate(null);
-    setIsPublic(false);
-    setIsFrequent(false);
+    setIsPublic(false); setIsFrequent(false);
     setPlace(''); setPlaceId(''); setPlaceLat(undefined); setPlaceLng(undefined);
-    setShowPlaceSearch(false); setSearchQuery(''); setPredictions([]);
     setError(null);
   };
 
   const handleClose = () => { reset(); onClose(); };
-
-  const handleSelectPrediction = async (prediction: PlacePrediction) => {
-    setLoadingPlace(true);
-    try {
-      const details = await getPlaceDetails(prediction.place_id);
-      setPlace(details.name);
-      setPlaceId(details.place_id);
-      setPlaceLat(details.latitude);
-      setPlaceLng(details.longitude);
-      setShowPlaceSearch(false);
-      setSearchQuery('');
-      setPredictions([]);
-    } catch {
-      // ignore
-    } finally {
-      setLoadingPlace(false);
-    }
-  };
 
   const handleClearPlace = () => {
     setPlace(''); setPlaceId(''); setPlaceLat(undefined); setPlaceLng(undefined);
@@ -166,53 +123,26 @@ export default function TripFormModal({ visible, onClose, onSubmit, mode = 'crea
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
+      {/* 위치 선택 Modal (장소 검색 + 지도) - TripForm Modal 위에 표시 */}
+      <Modal visible={showLocationPicker} animationType="slide" presentationStyle="pageSheet">
+        <LocationPickerContent
+          initialLatitude={placeLat}
+          initialLongitude={placeLng}
+          onConfirm={(lat, lng, placeName, placeId) => {
+            setPlaceLat(lat);
+            setPlaceLng(lng);
+            setPlace(placeName || `${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+            setPlaceId(placeId || '');
+            setShowLocationPicker(false);
+          }}
+          onClose={() => setShowLocationPicker(false)}
+        />
+      </Modal>
+
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        {showPlaceSearch ? (
-          /* 장소 검색 화면 */
-          <View style={styles.container}>
-            <View style={styles.header}>
-              <Text style={styles.headerTitle}>대표 장소 검색</Text>
-              <TouchableOpacity onPress={() => { setShowPlaceSearch(false); setSearchQuery(''); setPredictions([]); }}>
-                <Text style={styles.cancelText}>취소</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.placeSearchBox}>
-              <TextInput
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                placeholder="도시, 지역, 장소 검색..."
-                placeholderTextColor="#C4B49A"
-                style={styles.placeSearchInput}
-                autoFocus
-                autoCorrect={false}
-              />
-              {searching && <ActivityIndicator size="small" color="#F97316" />}
-            </View>
-            {loadingPlace ? (
-              <View style={styles.centerContainer}>
-                <ActivityIndicator size="large" color="#F97316" />
-              </View>
-            ) : (
-              <FlatList
-                data={predictions}
-                keyExtractor={(item) => item.place_id}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    onPress={() => handleSelectPrediction(item)}
-                    style={styles.predictionItem}
-                  >
-                    <Text style={styles.predictionMain}>{item.structured_formatting.main_text}</Text>
-                    <Text style={styles.predictionSecondary}>{item.structured_formatting.secondary_text}</Text>
-                  </TouchableOpacity>
-                )}
-                keyboardShouldPersistTaps="handled"
-              />
-            )}
-          </View>
-        ) : (
           <>
             {/* 헤더 */}
             <View style={styles.header}>
@@ -325,7 +255,7 @@ export default function TripFormModal({ visible, onClose, onSubmit, mode = 'crea
                   </View>
                 ) : (
                   <TouchableOpacity
-                    onPress={() => setShowPlaceSearch(true)}
+                    onPress={() => setShowLocationPicker(true)}
                     style={styles.placeAddButton}
                   >
                     <Text style={{ fontSize: 16 }}>📍</Text>
@@ -369,7 +299,6 @@ export default function TripFormModal({ visible, onClose, onSubmit, mode = 'crea
               )}
             </ScrollView>
           </>
-        )}
       </KeyboardAvoidingView>
     </Modal>
   );
@@ -578,43 +507,6 @@ const styles = StyleSheet.create({
   publicDesc: {
     fontSize: 12,
     color: '#C4B49A',
-  },
-  placeSearchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    margin: 16,
-    paddingHorizontal: 14,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E8E0D4',
-  },
-  placeSearchInput: {
-    flex: 1,
-    fontSize: 15,
-    paddingVertical: 12,
-    color: '#1F2937',
-  },
-  predictionItem: {
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderBottomWidth: 0.5,
-    borderBottomColor: '#E8E0D4',
-  },
-  predictionMain: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  predictionSecondary: {
-    fontSize: 13,
-    color: '#9CA3AF',
-    marginTop: 2,
-  },
-  centerContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   errorBox: {
     padding: 14,
