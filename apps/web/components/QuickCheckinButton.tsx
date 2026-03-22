@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import QuickCheckinModal from './QuickCheckinModal';
 
 interface NearbyCheckin {
@@ -22,6 +23,7 @@ function formatRelativeTime(dateStr: string): string {
 }
 
 export default function QuickCheckinButton() {
+  const router = useRouter();
   const [showModal, setShowModal] = useState(false);
   const [current, setCurrent] = useState<NearbyCheckin | null>(null);
   const [loading, setLoading] = useState(true);
@@ -80,7 +82,19 @@ export default function QuickCheckinButton() {
       </button>
 
       {showModal && (
-        <QuickCheckinModal onClose={() => setShowModal(false)} />
+        <QuickCheckinModal
+          onClose={() => setShowModal(false)}
+          onCheckedIn={(checkin) => {
+            setCurrent({
+              id: checkin.id,
+              trip_title: checkin.trip_title,
+              title: checkin.title,
+              place: checkin.place,
+              checked_in_at: checkin.checked_in_at,
+            });
+            router.refresh();
+          }}
+        />
       )}
     </>
   );
