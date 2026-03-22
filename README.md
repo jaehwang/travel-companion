@@ -129,19 +129,26 @@ cd apps/mobile && npx expo run:ios --device --configuration Release
 
 ## 테스트
 
-### 단위 테스트 (Jest) — 웹
+### 단위 테스트 (Jest) — 웹 + 모바일
 
 ```bash
-npm test                             # 루트에서
-cd apps/web && npm test              # 또는 직접
-npm run test:watch                   # 파일 변경 감지 후 자동 재실행
-npm run test:coverage                # 커버리지 리포트 포함 실행
+npm test                             # 루트에서 (웹 + 모바일 순차 실행)
+cd apps/web && npm test              # 웹만 실행
+cd apps/mobile && npm test           # 모바일만 실행
+npm run test:watch                   # 파일 변경 감지 후 자동 재실행 (웹)
+npm run test:coverage                # 커버리지 리포트 포함 실행 (웹)
 ```
 
 테스트 파일 위치 (`apps/web`):
 - `lib/__tests__/` - 유틸리티 함수 단위 테스트
 - `app/api/**/__tests__/` - API 라우트 테스트 (응답 형상 검증 포함)
 - `components/__tests__/` - React 컴포넌트 테스트
+
+테스트 파일 위치 (`apps/mobile/src/__tests__`):
+- `api.test.ts` - API 함수 테스트 (trips, checkins, places)
+- `useTrips.test.ts` - useTrips 훅 테스트
+- `useCheckins.test.ts` - useCheckins 훅 테스트
+- `utils.test.ts` - 날짜 포맷 유틸리티 테스트
 
 ### E2E 테스트 (Playwright) — 웹
 

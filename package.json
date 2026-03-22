@@ -3,6 +3,7 @@
   "private": true,
   "workspaces": [
     "apps/web",
+    "apps/mobile",
     "packages/*"
   ],
   "optionalDependencies": {
@@ -12,7 +13,7 @@
   "scripts": {
     "dev": "npm run dev --workspace=apps/web",
     "build": "npm run build --workspace=apps/web",
-    "test": "npm run test --workspace=apps/web",
+    "test": "npm run test --workspace=apps/web && npm run test --workspace=apps/mobile",
     "test:e2e": "npm run test:e2e --workspace=apps/web",
     "lint": "npm run lint --workspace=apps/web"
   }

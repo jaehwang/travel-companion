@@ -1,4 +1,8 @@
-import { fetchTrips, createTrip, updateTrip, deleteTrip, fetchSettings } from '../lib/api';
+import {
+  fetchTrips, createTrip, updateTrip, deleteTrip, fetchSettings,
+  fetchCheckins, createCheckin, updateCheckin, deleteCheckin,
+  searchPlaces, getPlaceDetails,
+} from '../lib/api';
 
 jest.mock('../lib/supabase', () => ({
   supabase: {
@@ -145,5 +149,152 @@ describe('fetchSettings', () => {
 
     const [url] = mockFetch.mock.calls[0];
     expect(url).toContain('/api/settings');
+  });
+});
+
+const mockCheckin = {
+  id: 'checkin-1',
+  trip_id: 'trip-1',
+  title: '멋진 카페',
+  latitude: 37.5665,
+  longitude: 126.9780,
+  checked_in_at: '2024-03-01T10:00:00Z',
+  created_at: '2024-03-01T10:00:00Z',
+  updated_at: '2024-03-01T10:00:00Z',
+};
+
+describe('fetchCheckins', () => {
+  it('trip_id 쿼리 파라미터와 함께 /api/checkins를 호출한다', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ checkins: [mockCheckin] }),
+    });
+
+    await fetchCheckins('trip-1');
+
+    const [url, options] = mockFetch.mock.calls[0];
+    expect(url).toContain('/api/checkins?trip_id=trip-1');
+    expect(options.headers['Authorization']).toBe('Bearer test-token');
+  });
+
+  it('checkins 배열을 반환한다', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ checkins: [mockCheckin] }),
+    });
+
+    const result = await fetchCheckins('trip-1');
+
+    expect(result).toEqual([mockCheckin]);
+  });
+});
+
+describe('createCheckin', () => {
+  it('체크인 데이터를 POST로 전송한다', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ checkin: mockCheckin }),
+    });
+
+    const data = { trip_id: 'trip-1', title: '멋진 카페', latitude: 37.5665, longitude: 126.9780 };
+    await createCheckin(data);
+
+    const [url, options] = mockFetch.mock.calls[0];
+    expect(url).toContain('/api/checkins');
+    expect(options.method).toBe('POST');
+    expect(JSON.parse(options.body)).toEqual(data);
+  });
+
+  it('생성된 checkin 객체를 반환한다', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ checkin: mockCheckin }),
+    });
+
+    const result = await createCheckin({ trip_id: 'trip-1', title: '멋진 카페', latitude: 37.5665, longitude: 126.9780 });
+
+    expect(result).toEqual(mockCheckin);
+  });
+});
+
+describe('updateCheckin', () => {
+  it('특정 checkin에 PATCH 요청을 보낸다', async () => {
+    const updated = { ...mockCheckin, title: '수정된 카페' };
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ checkin: updated }),
+    });
+
+    const result = await updateCheckin('checkin-1', { title: '수정된 카페' });
+
+    const [url, options] = mockFetch.mock.calls[0];
+    expect(url).toContain('/api/checkins/checkin-1');
+    expect(options.method).toBe('PATCH');
+    expect(result).toEqual(updated);
+  });
+});
+
+describe('deleteCheckin', () => {
+  it('특정 checkin에 DELETE 요청을 보낸다', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({}),
+    });
+
+    await deleteCheckin('checkin-1');
+
+    const [url, options] = mockFetch.mock.calls[0];
+    expect(url).toContain('/api/checkins/checkin-1');
+    expect(options.method).toBe('DELETE');
+  });
+});
+
+describe('searchPlaces', () => {
+  it('/api/places/autocomplete에 검색어를 전달한다', async () => {
+    const mockPredictions = [{
+      place_id: 'place-1',
+      description: '스타벅스 강남점',
+      structured_formatting: { main_text: '스타벅스 강남점', secondary_text: '서울' },
+    }];
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ predictions: mockPredictions }),
+    });
+
+    const result = await searchPlaces('스타벅스');
+
+    const [url] = mockFetch.mock.calls[0];
+    expect(url).toContain('/api/places/autocomplete');
+    expect(url).toContain('input=%EC%8A%A4%ED%83%80%EB%B2%85%EC%8A%A4');
+    expect(result).toEqual(mockPredictions);
+  });
+
+  it('위치 정보를 제공하면 lat/lng 파라미터가 추가된다', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ predictions: [] }),
+    });
+
+    await searchPlaces('카페', 37.5665, 126.9780);
+
+    const [url] = mockFetch.mock.calls[0];
+    expect(url).toContain('lat=37.5665');
+    expect(url).toContain('lng=126.978');
+  });
+});
+
+describe('getPlaceDetails', () => {
+  it('/api/places/details에 place_id를 전달하고 장소 정보를 반환한다', async () => {
+    const mockPlace = { name: '스타벅스 강남점', place_id: 'place-1', latitude: 37.5, longitude: 127.0 };
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ place: mockPlace }),
+    });
+
+    const result = await getPlaceDetails('place-1');
+
+    const [url] = mockFetch.mock.calls[0];
+    expect(url).toContain('/api/places/details?place_id=place-1');
+    expect(result).toEqual(mockPlace);
   });
 });
