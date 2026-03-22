@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.travelcompanion.app",
+      "bundleIdentifier": "com.jaehwang.travelcompanion",
       "config": {
         "googleMapsApiKey": "AIzaSyBim6h0fQvS0M8y6GCt39_QdBTw9yYYRL0"
       }

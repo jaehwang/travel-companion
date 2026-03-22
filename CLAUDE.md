@@ -28,7 +28,7 @@
 - `apps/mobile/.env.development` — 시뮬레이터용 (로컬 서버 URL)
 - `apps/mobile/.env.production` — 실기기/배포용 (`https://PRODUCTION_URL`)
 - 시뮬레이터: `npx expo run:ios`
-- 실기기: `NODE_ENV=production npx expo run:ios --device`
+- 실기기: `npx expo run:ios --device --configuration Release`
 
 ### 백엔드
 - **데이터베이스**: Supabase PostgreSQL

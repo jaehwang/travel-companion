@@ -123,8 +123,8 @@ cd apps/web && npm run dev           # 또는 직접
 # 모바일 (iOS 시뮬레이터 — development)
 cd apps/mobile && npx expo run:ios
 
-# 모바일 (iPhone 실기기 — production URL 사용)
-cd apps/mobile && NODE_ENV=production npx expo run:ios --device
+# 모바일 (iPhone 실기기 — Release 빌드, JS 번들 내장)
+cd apps/mobile && npx expo run:ios --device --configuration Release
 ```
 
 ## 테스트
