@@ -10,6 +10,9 @@ export const CHECKIN_CATEGORIES = {
   NATURE: 'nature',
   ACTIVITY: 'activity',
   TRANSPORTATION: 'transportation',
+  PERFORMANCE: 'performance',
+  MOVIE: 'movie',
+  EXHIBITION: 'exhibition',
   OTHER: 'other',
 } as const;
 
@@ -24,6 +27,9 @@ export const CHECKIN_CATEGORY_LABELS: Record<CheckinCategory, string> = {
   nature: '자연',
   activity: '액티비티',
   transportation: '교통',
+  performance: '공연',
+  movie: '영화',
+  exhibition: '전시',
   other: '기타',
 };
 

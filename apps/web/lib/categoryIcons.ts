@@ -1,4 +1,4 @@
-import { Utensils, Coffee, Landmark, BedDouble, ShoppingBag, Leaf, Bike, Bus, MapPin } from 'lucide-react';
+import { Utensils, Coffee, Landmark, BedDouble, ShoppingBag, Leaf, Bike, Bus, Music2, Film, Palette, MapPin } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 export const CATEGORY_META: Record<string, { icon: LucideIcon; label: string; color: string }> = {
@@ -10,5 +10,8 @@ export const CATEGORY_META: Record<string, { icon: LucideIcon; label: string; co
   nature:         { icon: Leaf,        label: '자연',     color: '#10B981' },
   activity:       { icon: Bike,        label: '액티비티', color: '#EF4444' },
   transportation: { icon: Bus,         label: '교통',     color: '#6B7280' },
+  performance:    { icon: Music2,      label: '공연',     color: '#E11D48' },
+  movie:          { icon: Film,        label: '영화',     color: '#7C3AED' },
+  exhibition:     { icon: Palette,     label: '전시',     color: '#0891B2' },
   other:          { icon: MapPin,      label: '기타',     color: '#C4A882' },
 };
