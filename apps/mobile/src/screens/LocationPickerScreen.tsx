@@ -12,8 +12,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RouteProp } from '@react-navigation/native';
-import MapView, { Marker, PROVIDER_GOOGLE, MapType } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE, MapPressEvent, MarkerDragStartEndEvent, PoiClickEvent } from 'react-native-maps';
 import * as Location from 'expo-location';
+import { Ionicons } from '@expo/vector-icons';
 import { searchPlaces, getPlaceDetails } from '../lib/api';
 import type { PlacePrediction } from '../lib/api';
 import type { AppStackParamList } from '../navigation/AppNavigator';
@@ -24,7 +25,7 @@ type PickerRouteProp = RouteProp<AppStackParamList, 'LocationPicker'>;
 export default function LocationPickerScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<PickerRouteProp>();
-  const { initialLatitude, initialLongitude } = route.params;
+  const { tripId, tripTitle, initialLatitude, initialLongitude } = route.params;
 
   const mapRef = useRef<MapView>(null);
 
@@ -34,14 +35,15 @@ export default function LocationPickerScreen() {
       : null
   );
   const [selectedPlace, setSelectedPlace] = useState<{ name: string; place_id: string } | null>(null);
-  const [mapType, setMapType] = useState<MapType>('standard');
-
   // Search
   const [searchQuery, setSearchQuery] = useState('');
   const [predictions, setPredictions] = useState<PlacePrediction[]>([]);
   const [searching, setSearching] = useState(false);
   const [loadingPlace, setLoadingPlace] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const currentRegionRef = useRef({ latitudeDelta: 0.01, longitudeDelta: 0.01 });
+  // onPoiClick과 onPress가 동시에 발생할 때 onPress가 POI 정보를 덮어쓰는 것을 방지
+  const poiClickedRef = useRef(false);
 
   // Get current location if no initial
   useEffect(() => {
@@ -113,13 +115,69 @@ export default function LocationPickerScreen() {
     }
   };
 
-  const handleMapPress = (event: any) => {
+  const handleZoomIn = () => {
+    const center = selectedLocation ?? { latitude: 37.5665, longitude: 126.9780 };
+    mapRef.current?.animateToRegion({
+      ...center,
+      latitudeDelta: currentRegionRef.current.latitudeDelta / 2,
+      longitudeDelta: currentRegionRef.current.longitudeDelta / 2,
+    }, 300);
+  };
+
+  const handleZoomOut = () => {
+    const center = selectedLocation ?? { latitude: 37.5665, longitude: 126.9780 };
+    mapRef.current?.animateToRegion({
+      ...center,
+      latitudeDelta: Math.min(currentRegionRef.current.latitudeDelta * 2, 90),
+      longitudeDelta: Math.min(currentRegionRef.current.longitudeDelta * 2, 90),
+    }, 300);
+  };
+
+  const handleGoToCurrentLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') return;
+      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+      const coords = { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
+      setSelectedLocation(coords);
+      setSelectedPlace(null);
+      mapRef.current?.animateToRegion({ ...coords, latitudeDelta: 0.01, longitudeDelta: 0.01 }, 500);
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleMapPress = (event: MapPressEvent) => {
+    // onPoiClick이 먼저 처리됐으면 무시
+    if (poiClickedRef.current) return;
     const { latitude, longitude } = event.nativeEvent.coordinate;
     setSelectedLocation({ latitude, longitude });
     setSelectedPlace(null);
   };
 
-  const handleMarkerDragEnd = (event: any) => {
+  const handlePoiClick = async (event: PoiClickEvent) => {
+    poiClickedRef.current = true;
+    setTimeout(() => { poiClickedRef.current = false; }, 300);
+
+    const { coordinate, placeId, name } = event.nativeEvent;
+    // 일단 이벤트에서 받은 좌표·이름으로 즉시 표시
+    setSelectedLocation(coordinate);
+    setSelectedPlace({ name, place_id: placeId });
+
+    // 웹 앱처럼 /api/places/details로 정확한 좌표와 이름을 가져옴
+    setLoadingPlace(true);
+    try {
+      const details = await getPlaceDetails(placeId);
+      setSelectedLocation({ latitude: details.latitude, longitude: details.longitude });
+      setSelectedPlace({ name: details.name || name, place_id: details.place_id || placeId });
+    } catch {
+      // 이벤트 데이터로 폴백 (이미 위에서 설정됨)
+    } finally {
+      setLoadingPlace(false);
+    }
+  };
+
+  const handleMarkerDragEnd = (event: MarkerDragStartEndEvent) => {
     const { latitude, longitude } = event.nativeEvent.coordinate;
     setSelectedLocation({ latitude, longitude });
     setSelectedPlace(null);
@@ -127,20 +185,9 @@ export default function LocationPickerScreen() {
 
   const handleConfirm = () => {
     if (!selectedLocation) return;
-    // Go back to previous screen and pass selected location via params
-    const parentRoute = navigation.getParent()?.getState()?.routes;
-    // Use navigation.navigate to pass result back to CheckinFormScreen
-    navigation.goBack();
-    // Set params on the CheckinForm screen in the stack
-    const state = navigation.getState();
-    const checkinFormRoute = state.routes.find(r => r.name === 'CheckinForm');
-    if (checkinFormRoute) {
-      navigation.setParams({} as any); // This doesn't work for other screens
-    }
-    // Instead, emit event through navigation
     navigation.navigate('CheckinForm', {
-      tripId: '', // placeholder - will merge with existing params
-      tripTitle: '',
+      tripId,
+      tripTitle,
       locationResult: {
         latitude: selectedLocation.latitude,
         longitude: selectedLocation.longitude,
@@ -158,7 +205,7 @@ export default function LocationPickerScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={[]}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTitleArea}>
@@ -224,22 +271,6 @@ export default function LocationPickerScreen() {
         </View>
       </View>
 
-      {/* Map Type Toggle */}
-      <View style={styles.mapTypeToggle}>
-        <TouchableOpacity
-          onPress={() => setMapType('standard')}
-          style={[styles.mapTypeBtn, mapType === 'standard' && styles.mapTypeBtnActive]}
-        >
-          <Text style={[styles.mapTypeBtnText, mapType === 'standard' && styles.mapTypeBtnTextActive]}>지도</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setMapType('satellite')}
-          style={[styles.mapTypeBtn, mapType === 'satellite' && styles.mapTypeBtnActive]}
-        >
-          <Text style={[styles.mapTypeBtnText, mapType === 'satellite' && styles.mapTypeBtnTextActive]}>위성</Text>
-        </TouchableOpacity>
-      </View>
-
       {/* Map */}
       <View style={styles.mapContainer}>
         <MapView
@@ -247,19 +278,34 @@ export default function LocationPickerScreen() {
           provider={PROVIDER_GOOGLE}
           style={styles.map}
           initialRegion={defaultRegion}
-          mapType={mapType}
           onPress={handleMapPress}
+          onPoiClick={handlePoiClick}
+          onRegionChangeComplete={(region) => {
+            currentRegionRef.current = { latitudeDelta: region.latitudeDelta, longitudeDelta: region.longitudeDelta };
+          }}
         >
           {selectedLocation && (
             <Marker
               coordinate={selectedLocation}
               draggable
               onDragEnd={handleMarkerDragEnd}
-            >
-              <Text style={styles.markerPin}>📍</Text>
-            </Marker>
+              pinColor="#FF6B47"
+            />
           )}
         </MapView>
+
+        {/* Map Control Buttons */}
+        <View style={styles.mapControls}>
+          <TouchableOpacity onPress={handleGoToCurrentLocation} style={styles.mapControlBtn}>
+            <Ionicons name="navigate" size={20} color="#2563EB" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleZoomIn} style={styles.mapControlBtn}>
+            <Text style={styles.mapControlText}>＋</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleZoomOut} style={styles.mapControlBtn}>
+            <Text style={styles.mapControlText}>－</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Location Info Overlay */}
         {selectedLocation && (
@@ -276,7 +322,7 @@ export default function LocationPickerScreen() {
                 <Text style={styles.overlayCoords}>
                   📍 {selectedLocation.latitude.toFixed(6)}, {selectedLocation.longitude.toFixed(6)}
                 </Text>
-                <Text style={styles.overlayHint}>마커를 드래그하여 미세 조정 가능</Text>
+                <Text style={styles.overlayHint}>💡 지도를 탭하거나 장소를 검색하세요</Text>
               </>
             )}
           </View>
@@ -298,7 +344,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   header: {
-    padding: 16,
+    paddingTop: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
   },
@@ -404,43 +452,36 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
   },
-  mapTypeToggle: {
-    position: 'absolute',
-    right: 16,
-    zIndex: 10,
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  mapTypeBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  mapTypeBtnActive: {
-    backgroundColor: '#2563EB',
-  },
-  mapTypeBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#6B7280',
-  },
-  mapTypeBtnTextActive: {
-    color: '#FFFFFF',
-  },
   mapContainer: {
     flex: 1,
   },
   map: {
     flex: 1,
   },
-  markerPin: {
-    fontSize: 32,
+  mapControls: {
+    position: 'absolute',
+    right: 16,
+    bottom: 80,
+    gap: 8,
+  },
+  mapControlBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  mapControlText: {
+    fontSize: 22,
+    fontWeight: '600',
+    color: '#1F2937',
+    lineHeight: 26,
   },
   locationOverlay: {
     position: 'absolute',

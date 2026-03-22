@@ -22,7 +22,6 @@ import { createCheckin, updateCheckin } from '../lib/api';
 import { usePhotoPicker } from '../components/PhotoPickerButton';
 import CheckinFormToolbar from '../components/CheckinFormToolbar';
 import CategorySelector from '../components/CategorySelector';
-import PlaceSearchPanel from '../components/PlaceSearchPanel';
 import type { AppStackParamList } from '../navigation/AppNavigator';
 import { CHECKIN_CATEGORY_LABELS } from '../../../../packages/shared/src/types';
 
@@ -60,7 +59,6 @@ export default function CheckinFormScreen() {
   const [checkedInAt, setCheckedInAt] = useState<Date | null>(null);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [showCategorySelector, setShowCategorySelector] = useState(false);
-  const [showPlaceSearch, setShowPlaceSearch] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -165,17 +163,11 @@ export default function CheckinFormScreen() {
 
   const handleLocationPicker = () => {
     navigation.navigate('LocationPicker', {
+      tripId,
+      tripTitle,
       initialLatitude: latitude,
       initialLongitude: longitude,
     });
-  };
-
-  const handlePlaceSelected = (lat: number, lng: number, name: string, pid: string) => {
-    setLatitude(lat);
-    setLongitude(lng);
-    setPlace(name);
-    setPlaceId(pid);
-    setShowPlaceSearch(false);
   };
 
   const catColor = CATEGORY_COLORS[category] ?? '#C4A882';
@@ -329,7 +321,7 @@ export default function CheckinFormScreen() {
           hasCategory={!!category}
           hasTime={!!checkedInAt}
           onPhoto={showPhotoPicker}
-          onPlace={() => setShowPlaceSearch(true)}
+          onPlace={handleLocationPicker}
           onCategory={() => setShowCategorySelector(true)}
           onTime={() => setShowTimePicker(true)}
         />
@@ -371,14 +363,6 @@ export default function CheckinFormScreen() {
         onClose={() => setShowCategorySelector(false)}
       />
 
-      {/* Place Search */}
-      <PlaceSearchPanel
-        visible={showPlaceSearch}
-        onClose={() => setShowPlaceSearch(false)}
-        onPlaceSelected={handlePlaceSelected}
-        currentLat={latitude}
-        currentLng={longitude}
-      />
     </SafeAreaView>
   );
 }

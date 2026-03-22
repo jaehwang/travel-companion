@@ -30,6 +30,8 @@ export type AppStackParamList = {
     checkin?: import('../../../../packages/shared/src/types').Checkin;
   };
   LocationPicker: {
+    tripId: string;
+    tripTitle: string;
     initialLatitude?: number;
     initialLongitude?: number;
   };
