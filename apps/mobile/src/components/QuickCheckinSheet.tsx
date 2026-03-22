@@ -4,6 +4,7 @@ import {
   StyleSheet, ActivityIndicator, Alert,
 } from 'react-native';
 import * as Location from 'expo-location';
+import { Ionicons } from '@expo/vector-icons';
 import { fetchNearbyCheckins, updateCheckin } from '../lib/api';
 import type { NearbyCheckin } from '../lib/api';
 
@@ -80,7 +81,10 @@ export default function QuickCheckinSheet({ visible, onClose, onCheckedIn }: Qui
 
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>⚡ 빠른 체크인</Text>
+          <View style={styles.headerTitleRow}>
+            <Ionicons name="flash-outline" size={18} color="#F97316" />
+            <Text style={styles.headerTitle}> 빠른 체크인</Text>
+          </View>
           <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
             <Text style={styles.closeBtnText}>닫기</Text>
           </TouchableOpacity>
@@ -100,7 +104,7 @@ export default function QuickCheckinSheet({ visible, onClose, onCheckedIn }: Qui
           </View>
         ) : checkins.length === 0 ? (
           <View style={styles.center}>
-            <Text style={styles.emptyEmoji}>📍</Text>
+            <Ionicons name="location-outline" size={40} color="#C4B49A" />
             <Text style={styles.emptyText}>근처에 등록된 장소가 없습니다</Text>
             <Text style={styles.emptySubText}>자주 가는 곳으로 설정된 여행의 체크인이 표시됩니다</Text>
           </View>
@@ -197,6 +201,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#F3F0EB',
   },
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   headerTitle: {
     fontSize: 17,
     fontWeight: '800',
@@ -239,14 +247,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 14,
   },
-  emptyEmoji: {
-    fontSize: 40,
-    marginBottom: 12,
-  },
   emptyText: {
     fontSize: 15,
     fontWeight: '700',
     color: '#4B5563',
+    marginTop: 12,
     marginBottom: 6,
     textAlign: 'center',
   },

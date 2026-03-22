@@ -1,6 +1,8 @@
 'use client';
 
 import { ChangeEvent } from 'react';
+import { Camera, MapPin, Tag, Clock } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 interface CheckinFormToolbarProps {
   fileInputRef: React.RefObject<HTMLInputElement | null>;
@@ -19,14 +21,14 @@ const ACTIVE_COLOR = '#FF6B47';
 const INACTIVE_COLOR = 'var(--tc-warm-faint)';
 
 function ToolbarBtn({
-  emoji,
+  icon: Icon,
   label,
   active,
   disabled,
   onClick,
   htmlFor,
 }: {
-  emoji: string;
+  icon: LucideIcon;
   label: string;
   active: boolean;
   disabled?: boolean;
@@ -38,7 +40,7 @@ function ToolbarBtn({
 
   const inner = (
     <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-      <span style={{ fontSize: 26, lineHeight: 1 }}>{emoji}</span>
+      <Icon size={26} color={color} />
       <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.02em', color }}>{label}</span>
     </span>
   );
@@ -118,26 +120,26 @@ export default function CheckinFormToolbar({
       />
 
       <ToolbarBtn
-        emoji="📷"
+        icon={Camera}
         label="사진"
         active={!!photoPreviewUrl}
         htmlFor="checkin-photo-input"
       />
       <ToolbarBtn
-        emoji="📍"
+        icon={MapPin}
         label="장소"
         active={!!selectedLocation}
         disabled={!onOpenLocationPicker}
         onClick={onOpenLocationPicker}
       />
       <ToolbarBtn
-        emoji="🏷️"
+        icon={Tag}
         label="분류"
         active={hasCategory}
         onClick={onOpenCategory}
       />
       <ToolbarBtn
-        emoji="⏰"
+        icon={Clock}
         label="시각"
         active={!!checkedInAt}
         onClick={onOpenTime}

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Map, Star } from 'lucide-react';
 import { DropdownMenu } from '@/components/DropdownMenu';
 import TripFormModal from '@/components/TripFormModal';
 import type { Trip, TripFormData } from '@/types/database';
@@ -161,8 +162,8 @@ export default function TripCard({ trip, accent, style }: TripCardProps) {
                   className="w-full h-full object-cover block"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-[32px]">
-                  🗺️
+                <div className="w-full h-full flex items-center justify-center">
+                  <Map size={48} color="#C4A882" />
                 </div>
               )}
             </div>
@@ -176,7 +177,7 @@ export default function TripCard({ trip, accent, style }: TripCardProps) {
                   fontSize: 10, fontWeight: 700,
                   background: 'rgba(245, 158, 11, 0.92)', color: 'white',
                 }}>
-                  ⭐ 자주 가는 곳
+                  <Star size={10} color="#FFF" fill="#FFF" /> 자주 가는 곳
                 </span>
               </div>
             )}

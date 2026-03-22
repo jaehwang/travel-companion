@@ -20,6 +20,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { Plane, Calendar, MapPin, Map as MapIcon } from 'lucide-react';
 import CheckinForm from '@/components/checkin-form/CheckinForm';
 import { LocationPicker } from '@/components/LocationPicker';
 import Map, { MapPhoto } from '@/components/Map';
@@ -199,7 +200,7 @@ function CheckinPageInner() {
     return (
       <div className="tc-page-bg" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
         <div style={{ textAlign: 'center' }}>
-          <div className="tc-plane" style={{ fontSize: 44, marginBottom: 16 }}>✈️</div>
+          <div className="tc-plane" style={{ marginBottom: 16, display: 'flex', justifyContent: 'center' }}><Plane size={44} color="#FF6B47" /></div>
           <p style={{ fontSize: 14, color: 'var(--tc-warm-mid)' }}>불러오는 중...</p>
         </div>
       </div>
@@ -336,15 +337,15 @@ function CheckinPageInner() {
                     </p>
                   )}
                   {startSrc && (
-                    <p style={{ fontSize: 12, color: 'var(--tc-warm-mid)', marginBottom: hasPlace ? 4 : 0 }}>
-                      📅 {formatTripDate(startSrc)}
+                    <p style={{ fontSize: 12, color: 'var(--tc-warm-mid)', marginBottom: hasPlace ? 4 : 0, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <Calendar size={12} />{formatTripDate(startSrc)}
                       {endSrc && endSrc !== selectedTrip?.start_date ? ` ~ ${formatTripDate(endSrc)}` : ''}
                     </p>
                   )}
                   {hasPlace && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <p style={{ fontSize: 12, color: 'var(--tc-warm-mid)', flex: 1 }}>
-                        📍 {selectedTrip.place}
+                      <p style={{ fontSize: 12, color: 'var(--tc-warm-mid)', flex: 1, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <MapPin size={12} />{selectedTrip.place}
                       </p>
                       {checkins.length > 0 && (
                         <button
@@ -482,7 +483,7 @@ function CheckinPageInner() {
             borderRadius: 20,
             boxShadow: '0 4px 20px rgba(45,36,22,0.08)',
           }}>
-            <div style={{ fontSize: 52, marginBottom: 16 }}>🗺️</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}><MapIcon size={52} color="#C4B49A" /></div>
             <p style={{ fontSize: 17, fontWeight: 800, color: 'var(--tc-warm-dark)', marginBottom: 8 }}>
               여행이 없습니다
             </p>

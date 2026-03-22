@@ -1,5 +1,7 @@
 'use client';
 
+import { Clock } from 'lucide-react';
+
 interface CheckinFormTimePanelProps {
   checkedInAt: string;
   onCheckedInAtChange: (v: string) => void;
@@ -38,7 +40,7 @@ export default function CheckinFormTimePanel({
 
       {/* 시간 선택 */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 28, gap: 20 }}>
-        <div style={{ fontSize: 48 }}>⏰</div>
+        <Clock size={48} color="#C4B49A" />
         <input
           type="datetime-local"
           value={checkedInAt}

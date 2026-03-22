@@ -1,5 +1,6 @@
 'use client';
 
+import { Search, MapPin, X } from 'lucide-react';
 import type { PlacePrediction } from './hooks/usePlaceSearch';
 
 // 이 패널은 체크인의 `place` 필드(공식 장소명)를 채우기 위한 검색 화면이다.
@@ -60,7 +61,7 @@ export default function CheckinFormPlacePanel({
           borderRadius: 9999,
           padding: '8px 14px',
         }}>
-          <span style={{ fontSize: 16, flexShrink: 0 }}>🔍</span>
+          <Search size={16} color="#9CA3AF" style={{ flexShrink: 0 }} />
           <input
             type="text"
             value={searchQuery}
@@ -96,10 +97,10 @@ export default function CheckinFormPlacePanel({
                 background: 'var(--tc-card-empty)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 border: 'none', cursor: 'pointer',
-                color: 'var(--tc-warm-mid)', fontSize: 11,
+                color: 'var(--tc-warm-mid)',
               }}
             >
-              ✕
+              <X size={14} />
             </button>
           )}
         </div>
@@ -124,8 +125,9 @@ export default function CheckinFormPlacePanel({
           >
             {/* structured_formatting: Google Places API가 장소명(main_text)과
                 주소/지역(secondary_text)을 분리해서 내려주는 구조체 */}
-            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tc-warm-dark)', marginBottom: 3 }}>
-              📍 {p.structured_formatting.main_text}
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tc-warm-dark)', marginBottom: 3, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <MapPin size={14} color="#9CA3AF" style={{ flexShrink: 0 }} />
+              {p.structured_formatting.main_text}
             </div>
             <div style={{ fontSize: 12, color: 'var(--tc-warm-mid)' }}>
               {p.structured_formatting.secondary_text}
@@ -135,13 +137,17 @@ export default function CheckinFormPlacePanel({
 
         {searchQuery.trim().length >= 2 && predictions.length === 0 && !searchingPlaces && (
           <div style={{ padding: '48px 20px', textAlign: 'center' }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>🔍</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+              <Search size={36} color="#C4B49A" />
+            </div>
             <p style={{ fontSize: 14, color: 'var(--tc-warm-faint)' }}>검색 결과가 없습니다</p>
           </div>
         )}
         {searchQuery.trim().length < 2 && (
           <div style={{ padding: '48px 20px', textAlign: 'center' }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>📍</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+              <MapPin size={36} color="#C4B49A" />
+            </div>
             <p style={{ fontSize: 14, color: 'var(--tc-warm-faint)' }}>장소 이름을 2자 이상 입력하세요</p>
           </div>
         )}

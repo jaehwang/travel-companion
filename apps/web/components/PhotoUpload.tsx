@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, ChangeEvent } from 'react';
+import { Camera, MapPin } from 'lucide-react';
 import imageCompression from 'browser-image-compression';
 import { supabase } from '@/lib/supabase';
 import { extractPhotoMetadata, isValidGPS, type PhotoMetadata } from '@/lib/exif';
@@ -131,7 +132,7 @@ export default function PhotoUpload({ onUploadComplete, onUploadError }: PhotoUp
 
   return (
     <div className="w-full max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4">📷 사진 업로드</h2>
+      <h2 className="text-2xl font-bold mb-4 flex items-center gap-2"><Camera size={20} />사진 업로드</h2>
 
       {/* 파일 선택 */}
       <div className="mb-6">
@@ -169,11 +170,11 @@ export default function PhotoUpload({ onUploadComplete, onUploadError }: PhotoUp
           {metadata.gps && isValidGPS(metadata.gps) ? (
             <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded">
               <p className="font-semibold text-green-800 mb-1">✅ GPS 정보 발견!</p>
-              <p className="text-sm text-gray-700">
-                📍 위도: {metadata.gps.latitude.toFixed(6)}
+              <p className="text-sm text-gray-700 flex items-center gap-1">
+                <MapPin size={13} />위도: {metadata.gps.latitude.toFixed(6)}
               </p>
-              <p className="text-sm text-gray-700">
-                📍 경도: {metadata.gps.longitude.toFixed(6)}
+              <p className="text-sm text-gray-700 flex items-center gap-1">
+                <MapPin size={13} />경도: {metadata.gps.longitude.toFixed(6)}
               </p>
               {metadata.gps.altitude && (
                 <p className="text-sm text-gray-700">
@@ -204,7 +205,7 @@ export default function PhotoUpload({ onUploadComplete, onUploadError }: PhotoUp
               <p>💾 파일 크기: {(metadata.fileSize / 1024 / 1024).toFixed(2)}MB</p>
             )}
             {metadata.cameraMake && (
-              <p>📷 카메라: {metadata.cameraMake} {metadata.cameraModel}</p>
+              <p className="flex items-center gap-1"><Camera size={13} />카메라: {metadata.cameraMake} {metadata.cameraModel}</p>
             )}
             {metadata.takenAt && (
               <p>🕐 촬영 시간: {new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' }).format(metadata.takenAt)}</p>

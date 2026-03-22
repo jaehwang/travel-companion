@@ -1,5 +1,7 @@
 'use client';
 
+import { Plane } from 'lucide-react';
+
 interface CheckinFormHeaderProps {
   userAvatarUrl?: string;
   tripName?: string;
@@ -43,9 +45,9 @@ export default function CheckinFormHeader({
             width: 30, height: 30, borderRadius: '50%',
             background: 'var(--tc-card-empty)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 14, flexShrink: 0,
+            flexShrink: 0,
           }}>
-            ✈️
+            <Plane size={16} color="#FF6B47" />
           </div>
         )}
         <span style={{

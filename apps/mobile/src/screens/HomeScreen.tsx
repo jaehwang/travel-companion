@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import * as Location from 'expo-location';
+import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import { fetchNearbyCheckins } from '../lib/api';
 import { useTrips } from '../hooks/useTrips';
@@ -162,7 +163,7 @@ export default function HomeScreen() {
             <Image source={{ uri: avatarUrl }} style={styles.avatar} />
           ) : (
             <View style={styles.avatarPlaceholder}>
-              <Text style={{ fontSize: 16 }}>👤</Text>
+              <Ionicons name="person-outline" size={18} color="#9CA3AF" />
             </View>
           )}
         </TouchableOpacity>
@@ -173,7 +174,7 @@ export default function HomeScreen() {
         style={styles.quickCheckinBtn}
         onPress={() => setShowQuickCheckin(true)}
       >
-        <Text style={styles.quickCheckinIcon}>⚡</Text>
+        <Ionicons name="flash-outline" size={22} color="#F97316" />
         <View style={{ flex: 1 }}>
           <Text style={styles.quickCheckinLabel}>빠른 체크인</Text>
           <Text
@@ -224,7 +225,7 @@ export default function HomeScreen() {
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyEmoji}>✈️</Text>
+              <Ionicons name="airplane-outline" size={64} color="#C4B49A" />
               <Text style={styles.emptyTitle}>아직 여행이 없습니다</Text>
               <Text style={styles.emptySubtitle}>+ 버튼을 눌러 첫 여행을 시작하세요</Text>
             </View>
@@ -356,15 +357,13 @@ const styles = StyleSheet.create({
   emptyContainer: {
     alignItems: 'center',
     paddingTop: 80,
-  },
-  emptyEmoji: {
-    fontSize: 64,
-    marginBottom: 16,
+    gap: 0,
   },
   emptyTitle: {
     fontSize: 18,
     fontWeight: '700',
     color: '#4B5563',
+    marginTop: 16,
     marginBottom: 8,
   },
   emptySubtitle: {
@@ -387,9 +386,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
     gap: 12,
-  },
-  quickCheckinIcon: {
-    fontSize: 24,
   },
   quickCheckinLabel: {
     fontSize: 15,

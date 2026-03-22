@@ -1,3 +1,4 @@
+import { Search, Lock } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { APP_NAME } from '@/lib/config';
 import type { Metadata } from 'next';
@@ -58,7 +59,7 @@ export default async function StoryPage({ params }: StoryPageProps) {
     return (
       <main className="tc-page-bg">
         <div className="max-w-2xl mx-auto px-4 py-20 text-center">
-          <div className="text-5xl mb-4">🔍</div>
+          <div className="flex justify-center mb-4"><Search size={48} color="#C4B49A" /></div>
           <h1 className="text-xl font-black text-tc-warm-dark mb-2">여행을 찾을 수 없습니다</h1>
           <p className="text-sm text-tc-warm-mid">
             존재하지 않는 여행이거나, 삭제된 여행입니다.
@@ -73,7 +74,7 @@ export default async function StoryPage({ params }: StoryPageProps) {
     return (
       <main className="tc-page-bg">
         <div className="max-w-2xl mx-auto px-4 py-20 text-center">
-          <div className="text-5xl mb-4">🔒</div>
+          <div className="flex justify-center mb-4"><Lock size={48} color="#C4B49A" /></div>
           <h1 className="text-xl font-black text-tc-warm-dark mb-2">비공개 여행입니다</h1>
           <p className="text-sm text-tc-warm-mid">
             이 여행은 작성자만 볼 수 있습니다.

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { MapPin } from 'lucide-react';
 import { APIProvider, Map as GoogleMap, AdvancedMarker, InfoWindow, useMap } from '@vis.gl/react-google-maps';
 import MyLocationButton from '@/components/MyLocationButton';
 
@@ -207,7 +208,7 @@ export default function Map({
                     rel="noopener noreferrer"
                     style={{ fontSize: 12, color: '#4285F4', textDecoration: 'none', display: 'block', marginBottom: 8 }}
                   >
-                    📍 {selectedPhoto.place || '지도에서 보기'}
+                    <MapPin size={12} style={{ display: 'inline', marginRight: 2 }} />{selectedPhoto.place || '지도에서 보기'}
                   </a>
 
                   {/* 이전/다음 버튼 */}

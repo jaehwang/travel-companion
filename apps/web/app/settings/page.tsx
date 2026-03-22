@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { User } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import LogoutButton from '@/components/LogoutButton';
 import CalendarConnectionSection from './CalendarConnectionSection';
@@ -97,9 +98,8 @@ export default async function SettingsPage({ searchParams }: Props) {
               width: 48, height: 48, borderRadius: '50%', flexShrink: 0,
               background: 'var(--tc-card-empty)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 20,
             }}>
-              👤
+              <User size={20} color="#9CA3AF" />
             </div>
           )}
           <div style={{ flex: 1, minWidth: 0 }}>

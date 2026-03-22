@@ -1,6 +1,7 @@
 'use client';
 
 import { createPortal } from 'react-dom';
+import { Star, MapPin } from 'lucide-react';
 import type { Trip } from '@/types/database';
 import { DropdownMenu } from '@/components/DropdownMenu';
 import { APP_NAME } from '@/lib/config';
@@ -153,7 +154,7 @@ export default function SideDrawer({
                       }}
                     >
                       {trip.is_frequent && (
-                        <span style={{ fontSize: 13, flexShrink: 0 }} title="자주 가는 곳">⭐</span>
+                        <Star size={13} color="#F59E0B" fill="#F59E0B" style={{ flexShrink: 0 }} />
                       )}
                       {trip.title}
                     </button>
@@ -175,8 +176,8 @@ export default function SideDrawer({
                         </span>
                       )}
                       {trip.place && (
-                        <span style={{ fontSize: 11, color: 'var(--tc-warm-faint)' }}>
-                          📍 {trip.place}
+                        <span style={{ fontSize: 11, color: 'var(--tc-warm-faint)', display: 'flex', alignItems: 'center', gap: 3 }}>
+                          <MapPin size={12} />{trip.place}
                         </span>
                       )}
                     </div>

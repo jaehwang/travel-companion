@@ -8,11 +8,11 @@ import {
   Alert,
   ActivityIndicator,
   ScrollView,
-  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
+import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import { signOut } from '../lib/auth';
 import { fetchSettings, disconnectCalendar } from '../lib/api';
@@ -87,11 +87,12 @@ export default function SettingsScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>← 돌아가기</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={16} color="#F97316" />
+          <Text style={styles.backText}>돌아가기</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>설정</Text>
-        <View style={{ width: 70 }} />
+        <View style={{ width: 80 }} />
       </View>
 
       <ScrollView style={styles.body}>
@@ -101,7 +102,7 @@ export default function SettingsScreen() {
             <Image source={{ uri: avatarUrl }} style={styles.profileAvatar} />
           ) : (
             <View style={styles.profileAvatarPlaceholder}>
-              <Text style={{ fontSize: 32 }}>👤</Text>
+              <Ionicons name="person-outline" size={32} color="#9CA3AF" />
             </View>
           )}
           <Text style={styles.profileName}>{userName || '사용자'}</Text>
@@ -114,7 +115,10 @@ export default function SettingsScreen() {
           <View style={styles.sectionCard}>
             <View style={styles.calendarRow}>
               <View style={styles.calendarInfo}>
-                <Text style={styles.calendarLabel}>📅 Google Calendar</Text>
+                <View style={styles.calendarLabelRow}>
+                  <Ionicons name="calendar-outline" size={15} color="#4285F4" />
+                  <Text style={styles.calendarLabel}> Google Calendar</Text>
+                </View>
                 {calendarLoading ? (
                   <ActivityIndicator size="small" color="#F97316" style={{ marginTop: 4 }} />
                 ) : calendarConnected ? (
@@ -166,6 +170,11 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#E8E0D4',
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
   },
   backText: {
     fontSize: 14,
@@ -247,6 +256,10 @@ const styles = StyleSheet.create({
   },
   calendarInfo: {
     flex: 1,
+  },
+  calendarLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   calendarLabel: {
     fontSize: 15,

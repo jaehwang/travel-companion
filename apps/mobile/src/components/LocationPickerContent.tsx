@@ -183,7 +183,7 @@ export default function LocationPickerContent({
           <View style={styles.headerRow}>
             <Text style={styles.headerTitle}>위치 선택</Text>
             <TouchableOpacity onPress={onClose}>
-              <Text style={styles.closeButton}>✕</Text>
+              <Ionicons name="close" size={20} color="#6B7280" />
             </TouchableOpacity>
           </View>
           <Text style={styles.headerSubtitle}>장소를 검색하거나 지도를 탭하세요</Text>
@@ -278,17 +278,21 @@ export default function LocationPickerContent({
           <View style={styles.locationOverlay}>
             {selectedPlace ? (
               <>
-                <Text style={styles.overlayPlace}>📍 {selectedPlace.name}</Text>
+                <View style={styles.overlayRow}>
+                  <Ionicons name="location-outline" size={14} color="#1d4ed8" />
+                  <Text style={styles.overlayPlace}> {selectedPlace.name}</Text>
+                </View>
                 <Text style={styles.overlayCoords}>
                   {selectedLocation.latitude.toFixed(6)}, {selectedLocation.longitude.toFixed(6)}
                 </Text>
               </>
             ) : (
               <>
-                <Text style={styles.overlayCoords}>
-                  📍 {selectedLocation.latitude.toFixed(6)}, {selectedLocation.longitude.toFixed(6)}
-                </Text>
-                <Text style={styles.overlayHint}>💡 지도를 탭하거나 장소를 검색하세요</Text>
+                <View style={styles.overlayRow}>
+                  <Ionicons name="location-outline" size={14} color="#1d4ed8" />
+                  <Text style={styles.overlayCoords}> {selectedLocation.latitude.toFixed(6)}, {selectedLocation.longitude.toFixed(6)}</Text>
+                </View>
+                <Text style={styles.overlayHint}>지도를 탭하거나 장소를 검색하세요</Text>
               </>
             )}
           </View>
@@ -310,7 +314,6 @@ const styles = StyleSheet.create({
   headerTitleArea: { marginBottom: 12 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   headerTitle: { fontSize: 20, fontWeight: '800', color: '#1F2937' },
-  closeButton: { fontSize: 20, color: '#6B7280', fontWeight: '600' },
   headerSubtitle: { fontSize: 14, color: '#6B7280', marginTop: 4 },
   searchContainer: {
     flexDirection: 'row', alignItems: 'center',
@@ -348,6 +351,7 @@ const styles = StyleSheet.create({
     padding: 12, backgroundColor: 'rgba(255,255,255,0.9)',
     borderTopWidth: 1, borderTopColor: '#BFDBFE',
   },
+  overlayRow: { flexDirection: 'row', alignItems: 'center' },
   overlayPlace: { fontSize: 14, fontWeight: '600', color: '#1E40AF' },
   overlayCoords: { fontSize: 14, color: '#1E40AF' },
   overlayHint: { fontSize: 12, color: '#2563EB', marginTop: 2 },

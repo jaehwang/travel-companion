@@ -6,31 +6,9 @@ import {
   StyleSheet,
   Modal,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { CHECKIN_CATEGORY_LABELS } from '../../../../packages/shared/src/types';
-
-const CATEGORY_EMOJI: Record<string, string> = {
-  restaurant: '🍽️',
-  attraction: '🏛️',
-  accommodation: '🏨',
-  cafe: '☕',
-  shopping: '🛍️',
-  nature: '🌿',
-  activity: '🎯',
-  transportation: '🚌',
-  other: '📌',
-};
-
-const CATEGORY_COLORS: Record<string, string> = {
-  restaurant: '#FF6B47',
-  cafe: '#F59E0B',
-  attraction: '#3B82F6',
-  accommodation: '#8B5CF6',
-  shopping: '#EC4899',
-  nature: '#10B981',
-  activity: '#EF4444',
-  transportation: '#6B7280',
-  other: '#C4A882',
-};
+import { CATEGORY_META, CATEGORY_ICONS } from '../utils/categoryIcons';
 
 interface CategorySelectorProps {
   visible: boolean;
@@ -60,7 +38,9 @@ export default function CategorySelector({
         <View style={styles.grid}>
           {Object.entries(CHECKIN_CATEGORY_LABELS).map(([value, label]) => {
             const isSelected = selected === value;
-            const color = CATEGORY_COLORS[value] ?? '#C4A882';
+            const meta = CATEGORY_META[value];
+            const color = meta?.color ?? '#C4A882';
+            const iconName = CATEGORY_ICONS[value] ?? 'location-outline';
             return (
               <TouchableOpacity
                 key={value}
@@ -73,7 +53,7 @@ export default function CategorySelector({
                   },
                 ]}
               >
-                <Text style={styles.emoji}>{CATEGORY_EMOJI[value] || '📌'}</Text>
+                <Ionicons name={iconName} size={28} color={isSelected ? color : '#6B7280'} />
                 <Text style={[
                   styles.label,
                   {
@@ -137,9 +117,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     alignItems: 'center',
     gap: 8,
-  },
-  emoji: {
-    fontSize: 28,
   },
   label: {
     fontSize: 12,

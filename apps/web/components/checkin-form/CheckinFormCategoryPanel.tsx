@@ -1,30 +1,7 @@
 'use client';
 
 import { CHECKIN_CATEGORY_LABELS } from '@/types/database';
-
-const CATEGORY_EMOJI: Record<string, string> = {
-  restaurant: '🍽️',
-  attraction: '🏛️',
-  accommodation: '🏨',
-  cafe: '☕',
-  shopping: '🛍️',
-  nature: '🌿',
-  activity: '🎯',
-  transportation: '🚌',
-  other: '📌',
-};
-
-const CATEGORY_COLORS: Record<string, string> = {
-  restaurant: '#FF6B47',
-  cafe: '#F59E0B',
-  attraction: '#3B82F6',
-  accommodation: '#8B5CF6',
-  shopping: '#EC4899',
-  nature: '#10B981',
-  activity: '#EF4444',
-  transportation: '#6B7280',
-  other: '#C4A882',
-};
+import { CATEGORY_META } from '@/lib/categoryIcons';
 
 interface CheckinFormCategoryPanelProps {
   category: string;
@@ -67,7 +44,9 @@ export default function CheckinFormCategoryPanel({
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
           {Object.entries(CHECKIN_CATEGORY_LABELS).map(([value, label]) => {
             const isSelected = category === value;
-            const color = CATEGORY_COLORS[value] ?? '#C4A882';
+            const meta = CATEGORY_META[value] ?? CATEGORY_META.other;
+            const color = meta.color;
+            const IconComponent = meta.icon;
             return (
               <button
                 key={value}
@@ -85,7 +64,7 @@ export default function CheckinFormCategoryPanel({
                   transition: 'all 0.15s ease',
                 }}
               >
-                <span style={{ fontSize: 28, lineHeight: 1 }}>{CATEGORY_EMOJI[value] || '📌'}</span>
+                <IconComponent size={28} color={isSelected ? color : 'var(--tc-warm-mid)'} />
                 <span style={{
                   fontSize: 12,
                   fontWeight: isSelected ? 800 : 500,

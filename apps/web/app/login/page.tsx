@@ -1,6 +1,8 @@
 'use client';
 
+import { Camera, Map, BookOpen } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import type { LucideIcon } from 'lucide-react';
 
 export default function LoginPage() {
   const supabase = createClient();
@@ -55,11 +57,11 @@ export default function LoginPage() {
 
         {/* 기능 소개 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 40 }}>
-          {[
-            { icon: '📸', text: '사진에서 GPS 위치 자동 추출' },
-            { icon: '🗺️', text: '지도로 여행 경로 시각화' },
-            { icon: '📖', text: '나만의 여행 일기 기록' },
-          ].map(({ icon, text }) => (
+          {([
+            { icon: Camera, text: '사진에서 GPS 위치 자동 추출' },
+            { icon: Map, text: '지도로 여행 경로 시각화' },
+            { icon: BookOpen, text: '나만의 여행 일기 기록' },
+          ] as { icon: LucideIcon; text: string }[]).map(({ icon: Icon, text }) => (
             <div key={text} style={{
               display: 'flex', alignItems: 'center', gap: 12,
               padding: '12px 16px',
@@ -68,7 +70,7 @@ export default function LoginPage() {
               boxShadow: '0 2px 8px rgba(45,36,22,0.06)',
               textAlign: 'left',
             }}>
-              <span style={{ fontSize: 22, flexShrink: 0 }}>{icon}</span>
+              <Icon size={22} color="#FF6B47" style={{ flexShrink: 0 }} />
               <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--tc-warm-dark)' }}>{text}</span>
             </div>
           ))}

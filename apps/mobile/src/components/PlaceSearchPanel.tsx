@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Modal,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { searchPlaces, getPlaceDetails } from '../lib/api';
 import type { PlacePrediction } from '../lib/api';
 
@@ -86,11 +87,12 @@ export default function PlaceSearchPanel({
       <View style={styles.container}>
         {/* Search Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={handleClose}>
-            <Text style={styles.backText}>← 뒤로</Text>
+          <TouchableOpacity onPress={handleClose} style={styles.backButton}>
+            <Ionicons name="chevron-back" size={16} color="#6B7280" />
+            <Text style={styles.backText}>뒤로</Text>
           </TouchableOpacity>
           <View style={styles.searchBar}>
-            <Text style={styles.searchIcon}>🔍</Text>
+            <Ionicons name="search-outline" size={16} color="#9CA3AF" />
             <TextInput
               value={query}
               onChangeText={setQuery}
@@ -105,7 +107,7 @@ export default function PlaceSearchPanel({
             {searching && <ActivityIndicator size="small" color="#F97316" />}
             {query && !searching && (
               <TouchableOpacity onPress={() => setQuery('')}>
-                <Text style={styles.clearText}>✕</Text>
+                <Ionicons name="close-circle" size={16} color="#9CA3AF" />
               </TouchableOpacity>
             )}
           </View>
@@ -126,9 +128,12 @@ export default function PlaceSearchPanel({
               onPress={() => handleSelect(item)}
               style={styles.resultItem}
             >
-              <Text style={styles.resultMain}>
-                📍 {item.structured_formatting.main_text}
-              </Text>
+              <View style={styles.resultMainRow}>
+                <Ionicons name="location-outline" size={14} color="#F97316" />
+                <Text style={styles.resultMain}>
+                  {item.structured_formatting.main_text}
+                </Text>
+              </View>
               <Text style={styles.resultSecondary}>
                 {item.structured_formatting.secondary_text}
               </Text>
@@ -138,12 +143,12 @@ export default function PlaceSearchPanel({
             <View style={styles.emptyContainer}>
               {query.trim().length >= 2 && !searching ? (
                 <>
-                  <Text style={styles.emptyEmoji}>🔍</Text>
+                  <Ionicons name="search-outline" size={40} color="#C4B49A" />
                   <Text style={styles.emptyText}>검색 결과가 없습니다</Text>
                 </>
               ) : (
                 <>
-                  <Text style={styles.emptyEmoji}>📍</Text>
+                  <Ionicons name="location-outline" size={40} color="#C4B49A" />
                   <Text style={styles.emptyText}>장소 이름을 2자 이상 입력하세요</Text>
                 </>
               )}
@@ -169,6 +174,11 @@ const styles = StyleSheet.create({
     borderBottomColor: '#E8E0D4',
     gap: 10,
   },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
   backText: {
     fontSize: 13,
     fontWeight: '700',
@@ -186,17 +196,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     gap: 8,
   },
-  searchIcon: {
-    fontSize: 16,
-  },
   searchInput: {
     flex: 1,
     fontSize: 15,
     color: '#1F2937',
-  },
-  clearText: {
-    fontSize: 12,
-    color: '#6B7280',
   },
   loadingOverlay: {
     position: 'absolute',
@@ -215,23 +218,26 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E8E0D4',
   },
+  resultMainRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 3,
+  },
   resultMain: {
     fontSize: 15,
     fontWeight: '700',
     color: '#1F2937',
-    marginBottom: 3,
   },
   resultSecondary: {
     fontSize: 12,
     color: '#6B7280',
+    paddingLeft: 20,
   },
   emptyContainer: {
     alignItems: 'center',
     paddingTop: 48,
-  },
-  emptyEmoji: {
-    fontSize: 36,
-    marginBottom: 12,
+    gap: 12,
   },
   emptyText: {
     fontSize: 14,

@@ -1,32 +1,10 @@
 'use client';
 
+import { Camera, MapPin, X, Clock } from 'lucide-react';
 import { CHECKIN_CATEGORY_LABELS } from '@/types/database';
 import type { CheckinCategory } from '@/types/database';
 import type { PhotoMetadata } from '@/lib/exif';
-
-const CATEGORY_EMOJI: Record<string, string> = {
-  restaurant: '🍽️',
-  attraction: '🏛️',
-  accommodation: '🏨',
-  cafe: '☕',
-  shopping: '🛍️',
-  nature: '🌿',
-  activity: '🎯',
-  transportation: '🚌',
-  other: '📌',
-};
-
-const CATEGORY_COLORS: Record<string, string> = {
-  restaurant: '#FF6B47',
-  cafe: '#F59E0B',
-  attraction: '#3B82F6',
-  accommodation: '#8B5CF6',
-  shopping: '#EC4899',
-  nature: '#10B981',
-  activity: '#EF4444',
-  transportation: '#6B7280',
-  other: '#C4A882',
-};
+import { CATEGORY_META } from '@/lib/categoryIcons';
 
 interface CheckinFormMainPanelProps {
   title: string;
@@ -74,7 +52,9 @@ export default function CheckinFormMainPanel({
   error,
   toolbarHeight,
 }: CheckinFormMainPanelProps) {
-  const catColor = CATEGORY_COLORS[category] ?? '#C4A882';
+  const catMeta = CATEGORY_META[category] ?? CATEGORY_META.other;
+  const catColor = catMeta.color;
+  const CatIcon = catMeta.icon;
 
   return (
     <div
@@ -171,7 +151,9 @@ export default function CheckinFormMainPanel({
               marginBottom: 8,
             }}
           >
-            📷 사진 삭제 ✕
+            <Camera size={13} />
+            사진 삭제
+            <X size={11} />
           </button>
           <img
             src={photoPreviewUrl}
@@ -202,8 +184,9 @@ export default function CheckinFormMainPanel({
               cursor: 'pointer',
             }}
           >
-            📍 {place || (photoMetadata?.gps ? 'GPS 추출됨' : `${selectedLocation.latitude.toFixed(4)}, ${selectedLocation.longitude.toFixed(4)}`)}
-            <span style={{ fontSize: 11, opacity: 0.7 }}>✕</span>
+            <MapPin size={13} />
+            {place || (photoMetadata?.gps ? 'GPS 추출됨' : `${selectedLocation.latitude.toFixed(4)}, ${selectedLocation.longitude.toFixed(4)}`)}
+            <X size={11} style={{ opacity: 0.7 }} />
           </button>
         )}
         {category && (
@@ -223,8 +206,9 @@ export default function CheckinFormMainPanel({
               cursor: 'pointer',
             }}
           >
-            {CATEGORY_EMOJI[category] || '🏷️'} {CHECKIN_CATEGORY_LABELS[category as CheckinCategory] || category}
-            <span style={{ fontSize: 11, opacity: 0.7 }}>✕</span>
+            <CatIcon size={12} color={catColor} />
+            {CHECKIN_CATEGORY_LABELS[category as CheckinCategory] || category}
+            <X size={11} style={{ opacity: 0.7 }} />
           </button>
         )}
         {checkedInAt && (
@@ -244,12 +228,12 @@ export default function CheckinFormMainPanel({
               cursor: 'pointer',
             }}
           >
-            ⏰{' '}
+            <Clock size={13} />
             {new Intl.DateTimeFormat('ko-KR', {
               month: 'long', day: 'numeric',
               weekday: 'short', hour: '2-digit', minute: '2-digit',
             }).format(new Date(checkedInAt))}
-            <span style={{ fontSize: 11, opacity: 0.7 }}>✕</span>
+            <X size={11} style={{ opacity: 0.7 }} />
           </button>
         )}
       </div>

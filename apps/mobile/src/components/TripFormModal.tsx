@@ -12,6 +12,7 @@ import {
   KeyboardAvoidingView,
   Switch,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import type { Trip, TripFormData } from '../../../../packages/shared/src/types';
 import LocationPickerContent from './LocationPickerContent';
@@ -33,16 +34,20 @@ const formatDate = (date: Date | null): string => {
 };
 
 const formatDateDisplay = (date: Date | null): string => {
-  if (!date) return '날짜 선택';
+  if (!date || isNaN(date.getTime())) return '날짜 선택';
   return new Intl.DateTimeFormat('ko-KR', {
     year: 'numeric', month: 'long', day: 'numeric',
   }).format(date);
 };
 
-const parseDate = (dateStr?: string): Date | null => {
+const parseDate = (dateStr?: string | null): Date | null => {
   if (!dateStr) return null;
-  const [y, m, d] = dateStr.split('-').map(Number);
-  return new Date(y, m - 1, d);
+  // YYYY-MM-DD 형식 파싱 (타임존 영향 없이 로컬 날짜로)
+  const parts = dateStr.substring(0, 10).split('-').map(Number);
+  if (parts.length < 3 || parts.some(isNaN)) return null;
+  const [y, m, d] = parts;
+  const date = new Date(y, m - 1, d);
+  return isNaN(date.getTime()) ? null : date;
 };
 
 export default function TripFormModal({ visible, onClose, onSubmit, mode = 'create', initialTrip }: TripFormModalProps) {
@@ -148,7 +153,11 @@ export default function TripFormModal({ visible, onClose, onSubmit, mode = 'crea
             <View style={styles.header}>
               <View style={styles.headerLeft}>
                 <View style={styles.headerIcon}>
-                  <Text style={{ fontSize: 15 }}>{mode === 'create' ? '✈️' : '✏️'}</Text>
+                  <Ionicons
+                    name={mode === 'create' ? 'airplane-outline' : 'pencil-outline'}
+                    size={16}
+                    color="#FF6B47"
+                  />
                 </View>
                 <Text style={styles.headerTitle}>{mode === 'create' ? '새 여행 만들기' : '여행 수정'}</Text>
               </View>
@@ -201,7 +210,10 @@ export default function TripFormModal({ visible, onClose, onSubmit, mode = 'crea
                   onPress={() => setShowStartPicker(!showStartPicker)}
                   style={styles.dateCard}
                 >
-                  <Text style={styles.dateLabel}>📅 시작일</Text>
+                  <View style={styles.dateLabelRow}>
+                    <Ionicons name="calendar-outline" size={11} color="#FF6B47" />
+                    <Text style={styles.dateLabel}>시작일</Text>
+                  </View>
                   <Text style={[styles.dateValue, !startDate && styles.datePlaceholder]}>
                     {formatDateDisplay(startDate)}
                   </Text>
@@ -224,7 +236,10 @@ export default function TripFormModal({ visible, onClose, onSubmit, mode = 'crea
                   onPress={() => setShowEndPicker(!showEndPicker)}
                   style={styles.dateCard}
                 >
-                  <Text style={[styles.dateLabel, { color: '#F59E0B' }]}>🏁 종료일</Text>
+                  <View style={styles.dateLabelRow}>
+                    <Ionicons name="flag-outline" size={11} color="#F59E0B" />
+                    <Text style={[styles.dateLabel, { color: '#F59E0B' }]}>종료일</Text>
+                  </View>
                   <Text style={[styles.dateValue, !endDate && styles.datePlaceholder]}>
                     {formatDateDisplay(endDate)}
                   </Text>
@@ -247,10 +262,10 @@ export default function TripFormModal({ visible, onClose, onSubmit, mode = 'crea
                 <Text style={styles.sectionLabel}>대표 장소</Text>
                 {place ? (
                   <View style={styles.placeCard}>
-                    <Text style={{ fontSize: 16 }}>📍</Text>
+                    <Ionicons name="location-outline" size={18} color="#FF6B47" />
                     <Text style={styles.placeText}>{place}</Text>
                     <TouchableOpacity onPress={handleClearPlace} style={styles.placeClearButton}>
-                      <Text style={styles.placeClearText}>✕</Text>
+                      <Ionicons name="close" size={12} color="#9CA3AF" />
                     </TouchableOpacity>
                   </View>
                 ) : (
@@ -258,7 +273,7 @@ export default function TripFormModal({ visible, onClose, onSubmit, mode = 'crea
                     onPress={() => setShowLocationPicker(true)}
                     style={styles.placeAddButton}
                   >
-                    <Text style={{ fontSize: 16 }}>📍</Text>
+                    <Ionicons name="location-outline" size={18} color="#FF6B47" />
                     <Text style={styles.placeAddText}>장소 추가</Text>
                   </TouchableOpacity>
                 )}
@@ -281,7 +296,10 @@ export default function TripFormModal({ visible, onClose, onSubmit, mode = 'crea
               {/* 자주 가는 곳 토글 */}
               <View style={styles.publicRow}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.publicLabel}>⭐ 자주 가는 곳</Text>
+                  <View style={styles.publicLabelRow}>
+                    <Ionicons name="star" size={14} color="#F59E0B" />
+                    <Text style={styles.publicLabel}>자주 가는 곳</Text>
+                  </View>
                   <Text style={styles.publicDesc}>빠른 체크인 목록에 표시됩니다</Text>
                 </View>
                 <Switch
@@ -412,12 +430,17 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
+  dateLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginBottom: 6,
+  },
   dateLabel: {
     fontSize: 11,
     fontWeight: '700',
     color: '#FF6B47',
     letterSpacing: 0.6,
-    marginBottom: 6,
   },
   dateValue: {
     fontSize: 16,
@@ -466,10 +489,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  placeClearText: {
-    fontSize: 12,
-    color: '#9CA3AF',
-  },
   placeAddButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -498,11 +517,16 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
+  publicLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 2,
+  },
   publicLabel: {
     fontSize: 15,
     fontWeight: '700',
     color: '#1F2937',
-    marginBottom: 2,
   },
   publicDesc: {
     fontSize: 12,

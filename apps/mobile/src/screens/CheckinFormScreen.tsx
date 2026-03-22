@@ -17,6 +17,7 @@ import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RouteProp } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Location from 'expo-location';
+import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import { createCheckin, updateCheckin } from '../lib/api';
 import { usePhotoPicker } from '../components/PhotoPickerButton';
@@ -24,21 +25,10 @@ import CheckinFormToolbar from '../components/CheckinFormToolbar';
 import CategorySelector from '../components/CategorySelector';
 import type { AppStackParamList } from '../navigation/AppNavigator';
 import { CHECKIN_CATEGORY_LABELS } from '../../../../packages/shared/src/types';
+import { CATEGORY_ICONS, CATEGORY_COLORS } from '../utils/categoryIcons';
 
 type NavigationProp = StackNavigationProp<AppStackParamList, 'CheckinForm'>;
 type FormRouteProp = RouteProp<AppStackParamList, 'CheckinForm'>;
-
-const CATEGORY_EMOJI: Record<string, string> = {
-  restaurant: '🍽️', attraction: '🏛️', accommodation: '🏨',
-  cafe: '☕', shopping: '🛍️', nature: '🌿',
-  activity: '🎯', transportation: '🚌', other: '📌',
-};
-
-const CATEGORY_COLORS: Record<string, string> = {
-  restaurant: '#FF6B47', cafe: '#F59E0B', attraction: '#3B82F6',
-  accommodation: '#8B5CF6', shopping: '#EC4899', nature: '#10B981',
-  activity: '#EF4444', transportation: '#6B7280', other: '#C4A882',
-};
 
 export default function CheckinFormScreen() {
   const navigation = useNavigation<NavigationProp>();
@@ -171,6 +161,7 @@ export default function CheckinFormScreen() {
   };
 
   const catColor = CATEGORY_COLORS[category] ?? '#C4A882';
+  const catIconName = CATEGORY_ICONS[category] ?? 'pricetag-outline';
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -185,7 +176,7 @@ export default function CheckinFormScreen() {
               <Image source={{ uri: avatarUrl }} style={styles.headerAvatar} />
             ) : (
               <View style={styles.headerAvatarPlaceholder}>
-                <Text style={{ fontSize: 14 }}>👤</Text>
+                <Ionicons name="person-outline" size={16} color="#9CA3AF" />
               </View>
             )}
             <Text style={styles.headerTripName} numberOfLines={1}>{tripTitle}</Text>
@@ -258,7 +249,11 @@ export default function CheckinFormScreen() {
                 }}
                 style={styles.clearChip}
               >
-                <Text style={styles.clearChipText}>📷 사진 삭제 ✕</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                  <Ionicons name="camera-outline" size={14} color="#FF6B47" />
+                  <Text style={styles.clearChipText}>사진 삭제</Text>
+                  <Ionicons name="close" size={12} color="#FF6B47" />
+                </View>
               </TouchableOpacity>
               <Image source={{ uri: photoPreview }} style={styles.photoPreview} resizeMode="cover" />
             </View>
@@ -276,18 +271,20 @@ export default function CheckinFormScreen() {
                 }}
                 style={styles.chip}
               >
+                <Ionicons name="location-outline" size={13} color="#FF6B47" />
                 <Text style={styles.chipText}>
-                  📍 {place || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`}
+                  {place || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`}
                 </Text>
-                <Text style={styles.chipClose}>✕</Text>
+                <Ionicons name="close" size={11} color="#FF6B47" style={{ opacity: 0.7 }} />
               </TouchableOpacity>
             )}
             {category ? (
               <TouchableOpacity onPress={() => setCategory('')} style={[styles.chip, { backgroundColor: `${catColor}18` }]}>
+                <Ionicons name={catIconName} size={13} color={catColor} />
                 <Text style={[styles.chipText, { color: catColor }]}>
-                  {CATEGORY_EMOJI[category] || '🏷️'} {CHECKIN_CATEGORY_LABELS[category as keyof typeof CHECKIN_CATEGORY_LABELS] || category}
+                  {CHECKIN_CATEGORY_LABELS[category as keyof typeof CHECKIN_CATEGORY_LABELS] || category}
                 </Text>
-                <Text style={[styles.chipClose, { color: catColor }]}>✕</Text>
+                <Ionicons name="close" size={11} color={catColor} style={{ opacity: 0.7 }} />
               </TouchableOpacity>
             ) : null}
             {checkedInAt && (
@@ -295,13 +292,14 @@ export default function CheckinFormScreen() {
                 onPress={() => setCheckedInAt(null)}
                 style={[styles.chip, { backgroundColor: 'rgba(139,92,246,0.1)' }]}
               >
+                <Ionicons name="time-outline" size={13} color="#8B5CF6" />
                 <Text style={[styles.chipText, { color: '#8B5CF6' }]}>
-                  ⏰ {new Intl.DateTimeFormat('ko-KR', {
+                  {new Intl.DateTimeFormat('ko-KR', {
                     month: 'long', day: 'numeric', weekday: 'short',
                     hour: '2-digit', minute: '2-digit',
                   }).format(checkedInAt)}
                 </Text>
-                <Text style={[styles.chipClose, { color: '#8B5CF6' }]}>✕</Text>
+                <Ionicons name="close" size={11} color="#8B5CF6" style={{ opacity: 0.7 }} />
               </TouchableOpacity>
             )}
           </View>
@@ -521,11 +519,6 @@ const styles = StyleSheet.create({
   chipText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#FF6B47',
-  },
-  chipClose: {
-    fontSize: 11,
-    opacity: 0.7,
     color: '#FF6B47',
   },
   errorBox: {

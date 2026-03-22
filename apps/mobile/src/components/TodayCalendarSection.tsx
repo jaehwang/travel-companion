@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Linking, StyleSheet, ActivityIndicator } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { fetchCalendarEvents, fetchCalendarAdvice, CalendarEvent } from '../lib/api';
 
 function formatEventWhen(event: CalendarEvent): string {
@@ -89,7 +90,10 @@ export default function TodayCalendarSection({ tripEndDate }: Props) {
   if (tokenExpired) {
     return (
       <View style={styles.expiredContainer}>
-        <Text style={styles.expiredText}>📅 캘린더 접근 권한 만료</Text>
+        <View style={styles.expiredRow}>
+          <Ionicons name="calendar-outline" size={14} color="#9CA3AF" />
+          <Text style={styles.expiredText}> 캘린더 접근 권한 만료</Text>
+        </View>
       </View>
     );
   }
@@ -99,7 +103,7 @@ export default function TodayCalendarSection({ tripEndDate }: Props) {
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={() => setOpen(o => !o)} style={styles.header} activeOpacity={0.7}>
-        <Text style={styles.calIcon}>📅</Text>
+        <Ionicons name="calendar-outline" size={16} color="#4285F4" />
         <View style={styles.headerText}>
           <Text style={styles.title}>
             {tripEndDate ? '여행 일정' : '오늘 일정'} {events.length}개
@@ -121,13 +125,18 @@ export default function TodayCalendarSection({ tripEndDate }: Props) {
               <View style={styles.eventInfo}>
                 <Text style={styles.eventTitle} numberOfLines={1}>{event.summary ?? '(제목 없음)'}</Text>
                 {event.location && (
-                  <Text
-                    style={styles.eventLocation}
-                    numberOfLines={1}
+                  <TouchableOpacity
+                    style={styles.eventLocationRow}
                     onPress={() => Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location!)}`)}
                   >
-                    📍 {event.location}
-                  </Text>
+                    <Ionicons name="location-outline" size={11} color="#4285F4" />
+                    <Text
+                      style={styles.eventLocation}
+                      numberOfLines={1}
+                    >
+                      {event.location}
+                    </Text>
+                  </TouchableOpacity>
                 )}
               </View>
             </View>
@@ -158,9 +167,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     gap: 8,
-  },
-  calIcon: {
-    fontSize: 16,
   },
   headerText: {
     flex: 1,
@@ -211,10 +217,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#1F2937',
   },
+  eventLocationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginTop: 1,
+  },
   eventLocation: {
     fontSize: 11,
     color: '#4285F4',
-    marginTop: 1,
+    flex: 1,
   },
   expiredContainer: {
     marginHorizontal: 16,
@@ -227,6 +239,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 2,
+  },
+  expiredRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   expiredText: {
     fontSize: 12,

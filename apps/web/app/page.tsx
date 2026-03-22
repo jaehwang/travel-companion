@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { User, Map } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import TripCreateButton from '@/components/TripCreateButton';
 import TripCard from '@/components/TripCard';
@@ -46,8 +47,8 @@ export default async function Home() {
                 className="user-avatar"
               />
             ) : (
-              <div className="user-avatar flex items-center justify-center text-base">
-                👤
+              <div className="user-avatar flex items-center justify-center">
+                <User size={18} color="#9CA3AF" />
               </div>
             )}
           </Link>
@@ -69,7 +70,7 @@ export default async function Home() {
           {/* 빈 상태 */}
           {trips.length === 0 && (
             <div className="text-center py-10">
-              <div className="text-5xl mb-3">🗺️</div>
+              <div className="flex justify-center mb-3"><Map size={48} color="#C4B49A" /></div>
               <p className="text-base font-extrabold text-tc-warm-dark mb-1.5">
                 첫 여행을 기록해볼까요?
               </p>

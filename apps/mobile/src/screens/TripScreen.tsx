@@ -260,13 +260,19 @@ export default function TripScreen() {
             <Text style={styles.tripDescription}>{trip.description}</Text>
           )}
           {startSrc && (
-            <Text style={styles.tripMeta}>
-              📅 {formatTripDate(startSrc)}
-              {endSrc && endSrc !== trip.start_date ? ` ~ ${formatTripDate(endSrc)}` : ''}
-            </Text>
+            <View style={styles.tripMetaRow}>
+              <Ionicons name="calendar-outline" size={12} color="#F97316" />
+              <Text style={styles.tripMeta}>
+                {' '}{formatTripDate(startSrc)}
+                {endSrc && endSrc !== trip.start_date ? ` ~ ${formatTripDate(endSrc)}` : ''}
+              </Text>
+            </View>
           )}
           {hasPlace && (
-            <Text style={styles.tripMeta}>📍 {trip.place}</Text>
+            <View style={styles.tripMetaRow}>
+              <Ionicons name="location-outline" size={12} color="#6B7280" />
+              <Text style={styles.tripMeta}> {trip.place}</Text>
+            </View>
           )}
         </View>
       )}
@@ -310,7 +316,7 @@ export default function TripScreen() {
             return (
               <View style={styles.markerInfoCard}>
                 <TouchableOpacity style={styles.markerInfoClose} onPress={() => setSelectedCheckinId(null)}>
-                  <Text style={styles.markerInfoCloseText}>✕</Text>
+                  <Ionicons name="close" size={14} color="#FFFFFF" />
                 </TouchableOpacity>
                 {selectedCheckin.photo_url && (
                   <Image
@@ -324,7 +330,10 @@ export default function TripScreen() {
                 )}
                 <Text style={styles.markerInfoTime}>{formatCheckinTime(selectedCheckin.checked_in_at)}</Text>
                 {selectedCheckin.place && (
-                  <Text style={styles.markerInfoPlace}>📍 {selectedCheckin.place}</Text>
+                  <View style={styles.markerInfoPlaceRow}>
+                    <Ionicons name="location-outline" size={11} color="#4285F4" />
+                    <Text style={styles.markerInfoPlace}> {selectedCheckin.place}</Text>
+                  </View>
                 )}
                 <View style={styles.markerInfoNav}>
                   <TouchableOpacity
@@ -332,7 +341,10 @@ export default function TripScreen() {
                     onPress={() => hasPrev && setSelectedCheckinId(sortedCheckins[selectedIndex - 1].id)}
                     disabled={!hasPrev}
                   >
-                    <Text style={[styles.markerInfoNavBtnText, !hasPrev && styles.markerInfoNavBtnTextDisabled]}>← 이전</Text>
+                    <View style={styles.markerInfoNavBtnInner}>
+                      <Ionicons name="chevron-back" size={12} color={hasPrev ? '#FFFFFF' : '#9CA3AF'} />
+                      <Text style={[styles.markerInfoNavBtnText, !hasPrev && styles.markerInfoNavBtnTextDisabled]}>이전</Text>
+                    </View>
                   </TouchableOpacity>
                   <Text style={styles.markerInfoNavCount}>{selectedIndex + 1} / {sortedCheckins.length}</Text>
                   <TouchableOpacity
@@ -340,7 +352,10 @@ export default function TripScreen() {
                     onPress={() => hasNext && setSelectedCheckinId(sortedCheckins[selectedIndex + 1].id)}
                     disabled={!hasNext}
                   >
-                    <Text style={[styles.markerInfoNavBtnText, !hasNext && styles.markerInfoNavBtnTextDisabled]}>다음 →</Text>
+                    <View style={styles.markerInfoNavBtnInner}>
+                      <Text style={[styles.markerInfoNavBtnText, !hasNext && styles.markerInfoNavBtnTextDisabled]}>다음</Text>
+                      <Ionicons name="chevron-forward" size={12} color={hasNext ? '#FFFFFF' : '#9CA3AF'} />
+                    </View>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -385,7 +400,7 @@ export default function TripScreen() {
             <Image source={{ uri: avatarUrl }} style={styles.avatar} />
           ) : (
             <View style={styles.avatarPlaceholder}>
-              <Text style={{ fontSize: 14 }}>👤</Text>
+              <Ionicons name="person-outline" size={16} color="#9CA3AF" />
             </View>
           )}
         </TouchableOpacity>
@@ -429,7 +444,7 @@ export default function TripScreen() {
           ListHeaderComponent={renderHeader}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyEmoji}>📍</Text>
+              <Ionicons name="location-outline" size={48} color="#C4B49A" />
               <Text style={styles.emptyText}>아직 체크인이 없습니다</Text>
               <Text style={styles.emptySubtext}>+ 버튼을 눌러 첫 체크인을 해보세요</Text>
             </View>
@@ -447,7 +462,7 @@ export default function TripScreen() {
           onPress={() => navigation.navigate('Home')}
           style={styles.homeButton}
         >
-          <Text style={styles.homeIcon}>🏠</Text>
+          <Ionicons name="home-outline" size={24} color="#6B7280" />
         </TouchableOpacity>
 
         {/* FAB */}
@@ -558,10 +573,14 @@ const styles = StyleSheet.create({
     color: '#3D2B1F',
     marginBottom: 4,
   },
+  tripMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
   tripMeta: {
     fontSize: 12,
     color: '#8B7355',
-    marginTop: 2,
   },
   mapSection: {
     marginHorizontal: 16,
@@ -601,11 +620,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     zIndex: 1,
   },
-  markerInfoCloseText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    lineHeight: 16,
+  markerInfoPlaceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 5,
   },
   markerInfoPhoto: {
     width: '100%',
@@ -628,7 +646,6 @@ const styles = StyleSheet.create({
   markerInfoPlace: {
     fontSize: 11,
     color: '#4285F4',
-    marginBottom: 5,
   },
   markerInfoNav: {
     flexDirection: 'row',
@@ -646,6 +663,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#4285F4',
     borderRadius: 4,
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  markerInfoNavBtnInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
   },
   markerInfoNavBtnDisabled: {
     backgroundColor: '#E5E7EB',
@@ -764,15 +787,13 @@ const styles = StyleSheet.create({
   emptyContainer: {
     alignItems: 'center',
     paddingTop: 40,
-  },
-  emptyEmoji: {
-    fontSize: 48,
-    marginBottom: 12,
+    gap: 0,
   },
   emptyText: {
     fontSize: 16,
     fontWeight: '700',
     color: '#4B5563',
+    marginTop: 12,
     marginBottom: 6,
   },
   emptySubtext: {
@@ -802,9 +823,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 32,
     bottom: 26,
-  },
-  homeIcon: {
-    fontSize: 24,
   },
   fab: {
     width: 56,

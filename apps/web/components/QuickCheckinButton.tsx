@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Zap } from 'lucide-react';
 import QuickCheckinModal from './QuickCheckinModal';
 
 interface NearbyCheckin {
@@ -73,7 +74,7 @@ export default function QuickCheckinButton() {
           textAlign: 'left',
         }}
       >
-        <span style={{ fontSize: 24 }}>⚡</span>
+        <Zap size={24} color="currentColor" />
         <div style={{ flex: 1 }}>
           <p style={{ fontSize: 15, fontWeight: 800, color: '#1F2937', marginBottom: 2 }}>빠른 체크인</p>
           <p style={{ fontSize: 12, color: current ? '#F97316' : '#9CA3AF' }}>{subtitle}</p>

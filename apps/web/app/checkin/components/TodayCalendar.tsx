@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { MapPin } from 'lucide-react';
 
 interface CalendarEvent {
   id: string;
@@ -237,10 +238,10 @@ export default function TodayCalendar({ tripEndDate }: { tripEndDate?: string })
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ fontSize: 11, color: '#4285F4', textDecoration: 'none', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                    style={{ fontSize: 11, color: '#4285F4', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                     onClick={e => e.stopPropagation()}
                   >
-                    📍 {event.location}
+                    <MapPin size={12} style={{ flexShrink: 0 }} />{event.location}
                   </a>
                 )}
               </div>

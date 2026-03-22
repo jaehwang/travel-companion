@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Plane, Pencil, Calendar, Flag, MapPin, X, Star } from 'lucide-react';
 import type { Trip, TripFormData } from '@/types/database';
-import { LocationPicker } from '@/components/LocationPicker';
+import { usePlaceSearch } from '@/components/checkin-form/hooks/usePlaceSearch';
+import CheckinFormPlacePanel from '@/components/checkin-form/CheckinFormPlacePanel';
 
 interface TripFormModalProps {
   mode: 'create' | 'edit';
@@ -32,9 +34,22 @@ export default function TripFormModal({
   const [placeId, setPlaceId] = useState(initialTrip?.place_id ?? '');
   const [placeLat, setPlaceLat] = useState<number | undefined>(initialTrip?.latitude ?? undefined);
   const [placeLng, setPlaceLng] = useState<number | undefined>(initialTrip?.longitude ?? undefined);
-  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [showPlaceSearch, setShowPlaceSearch] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const placeSearch = usePlaceSearch({
+    isActive: showPlaceSearch,
+    onPlaceSelected: (lat, lng, name, pid) => {
+      setPlace(name);
+      setPlaceId(pid);
+      setPlaceLat(lat);
+      setPlaceLng(lng);
+      setShowPlaceSearch(false);
+      placeSearch.reset();
+    },
+    onError: setError,
+  });
 
   const canSubmit = !!title.trim() && !submitting;
 
@@ -74,34 +89,23 @@ export default function TripFormModal({
     setPlaceLng(undefined);
   };
 
-  if (showLocationPicker) {
-    return (
-      <LocationPicker
-        initialLocation={placeLat != null && placeLng != null ? { latitude: placeLat, longitude: placeLng } : undefined}
-        onLocationSelect={(lat, lng, selectedPlace) => {
-          setPlaceLat(lat);
-          setPlaceLng(lng);
-          if (selectedPlace) {
-            setPlace(selectedPlace.name);
-            setPlaceId(selectedPlace.place_id);
-          } else {
-            setPlace(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
-            setPlaceId('');
-          }
-          setShowLocationPicker(false);
-        }}
-        onClose={() => setShowLocationPicker(false)}
-      />
-    );
-  }
-
   return createPortal(
     <div style={{
       position: 'fixed', inset: 0, zIndex: 10001,
       backgroundColor: 'var(--tc-bg)',
       display: 'flex', flexDirection: 'column',
     }}>
-      <>
+      {showPlaceSearch ? (
+        <CheckinFormPlacePanel
+          searchQuery={placeSearch.searchQuery}
+          onSearchQueryChange={placeSearch.setSearchQuery}
+          predictions={placeSearch.predictions}
+          searchingPlaces={placeSearch.searchingPlaces}
+          onSelectPlace={placeSearch.handleSelectPlace}
+          onBack={() => { setShowPlaceSearch(false); placeSearch.reset(); }}
+        />
+      ) : (
+        <>
           {/* 헤더 */}
           <div style={{
             display: 'flex', alignItems: 'center',
@@ -114,9 +118,9 @@ export default function TripFormModal({
                 width: 30, height: 30, borderRadius: '50%',
                 background: 'rgba(255,107,71,0.12)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 15, flexShrink: 0,
+                flexShrink: 0,
               }}>
-                {mode === 'create' ? '✈️' : '✏️'}
+                {mode === 'create' ? <Plane size={15} color="#FF6B47" /> : <Pencil size={15} color="#FF6B47" />}
               </div>
               <span style={{
                 fontSize: 15, fontWeight: 800,
@@ -205,8 +209,8 @@ export default function TripFormModal({
                 padding: '14px 16px',
                 boxShadow: '0 2px 8px rgba(45,36,22,0.06)',
               }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: '#FF6B47', letterSpacing: '0.06em', marginBottom: 6 }}>
-                  📅 시작일
+                <p style={{ fontSize: 11, fontWeight: 700, color: '#FF6B47', letterSpacing: '0.06em', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <Calendar size={11} />시작일
                 </p>
                 <input
                   type="date"
@@ -228,8 +232,8 @@ export default function TripFormModal({
                 padding: '14px 16px',
                 boxShadow: '0 2px 8px rgba(45,36,22,0.06)',
               }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: '#F59E0B', letterSpacing: '0.06em', marginBottom: 6 }}>
-                  🏁 종료일
+                <p style={{ fontSize: 11, fontWeight: 700, color: '#F59E0B', letterSpacing: '0.06em', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <Flag size={11} />종료일
                 </p>
                 <input
                   type="date"
@@ -259,7 +263,7 @@ export default function TripFormModal({
                   padding: '14px 16px',
                   boxShadow: '0 2px 8px rgba(45,36,22,0.06)',
                 }}>
-                  <span style={{ fontSize: 16 }}>📍</span>
+                  <MapPin size={16} color="#FF6B47" />
                   <span style={{ flex: 1, fontSize: 15, fontWeight: 600, color: 'var(--tc-warm-dark)' }}>
                     {place}
                   </span>
@@ -271,15 +275,15 @@ export default function TripFormModal({
                       background: 'var(--tc-card-empty)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       border: 'none', cursor: 'pointer',
-                      color: 'var(--tc-warm-mid)', fontSize: 12,
+                      color: 'var(--tc-warm-mid)',
                     }}
                   >
-                    ✕
+                    <X size={12} color="#9CA3AF" />
                   </button>
                 </div>
               ) : (
                 <button
-                  onClick={() => setShowLocationPicker(true)}
+                  onClick={() => { setShowPlaceSearch(true); placeSearch.reset(); }}
                   style={{
                     width: '100%', textAlign: 'left',
                     display: 'flex', alignItems: 'center', gap: 10,
@@ -293,7 +297,7 @@ export default function TripFormModal({
                     fontSize: 14,
                   }}
                 >
-                  <span style={{ fontSize: 16 }}>📍</span>
+                  <MapPin size={16} color="#C4B49A" />
                   장소 추가
                 </button>
               )}
@@ -349,7 +353,7 @@ export default function TripFormModal({
               marginBottom: 20,
             }}>
               <div>
-                <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--tc-warm-dark)', marginBottom: 2 }}>⭐ 자주 가는 곳</p>
+                <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--tc-warm-dark)', marginBottom: 2, display: 'flex', alignItems: 'center', gap: 6 }}><Star size={14} color="#F59E0B" />자주 가는 곳</p>
                 <p style={{ fontSize: 12, color: 'var(--tc-warm-faint)' }}>빠른 체크인 목록에 표시됩니다</p>
               </div>
               <label style={{ position: 'relative', display: 'inline-block', width: 51, height: 31, cursor: 'pointer', flexShrink: 0 }}>
@@ -390,7 +394,8 @@ export default function TripFormModal({
               </div>
             )}
           </div>
-      </>
+        </>
+      )}
     </div>,
     document.body
   );

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { MapPin } from 'lucide-react';
 
 interface CalendarEvent {
   id: string;
@@ -129,8 +130,8 @@ export default function CalendarPage() {
                 {formatDate(event)}
               </div>
               {event.location && (
-                <div style={{ fontSize: 'var(--font-sm)', color: 'var(--tc-warm-faint)', marginTop: 4 }}>
-                  📍 {event.location}
+                <div style={{ fontSize: 'var(--font-sm)', color: 'var(--tc-warm-faint)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <MapPin size={12} />{event.location}
                 </div>
               )}
             </div>

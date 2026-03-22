@@ -20,6 +20,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { MapPin } from 'lucide-react';
 import { APIProvider, Map as GoogleMap, AdvancedMarker, useMap } from '@vis.gl/react-google-maps';
 import MyLocationButton from '@/components/MyLocationButton';
 import { usePlaceSearch } from '@/components/checkin-form/hooks/usePlaceSearch';
@@ -281,7 +282,7 @@ export function LocationPicker({
                     }
                   }}
                 >
-                  <span style={{ fontSize: 32, lineHeight: 1, display: 'block', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>📍</span>
+                  <MapPin size={32} color="#FF6B47" style={{ display: 'block', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }} />
                 </AdvancedMarker>
               )}
             </GoogleMap>
@@ -292,15 +293,15 @@ export function LocationPicker({
             <div className="absolute bottom-0 left-0 right-0 p-3 bg-white/90 border-t border-blue-200 pointer-events-none">
               {selectedPlace ? (
                 <>
-                  <p className="text-sm font-medium text-blue-800">📍 {selectedPlace.name}</p>
+                  <p className="text-sm font-medium text-blue-800 flex items-center gap-1"><MapPin size={14} color="#1d4ed8" />{selectedPlace.name}</p>
                   <p className="text-xs text-blue-600 mt-0.5">
                     {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}
                   </p>
                 </>
               ) : (
                 <>
-                  <p className="text-sm text-blue-800">
-                    📍 {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}
+                  <p className="text-sm text-blue-800 flex items-center gap-1">
+                    <MapPin size={14} />{selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}
                   </p>
                   <p className="text-xs text-blue-600 mt-0.5">
                     💡 마커를 드래그하여 미세 조정 가능

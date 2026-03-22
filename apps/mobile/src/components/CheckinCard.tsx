@@ -7,19 +7,9 @@ import {
   StyleSheet,
   Linking,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import type { Checkin } from '../../../../packages/shared/src/types';
-
-const CATEGORY_META: Record<string, { icon: string; label: string; color: string }> = {
-  restaurant:     { icon: '🍽️', label: '음식점',   color: '#FF6B47' },
-  cafe:           { icon: '☕',  label: '카페',     color: '#F59E0B' },
-  attraction:     { icon: '🏛️', label: '명소',     color: '#3B82F6' },
-  accommodation:  { icon: '🏨', label: '숙소',     color: '#8B5CF6' },
-  shopping:       { icon: '🛍️', label: '쇼핑',     color: '#EC4899' },
-  nature:         { icon: '🌿', label: '자연',     color: '#10B981' },
-  activity:       { icon: '🎯', label: '액티비티', color: '#EF4444' },
-  transportation: { icon: '🚌', label: '교통',     color: '#6B7280' },
-  other:          { icon: '📍', label: '기타',     color: '#C4A882' },
-};
+import { CATEGORY_META } from '../utils/categoryIcons';
 
 interface CheckinCardProps {
   checkin: Checkin;
@@ -55,9 +45,10 @@ export default function CheckinCard({ checkin, onEdit, onDelete }: CheckinCardPr
         <View style={styles.body}>
           {/* Meta: Category + Time + Menu */}
           <View style={styles.metaRow}>
-            <Text style={[styles.categoryText, { color: meta.color }]}>
-              {meta.icon} {meta.label}
-            </Text>
+            <View style={styles.categoryBadge}>
+              <Ionicons name={meta.icon} size={12} color={meta.color} />
+              <Text style={[styles.categoryText, { color: meta.color }]}> {meta.label}</Text>
+            </View>
             <View style={styles.metaRight}>
               <Text style={styles.timeText}>
                 {formatTime(checkin.checked_in_at)}
@@ -109,9 +100,12 @@ export default function CheckinCard({ checkin, onEdit, onDelete }: CheckinCardPr
 
           {/* Place Link */}
           <TouchableOpacity onPress={handleMapPress} style={styles.placeLink}>
-            <Text style={styles.placeLinkText}>
-              📍 {checkin.place || '지도에서 보기'}
-            </Text>
+            <View style={styles.placeLinkInner}>
+              <Ionicons name="location-outline" size={12} color="#C4B49A" />
+              <Text style={styles.placeLinkText}>
+                {checkin.place || '지도에서 보기'}
+              </Text>
+            </View>
           </TouchableOpacity>
         </View>
       </View>
@@ -148,6 +142,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 8,
+  },
+  categoryBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   categoryText: {
     fontSize: 12,
@@ -190,6 +189,11 @@ const styles = StyleSheet.create({
   },
   placeLink: {
     marginTop: 2,
+  },
+  placeLinkInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
   },
   placeLinkText: {
     fontSize: 12,

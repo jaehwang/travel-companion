@@ -1,5 +1,6 @@
 'use client';
 
+import { Map } from 'lucide-react';
 import { CheckinListItem } from '@/components/CheckinListItem';
 import type { Checkin } from '@/types/database';
 
@@ -62,7 +63,7 @@ export default function CheckinTimeline({
       {/* 빈 상태 */}
       {checkins.length === 0 && (
         <div className="text-center py-12">
-          <div className="text-5xl mb-3.5">🗺️</div>
+          <div className="flex justify-center mb-3.5"><Map size={48} color="#C4B49A" /></div>
           <p className="text-base font-extrabold text-tc-warm-dark mb-1.5">
             아직 체크인이 없어요
           </p>

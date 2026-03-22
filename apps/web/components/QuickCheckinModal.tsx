@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { Zap, MapPin } from 'lucide-react';
 
 interface NearbyCheckin {
   id: string;
@@ -118,7 +119,7 @@ export default function QuickCheckinModal({ onClose, onCheckedIn }: QuickCheckin
           borderBottom: '1px solid #F3F0EB',
           flexShrink: 0,
         }}>
-          <span style={{ fontSize: 17, fontWeight: 800, color: '#1F2937' }}>⚡ 빠른 체크인</span>
+          <span style={{ fontSize: 17, fontWeight: 800, color: '#1F2937', display: 'flex', alignItems: 'center', gap: 6 }}><Zap size={16} color="#FF6B47" />빠른 체크인</span>
           <button
             onClick={onClose}
             style={{
@@ -155,7 +156,7 @@ export default function QuickCheckinModal({ onClose, onCheckedIn }: QuickCheckin
             </div>
           ) : checkins.length === 0 ? (
             <div style={{ padding: 40, textAlign: 'center' }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>📍</div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><MapPin size={40} color="#C4B49A" /></div>
               <p style={{ fontSize: 15, fontWeight: 700, color: '#4B5563', marginBottom: 6 }}>
                 근처에 등록된 장소가 없습니다
               </p>

@@ -1,25 +1,15 @@
 'use client';
 
+import { MapPin } from 'lucide-react';
 import type { Checkin } from '@/types/database';
 import { DropdownMenu } from '@/components/DropdownMenu';
+import { CATEGORY_META } from '@/lib/categoryIcons';
 
 interface CheckinListItemProps {
   checkin: Checkin;
   onEdit?: (checkin: Checkin) => void;
   onDelete?: (checkinId: string) => void;
 }
-
-const CATEGORY_META: Record<string, { icon: string; label: string; color: string }> = {
-  restaurant:     { icon: '🍽️', label: '음식점',   color: '#FF6B47' },
-  cafe:           { icon: '☕',  label: '카페',     color: '#F59E0B' },
-  attraction:     { icon: '🏛️', label: '명소',     color: '#3B82F6' },
-  accommodation:  { icon: '🏨', label: '숙소',     color: '#8B5CF6' },
-  shopping:       { icon: '🛍️', label: '쇼핑',     color: '#EC4899' },
-  nature:         { icon: '🌿', label: '자연',     color: '#10B981' },
-  activity:       { icon: '🎯', label: '액티비티', color: '#EF4444' },
-  transportation: { icon: '🚌', label: '교통',     color: '#6B7280' },
-  other:          { icon: '📍', label: '기타',     color: '#C4A882' },
-};
 
 export function CheckinListItem({ checkin, onEdit, onDelete }: CheckinListItemProps) {
   const meta = CATEGORY_META[checkin.category ?? 'other'] ?? CATEGORY_META.other;
@@ -52,8 +42,9 @@ export function CheckinListItem({ checkin, onEdit, onDelete }: CheckinListItemPr
         <div className="flex-1 p-[14px] pb-3">
           {/* 상단 메타 — 카테고리 + 시간 + 더보기 */}
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold tracking-[0.02em]" style={{ color: meta.color }}>
-              {meta.icon} {meta.label}
+            <span className="text-xs font-bold tracking-[0.02em] flex items-center gap-1" style={{ color: meta.color }}>
+              <meta.icon size={12} color={meta.color} />
+              {meta.label}
             </span>
             <div className="flex items-center gap-1">
               <span className="text-[11px] text-tc-warm-faint">
@@ -100,7 +91,8 @@ export function CheckinListItem({ checkin, onEdit, onDelete }: CheckinListItemPr
               rel="noopener noreferrer"
               className="text-xs text-tc-warm-faint no-underline flex items-center gap-[3px] hover:text-tc-warm-mid transition-colors"
             >
-              📍 {checkin.place || '지도에서 보기'}
+              <MapPin size={11} color="#C4B49A" style={{ flexShrink: 0 }} />
+              <span>{checkin.place || '지도에서 보기'}</span>
             </a>
           </div>
         </div>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Plane, Pencil, Calendar, Flag } from 'lucide-react';
 import type { Trip } from '@/types/database';
 import type { TripFormData } from '@/types/database';
 
@@ -75,9 +76,9 @@ export default function TripFormModal({
             width: 30, height: 30, borderRadius: '50%',
             background: 'rgba(255,107,71,0.12)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 15, flexShrink: 0,
+            flexShrink: 0,
           }}>
-            {mode === 'create' ? '✈️' : '✏️'}
+            {mode === 'create' ? <Plane size={15} color="#FF6B47" /> : <Pencil size={15} color="#FF6B47" />}
           </div>
           <span style={{
             fontSize: 15, fontWeight: 800,
@@ -172,8 +173,8 @@ export default function TripFormModal({
             padding: '14px 16px',
             boxShadow: '0 2px 8px rgba(45,36,22,0.06)',
           }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#FF6B47', letterSpacing: '0.06em', marginBottom: 6 }}>
-              📅 시작일
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#FF6B47', letterSpacing: '0.06em', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Calendar size={11} />시작일
             </p>
             <input
               type="date"
@@ -196,8 +197,8 @@ export default function TripFormModal({
             padding: '14px 16px',
             boxShadow: '0 2px 8px rgba(45,36,22,0.06)',
           }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#F59E0B', letterSpacing: '0.06em', marginBottom: 6 }}>
-              🏁 종료일
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#F59E0B', letterSpacing: '0.06em', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Flag size={11} />종료일
             </p>
             <input
               type="date"

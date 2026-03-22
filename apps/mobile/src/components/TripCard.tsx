@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Dimensions,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import type { Trip } from '../../../../packages/shared/src/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -47,7 +48,7 @@ export default function TripCard({ trip, onPress, onMenuPress }: TripCardProps) 
           />
         ) : (
           <View style={styles.coverPlaceholder}>
-            <Text style={styles.coverEmoji}>🗺️</Text>
+            <Ionicons name="map-outline" size={48} color="#C4A882" />
           </View>
         )}
 
@@ -55,7 +56,10 @@ export default function TripCard({ trip, onPress, onMenuPress }: TripCardProps) 
         {trip.is_frequent && (
           <View style={styles.frequentBadgeContainer}>
             <View style={styles.frequentBadge}>
-              <Text style={styles.badgeText}>⭐ 자주 가는 곳</Text>
+              <View style={styles.badgeInner}>
+                <Ionicons name="star" size={10} color="#FFF" />
+                <Text style={styles.badgeText}>자주 가는 곳</Text>
+              </View>
             </View>
           </View>
         )}
@@ -63,9 +67,16 @@ export default function TripCard({ trip, onPress, onMenuPress }: TripCardProps) 
         {/* Public/Private Badge */}
         <View style={styles.badgeContainer}>
           <View style={[styles.badge, trip.is_public ? styles.badgePublic : styles.badgePrivate]}>
-            <Text style={styles.badgeText}>
-              {trip.is_public ? '🌐 공개' : '🔒 비공개'}
-            </Text>
+            <View style={styles.badgeInner}>
+              {trip.is_public ? (
+                <Ionicons name="earth-outline" size={10} color="#FFF" />
+              ) : (
+                <Ionicons name="lock-closed-outline" size={10} color="#FFF" />
+              )}
+              <Text style={styles.badgeText}>
+                {trip.is_public ? '공개' : '비공개'}
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -126,9 +137,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  coverEmoji: {
-    fontSize: 48,
-  },
   frequentBadgeContainer: {
     position: 'absolute',
     top: 8,
@@ -155,6 +163,11 @@ const styles = StyleSheet.create({
   },
   badgePrivate: {
     backgroundColor: 'rgba(55, 65, 81, 0.92)',
+  },
+  badgeInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
   },
   badgeText: {
     color: '#FFFFFF',

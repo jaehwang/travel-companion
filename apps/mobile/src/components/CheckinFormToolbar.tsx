@@ -1,10 +1,12 @@
 import React from 'react';
+import type { ComponentProps } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 interface CheckinFormToolbarProps {
   hasPhoto: boolean;
@@ -21,12 +23,12 @@ const ACTIVE_COLOR = '#FF6B47';
 const INACTIVE_COLOR = '#C4B49A';
 
 function ToolbarButton({
-  emoji,
+  iconName,
   label,
   active,
   onPress,
 }: {
-  emoji: string;
+  iconName: ComponentProps<typeof Ionicons>['name'];
   label: string;
   active: boolean;
   onPress: () => void;
@@ -36,7 +38,7 @@ function ToolbarButton({
       onPress={onPress}
       style={[styles.button, active && styles.buttonActive]}
     >
-      <Text style={styles.buttonEmoji}>{emoji}</Text>
+      <Ionicons name={iconName} size={26} color={active ? ACTIVE_COLOR : INACTIVE_COLOR} />
       <Text style={[styles.buttonLabel, { color: active ? ACTIVE_COLOR : INACTIVE_COLOR }]}>
         {label}
       </Text>
@@ -56,10 +58,10 @@ export default function CheckinFormToolbar({
 }: CheckinFormToolbarProps) {
   return (
     <View style={styles.container}>
-      <ToolbarButton emoji="📷" label="사진" active={hasPhoto} onPress={onPhoto} />
-      <ToolbarButton emoji="📍" label="장소" active={hasLocation} onPress={onPlace} />
-      <ToolbarButton emoji="🏷️" label="분류" active={hasCategory} onPress={onCategory} />
-      <ToolbarButton emoji="⏰" label="시각" active={hasTime} onPress={onTime} />
+      <ToolbarButton iconName="camera-outline" label="사진" active={hasPhoto} onPress={onPhoto} />
+      <ToolbarButton iconName="location-outline" label="장소" active={hasLocation} onPress={onPlace} />
+      <ToolbarButton iconName="pricetag-outline" label="분류" active={hasCategory} onPress={onCategory} />
+      <ToolbarButton iconName="time-outline" label="시각" active={hasTime} onPress={onTime} />
     </View>
   );
 }
@@ -86,9 +88,6 @@ const styles = StyleSheet.create({
   },
   buttonActive: {
     backgroundColor: 'rgba(255,107,71,0.1)',
-  },
-  buttonEmoji: {
-    fontSize: 26,
   },
   buttonLabel: {
     fontSize: 10,

@@ -8,6 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { signInWithGoogle } from '../lib/auth';
 
 export default function LoginScreen() {
@@ -31,15 +32,24 @@ export default function LoginScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.emoji}>✈️</Text>
+          <Ionicons name="airplane" size={64} color="#FF6B47" style={styles.logoIcon} />
           <Text style={styles.title}>Travel Companion</Text>
           <Text style={styles.subtitle}>여행의 순간을 기록하세요</Text>
         </View>
 
         <View style={styles.features}>
-          <Text style={styles.featureItem}>📍 방문한 장소를 지도에 기록</Text>
-          <Text style={styles.featureItem}>📸 사진과 함께 추억 저장</Text>
-          <Text style={styles.featureItem}>🗺️ 나만의 여행 스토리 만들기</Text>
+          <View style={styles.featureItem}>
+            <Ionicons name="location-outline" size={18} color="#F97316" />
+            <Text style={styles.featureText}>방문한 장소를 지도에 기록</Text>
+          </View>
+          <View style={styles.featureItem}>
+            <Ionicons name="camera-outline" size={18} color="#F97316" />
+            <Text style={styles.featureText}>사진과 함께 추억 저장</Text>
+          </View>
+          <View style={styles.featureItem}>
+            <Ionicons name="map-outline" size={18} color="#F97316" />
+            <Text style={styles.featureText}>나만의 여행 스토리 만들기</Text>
+          </View>
         </View>
 
         <TouchableOpacity
@@ -73,8 +83,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 48,
   },
-  emoji: {
-    fontSize: 64,
+  logoIcon: {
     marginBottom: 16,
   },
   title: {
@@ -93,6 +102,11 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  featureText: {
     fontSize: 15,
     color: '#4B5563',
     lineHeight: 22,
