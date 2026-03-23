@@ -24,8 +24,6 @@ export type AppStackParamList = {
     initialLongitude?: number;
     initialPlace?: string;
     initialPlaceId?: string;
-    // LocationPicker result - set when returning from LocationPicker
-    locationResult?: LocationPickerResult;
     // Edit mode: existing checkin to update
     checkin?: import('../../../../packages/shared/src/types').Checkin;
   };

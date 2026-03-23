@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,9 +12,10 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RouteProp } from '@react-navigation/native';
+import { consumeLocationPickerResult } from '../lib/locationPickerStore';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
@@ -33,7 +34,7 @@ type FormRouteProp = RouteProp<AppStackParamList, 'CheckinForm'>;
 export default function CheckinFormScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<FormRouteProp>();
-  const { tripId, tripTitle, initialLatitude, initialLongitude, initialPlace, initialPlaceId, locationResult, checkin: editingCheckin } = route.params;
+  const { tripId, tripTitle, initialLatitude, initialLongitude, initialPlace, initialPlaceId, checkin: editingCheckin } = route.params;
   const isEditMode = !!editingCheckin;
 
   const [title, setTitle] = useState(editingCheckin?.title ?? '');
@@ -54,15 +55,18 @@ export default function CheckinFormScreen() {
   const [error, setError] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
 
-  // Receive location result from LocationPickerScreen
-  useEffect(() => {
-    if (locationResult) {
-      setLatitude(locationResult.latitude);
-      setLongitude(locationResult.longitude);
-      if (locationResult.placeName) setPlace(locationResult.placeName);
-      if (locationResult.placeId) setPlaceId(locationResult.placeId);
-    }
-  }, [locationResult]);
+  // Receive location result from LocationPickerScreen via store
+  useFocusEffect(
+    useCallback(() => {
+      const result = consumeLocationPickerResult();
+      if (result) {
+        setLatitude(result.latitude);
+        setLongitude(result.longitude);
+        if (result.placeName) setPlace(result.placeName);
+        if (result.placeId) setPlaceId(result.placeId);
+      }
+    }, [])
+  );
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {

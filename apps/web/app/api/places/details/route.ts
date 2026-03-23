@@ -33,9 +33,10 @@ export async function GET(request: NextRequest) {
 
     if (data.status !== 'OK') {
       console.error('Place Details API error:', data);
+      const httpStatus = data.status === 'NOT_FOUND' ? 404 : 500;
       return NextResponse.json(
         { error: `Places API error: ${data.status}` },
-        { status: 500 }
+        { status: httpStatus }
       );
     }
 
