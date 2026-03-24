@@ -327,10 +327,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cardBody: {
-    height: 80,
     padding: 10,
     gap: 2,
-    overflow: 'hidden',
   },
   cardTitle: {
     fontSize: 13,

@@ -99,6 +99,11 @@ function MainTabs() {
             <Ionicons name="airplane-outline" size={size} color={color} />
           ),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: () => {
+            navigation.navigate('TripsTab', { screen: 'Home' });
+          },
+        })}
       />
       <Tab.Screen
         name="CheckinsTab"
