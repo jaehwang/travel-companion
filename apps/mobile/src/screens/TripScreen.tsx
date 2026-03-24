@@ -12,8 +12,9 @@ import {
 } from 'react-native';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
+import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RouteProp } from '@react-navigation/native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
@@ -25,7 +26,7 @@ import TripTaglineBanner from '../components/TripTaglineBanner';
 import TodayCalendarSection from '../components/TodayCalendarSection';
 import SideDrawer from '../components/SideDrawer';
 import TripFormModal from '../components/TripFormModal';
-import type { AppStackParamList } from '../navigation/AppNavigator';
+import type { TripsStackParamList, RootStackParamList } from '../navigation/AppNavigator';
 import type { Trip, Checkin, TripFormData } from '../../../../packages/shared/src/types';
 
 
@@ -33,8 +34,11 @@ type ListItem =
   | { type: 'date'; date: string; label: string }
   | { type: 'checkin'; checkin: Checkin };
 
-type NavigationProp = StackNavigationProp<AppStackParamList, 'Trip'>;
-type TripRouteProp = RouteProp<AppStackParamList, 'Trip'>;
+type NavigationProp = CompositeNavigationProp<
+  StackNavigationProp<TripsStackParamList, 'Trip'>,
+  StackNavigationProp<RootStackParamList>
+>;
+type TripRouteProp = RouteProp<TripsStackParamList, 'Trip'>;
 
 const MARKER_COLOR = '#3B82F6';
 const MAP_SIZE = Dimensions.get('window').width - 32; // mapSection marginHorizontal 16 * 2
@@ -71,7 +75,11 @@ const formatCheckinTime = (dateStr: string): string => {
 export default function TripScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<TripRouteProp>();
+  const insets = useSafeAreaInsets();
   const [trip, setTrip] = useState<Trip>(route.params.trip);
+  useEffect(() => {
+    setTrip(route.params.trip);
+  }, [route.params.trip]);
   const { checkins, loading, error, reload, remove } = useCheckins(trip.id);
   const { trips, reload: reloadTrips, create: createTrip } = useTrips();
   const [refreshing, setRefreshing] = useState(false);
@@ -456,30 +464,20 @@ export default function TripScreen() {
         />
       )}
 
-      {/* Bottom Bar */}
-      <View style={styles.bottomBar}>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('Home')}
-          style={styles.homeButton}
-        >
-          <Ionicons name="home-outline" size={24} color="#6B7280" />
-        </TouchableOpacity>
-
-        {/* FAB */}
-        <TouchableOpacity
-          onPress={() => navigation.navigate('CheckinForm', {
-            tripId: trip.id,
-            tripTitle: trip.title,
-            initialLatitude: trip.latitude ?? undefined,
-            initialLongitude: trip.longitude ?? undefined,
-            initialPlace: trip.place ?? undefined,
-            initialPlaceId: trip.place_id ?? undefined,
-          })}
-          style={styles.fab}
-        >
-          <Text style={styles.fabText}>+</Text>
-        </TouchableOpacity>
-      </View>
+      {/* FAB */}
+      <TouchableOpacity
+        onPress={() => navigation.navigate('CheckinForm', {
+          tripId: trip.id,
+          tripTitle: trip.title,
+          initialLatitude: trip.latitude ?? undefined,
+          initialLongitude: trip.longitude ?? undefined,
+          initialPlace: trip.place ?? undefined,
+          initialPlaceId: trip.place_id ?? undefined,
+        })}
+        style={[styles.fab, { bottom: insets.bottom + 16 }]}
+      >
+        <Text style={styles.fabText}>+</Text>
+      </TouchableOpacity>
 
       {/* Side Drawer */}
       <SideDrawer
@@ -800,31 +798,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#9CA3AF',
   },
-  bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 80,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E8E0D4',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  homeButton: {
-    position: 'absolute',
-    left: 32,
-    bottom: 26,
-  },
   fab: {
+    position: 'absolute',
+    right: 20,
     width: 56,
     height: 56,
     borderRadius: 28,

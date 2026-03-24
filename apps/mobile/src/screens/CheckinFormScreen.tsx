@@ -24,12 +24,12 @@ import { createCheckin, updateCheckin } from '../lib/api';
 import { usePhotoPicker } from '../components/PhotoPickerButton';
 import CheckinFormToolbar from '../components/CheckinFormToolbar';
 import CategorySelector from '../components/CategorySelector';
-import type { AppStackParamList } from '../navigation/AppNavigator';
+import type { RootStackParamList } from '../navigation/AppNavigator';
 import { CHECKIN_CATEGORY_LABELS } from '../../../../packages/shared/src/types';
 import { CATEGORY_ICONS, CATEGORY_COLORS } from '../utils/categoryIcons';
 
-type NavigationProp = StackNavigationProp<AppStackParamList, 'CheckinForm'>;
-type FormRouteProp = RouteProp<AppStackParamList, 'CheckinForm'>;
+type NavigationProp = StackNavigationProp<RootStackParamList, 'CheckinForm'>;
+type FormRouteProp = RouteProp<RootStackParamList, 'CheckinForm'>;
 
 export default function CheckinFormScreen() {
   const navigation = useNavigation<NavigationProp>();

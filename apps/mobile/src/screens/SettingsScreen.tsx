@@ -16,9 +16,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import { signOut } from '../lib/auth';
 import { fetchSettings, disconnectCalendar } from '../lib/api';
-import type { AppStackParamList } from '../navigation/AppNavigator';
+import type { RootStackParamList } from '../navigation/AppNavigator';
 
-type NavigationProp = StackNavigationProp<AppStackParamList, 'Settings'>;
+type NavigationProp = StackNavigationProp<RootStackParamList, 'Settings'>;
 
 export default function SettingsScreen() {
   const navigation = useNavigation<NavigationProp>();

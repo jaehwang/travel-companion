@@ -76,6 +76,12 @@ export async function fetchCheckins(tripId: string): Promise<Checkin[]> {
   return data.checkins;
 }
 
+export async function fetchAllCheckins(tripId?: string): Promise<Checkin[]> {
+  const path = tripId ? `/api/checkins?trip_id=${tripId}` : '/api/checkins';
+  const data = await apiFetch<{ checkins: Checkin[] }>(path);
+  return data.checkins;
+}
+
 export async function createCheckin(checkinData: CheckinInsert): Promise<Checkin> {
   const data = await apiFetch<{ checkin: Checkin }>('/api/checkins', {
     method: 'POST',

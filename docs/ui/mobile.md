@@ -13,20 +13,39 @@ App.tsx
   └─ RootNavigator
        ├─ 로딩 중 → ActivityIndicator
        ├─ 미인증 → LoginScreen
-       └─ 인증 완료 → AppNavigator (Stack.Navigator)
-            ├─ Home (기본 화면)
-            ├─ Trip (여행 상세)
+       └─ 인증 완료 → AppNavigator (RootStack)
+            ├─ MainTabs (BottomTabNavigator)
+            │    ├─ TripsTab → TripsStack
+            │    │    ├─ Home (여행 목록)
+            │    │    └─ Trip (여행 상세)
+            │    └─ CheckinsTab → CheckinsStack
+            │         └─ Checkins (전체 체크인)
             ├─ CheckinForm (modal)
             ├─ LocationPicker (modal)
             └─ Settings
 ```
 
+모달(CheckinForm, LocationPicker)은 탭 바 위 전체 화면으로 표시되도록 RootStack에 배치한다.
+
 ### 네비게이션 파라미터 타입
 
 ```typescript
-type AppStackParamList = {
+type TripsStackParamList = {
   Home: undefined;
   Trip: { trip: Trip };
+};
+
+type CheckinsStackParamList = {
+  Checkins: undefined;
+};
+
+type MainTabParamList = {
+  TripsTab: NavigatorScreenParams<TripsStackParamList>;
+  CheckinsTab: NavigatorScreenParams<CheckinsStackParamList>;
+};
+
+type RootStackParamList = {
+  MainTabs: NavigatorScreenParams<MainTabParamList>;
   CheckinForm: {
     tripId: string;
     tripTitle: string;
@@ -34,16 +53,42 @@ type AppStackParamList = {
     initialLongitude?: number;
     initialPlace?: string;
     initialPlaceId?: string;
-    locationResult?: LocationPickerResult;  // LocationPicker 반환값
-    checkin?: Checkin;                      // 수정 모드
+    checkin?: Checkin;  // 수정 모드
   };
   LocationPicker: {
+    tripId: string;
+    tripTitle: string;
     initialLatitude?: number;
     initialLongitude?: number;
   };
   Settings: undefined;
 };
 ```
+
+### 탭 내 화면에서 모달/Settings 이동
+
+탭 안의 Stack에서 RootStack의 모달로 이동할 때 `CompositeNavigationProp` 사용:
+
+```typescript
+type NavigationProp = CompositeNavigationProp<
+  StackNavigationProp<TripsStackParamList, 'Home'>,
+  StackNavigationProp<RootStackParamList>
+>;
+```
+
+### 탭 간 화면 이동
+
+CheckinsScreen에서 체크인 카드 탭 시 TripsTab의 TripScreen으로 이동:
+
+```typescript
+navigation.navigate('TripsTab', {
+  screen: 'Trip',
+  params: { trip },
+});
+```
+
+TripScreen은 `route.params.trip`이 바뀌면 `useEffect`로 내부 state를 동기화한다
+(다른 탭에서 재진입 시 이전 여행이 표시되는 문제 방지).
 
 ---
 
@@ -93,7 +138,7 @@ type AppStackParamList = {
 - 오늘의 일정 섹션 (TodayCalendarSection)
 - 날짜별 그룹핑된 체크인 타임라인
 - 체크인 카드 탭 → 수정, Long Press → 삭제
-- 새 체크인 추가 버튼 (하단 FAB)
+- 새 체크인 추가 버튼 (우하단 FAB)
 
 **디자인**
 - 상단: 여행 제목 헤더 + 설정 아이콘
@@ -105,7 +150,7 @@ type AppStackParamList = {
 - AI Tagline 배너
 - 지도: 체크인 마커 표시 (같은 좌표 중복 제거), 우하단 현재 위치 버튼
 - 날짜 구분자 + 체크인 카드 리스트
-- 하단: 체크인 추가 FAB 버튼
+- 우하단 FAB: 체크인 추가 (`position: absolute`, `bottom: insets.bottom + 16`)
 
 **지도 영역 계산**
 ```typescript
@@ -136,7 +181,38 @@ type ListItem =
 
 ---
 
-### 2.3 CheckinFormScreen (체크인 작성/수정)
+### 2.3 CheckinsScreen (전체 체크인)
+
+**파일**: `apps/mobile/src/screens/CheckinsScreen.tsx`
+
+**기능**
+- 전체 여행의 체크인을 최신순으로 표시
+- 월별 섹션 헤더 (SectionList)
+- 2열 그리드 레이아웃
+- 여행 필터 (전체 / 특정 여행)
+- 카드 탭 → 해당 TripScreen으로 이동 (TripsTab 전환)
+- 당겨 새로고침, 탭 포커스 시 자동 새로고침
+
+**디자인**
+- 상단 헤더: "체크인" 제목 + 필터 버튼 (우측)
+- 2열 그리드 카드 (`CARD_WIDTH = (screenWidth - 16*2 - 8) / 2`)
+  - 상단: 사진 있으면 정사각형 이미지, 없으면 카테고리 아이콘 플레이스홀더 (동일 높이)
+  - 하단 고정 높이(80px): 제목, 여행명(주황색), 카테고리 라벨, 날짜·시간
+- 섹션 헤더: "2026년 3월" 형식
+- 빈 상태: 안내 메시지
+
+**데이터 흐름**
+1. `useAllCheckins(selectedTripId)` — 체크인 목록 (tripId 없으면 전체)
+2. `useTrips()` — `Map<tripId, Trip>` 생성
+3. `useMemo`로 체크인을 `[Checkin, Checkin | null]` 쌍으로 묶어 SectionList sections 생성
+4. 필터: ActionSheetIOS (iOS) / Alert (Android)
+
+**백엔드 연계**
+- `useAllCheckins` 훅 → `fetchAllCheckins(tripId?)` → `GET /api/checkins?sort=desc[&trip_id=]`
+
+---
+
+### 2.4 CheckinFormScreen (체크인 작성/수정)
 
 **파일**: `apps/mobile/src/screens/CheckinFormScreen.tsx`
 
@@ -150,7 +226,7 @@ type ListItem =
 - 현재 위치 자동 설정 (초기값 없을 때)
 
 **디자인**
-- 전체화면 모달 스타일 (Stack 네비게이터 modal 모드)
+- 전체화면 모달 스타일 (RootStack modal 모드)
 - 상단: 취소 / 저장 버튼
 - 사진 미리보기 영역
 - 입력 필드: 제목, 메모
@@ -190,7 +266,7 @@ useEffect(() => {
 
 ---
 
-### 2.4 LocationPickerScreen (위치 선택)
+### 2.5 LocationPickerScreen (위치 선택)
 
 **파일**: `apps/mobile/src/screens/LocationPickerScreen.tsx`
 
@@ -228,7 +304,7 @@ const handleSelectPrediction = async (prediction: PlacePrediction) => {
 
 ---
 
-### 2.5 LoginScreen (로그인)
+### 2.6 LoginScreen (로그인)
 
 **파일**: `apps/mobile/src/screens/LoginScreen.tsx`
 
@@ -252,7 +328,7 @@ await signInWithGoogle();
 
 ---
 
-### 2.6 SettingsScreen (설정)
+### 2.7 SettingsScreen (설정)
 
 **파일**: `apps/mobile/src/screens/SettingsScreen.tsx`
 
@@ -298,7 +374,7 @@ await signInWithGoogle();
 ### CategorySelector (`src/components/CategorySelector.tsx`)
 
 - 카테고리 선택 모달
-- 9가지 카테고리 아이콘 그리드
+- 12가지 카테고리 아이콘 그리드
 
 ### PlaceSearchPanel (`src/components/PlaceSearchPanel.tsx`)
 
@@ -323,11 +399,12 @@ await signInWithGoogle();
 
 ### QuickCheckinSheet (`src/components/QuickCheckinSheet.tsx`)
 
-- 빠른 체크인용 바텀 시트 모달
+- 빠른 체크인용 바텀 시트 모달 (`Modal presentationStyle="overFullScreen"`)
 - 현재 위치 기반으로 `is_frequent = true` 여행의 주변 체크인 목록 로드
 - 체크인을 여행별로 그룹핑: 그룹 헤더에 여행명 + "현재: [장소] · [시간 전]" 표시
 - 각 항목에 거리 및 체크인 버튼 (현재 위치 항목은 주황색 강조)
 - 체크인 완료 시 `onCheckedIn(checkin)` 콜백 호출
+- 하단 탭 바와 시각적 충돌 없음 (Modal이 전체 화면을 덮음)
 
 ### SideDrawer (`src/components/SideDrawer.tsx`)
 
@@ -341,7 +418,8 @@ await signInWithGoogle();
 | 훅 | 파일 | 역할 |
 |---|---|---|
 | `useTrips` | `src/hooks/useTrips.ts` | 여행 CRUD + 상태 관리 |
-| `useCheckins` | `src/hooks/useCheckins.ts` | 체크인 CRUD + 상태 관리 |
+| `useCheckins` | `src/hooks/useCheckins.ts` | 특정 여행의 체크인 CRUD + 상태 관리 |
+| `useAllCheckins` | `src/hooks/useAllCheckins.ts` | 전체(또는 특정 여행) 체크인 조회, `useFocusEffect`로 탭 포커스 시 자동 새로고침 |
 
 ---
 
@@ -371,6 +449,7 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
 | `updateTrip(id, data)` | PATCH | `/api/trips/[id]` |
 | `deleteTrip(id)` | DELETE | `/api/trips/[id]` |
 | `fetchCheckins(tripId)` | GET | `/api/checkins?trip_id=` |
+| `fetchAllCheckins(tripId?)` | GET | `/api/checkins?sort=desc[&trip_id=]` |
 | `createCheckin(data)` | POST | `/api/checkins` |
 | `updateCheckin(id, data)` | PATCH | `/api/checkins/[id]` |
 | `deleteCheckin(id)` | DELETE | `/api/checkins/[id]` |

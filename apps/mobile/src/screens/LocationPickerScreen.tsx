@@ -3,11 +3,11 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RouteProp } from '@react-navigation/native';
 import LocationPickerContent from '../components/LocationPickerContent';
-import type { AppStackParamList } from '../navigation/AppNavigator';
+import type { RootStackParamList } from '../navigation/AppNavigator';
 import { setLocationPickerResult } from '../lib/locationPickerStore';
 
-type NavigationProp = StackNavigationProp<AppStackParamList, 'LocationPicker'>;
-type PickerRouteProp = RouteProp<AppStackParamList, 'LocationPicker'>;
+type NavigationProp = StackNavigationProp<RootStackParamList, 'LocationPicker'>;
+type PickerRouteProp = RouteProp<RootStackParamList, 'LocationPicker'>;
 
 export default function LocationPickerScreen() {
   const navigation = useNavigation<NavigationProp>();

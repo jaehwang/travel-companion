@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,7 +24,7 @@ import { useTrips } from '../hooks/useTrips';
 import TripCard from '../components/TripCard';
 import TripFormModal from '../components/TripFormModal';
 import QuickCheckinSheet from '../components/QuickCheckinSheet';
-import type { AppStackParamList } from '../navigation/AppNavigator';
+import type { TripsStackParamList, RootStackParamList } from '../navigation/AppNavigator';
 import type { Trip, TripFormData } from '../../../../packages/shared/src/types';
 import type { NearbyCheckin } from '../lib/api';
 
@@ -37,7 +38,10 @@ function formatRelativeTime(dateStr: string): string {
   return `${Math.floor(hours / 24)}일 전`;
 }
 
-type NavigationProp = StackNavigationProp<AppStackParamList, 'Home'>;
+type NavigationProp = CompositeNavigationProp<
+  StackNavigationProp<TripsStackParamList, 'Home'>,
+  StackNavigationProp<RootStackParamList>
+>;
 
 export default function HomeScreen() {
   const navigation = useNavigation<NavigationProp>();
