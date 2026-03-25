@@ -1,5 +1,6 @@
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { useCheckins } from '../hooks/useCheckins';
+import { useCheckinsStore } from '../store/checkinsStore';
 import { fetchCheckins, createCheckin, updateCheckin, deleteCheckin } from '../lib/api';
 
 jest.mock('../lib/api', () => ({
@@ -27,6 +28,16 @@ const makeCheckin = (id: string, title: string) => ({
 
 beforeEach(() => {
   jest.clearAllMocks();
+  // Reset Zustand store before each test
+  useCheckinsStore.setState({
+    checkins: [],
+    tripId: null,
+    loading: true,
+    error: null,
+    allCheckins: [],
+    allCheckinsLoading: true,
+    allCheckinsError: null,
+  });
 });
 
 describe('useCheckins', () => {

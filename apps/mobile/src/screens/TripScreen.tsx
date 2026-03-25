@@ -9,11 +9,14 @@ import {
   Image,
   ActivityIndicator,
   Dimensions,
+  ActionSheetIOS,
+  Alert,
+  Platform,
 } from 'react-native';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RouteProp } from '@react-navigation/native';
@@ -21,6 +24,7 @@ import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { supabase } from '../lib/supabase';
 import { useCheckins } from '../hooks/useCheckins';
 import { useTrips } from '../hooks/useTrips';
+import { useTripsStore } from '../store/tripsStore';
 import CheckinCard from '../components/CheckinCard';
 import TripTaglineBanner from '../components/TripTaglineBanner';
 import TodayCalendarSection from '../components/TodayCalendarSection';
@@ -76,15 +80,17 @@ export default function TripScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<TripRouteProp>();
   const insets = useSafeAreaInsets();
-  const [trip, setTrip] = useState<Trip>(route.params.trip);
+  const [selectedTripId, setSelectedTripId] = useState<string>(route.params.trip.id);
   useEffect(() => {
-    setTrip(route.params.trip);
-  }, [route.params.trip]);
+    setSelectedTripId(route.params.trip.id);
+  }, [route.params.trip.id]);
+  const trip = useTripsStore((s) => s.trips.find((t) => t.id === selectedTripId)) ?? route.params.trip;
   const { checkins, loading, error, reload, remove } = useCheckins(trip.id);
-  const { trips, reload: reloadTrips, create: createTrip } = useTrips();
+  const { trips, reload: reloadTrips, create: createTrip, update: updateTrip } = useTrips();
   const [refreshing, setRefreshing] = useState(false);
   const [showDrawer, setShowDrawer] = useState(false);
   const [showCreateTripModal, setShowCreateTripModal] = useState(false);
+  const [showEditTripModal, setShowEditTripModal] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [selectedCheckinId, setSelectedCheckinId] = useState<string | null>(null);
@@ -100,12 +106,7 @@ export default function TripScreen() {
     });
   }, []);
 
-  // Reload checkins when screen is focused (e.g., after creating a checkin)
-  useFocusEffect(
-    useCallback(() => {
-      reload();
-    }, [reload])
-  );
+
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -231,15 +232,52 @@ export default function TripScreen() {
   }, []);
 
   const handleSelectTrip = (t: Trip) => {
-    setTrip(t);
+    setSelectedTripId(t.id);
     setShowDrawer(false);
   };
 
   const handleCreateTrip = async (data: TripFormData) => {
     const newTrip = await createTrip(data);
-    setTrip(newTrip);
+    setSelectedTripId(newTrip.id);
     setShowDrawer(false);
     setShowCreateTripModal(false);
+  };
+
+  const handleTripOptions = useCallback(() => {
+    const publicLabel = trip.is_public ? '비공개로 전환' : '공개로 전환';
+    const frequentLabel = trip.is_frequent ? '자주 가는 곳에서 제거' : '자주 가는 곳 추가';
+    const options = ['여행 수정', publicLabel, frequentLabel, '취소'];
+    const cancelIndex = options.length - 1;
+
+    const handleSelect = async (index: number) => {
+      if (index === cancelIndex) return;
+      if (index === 0) {
+        setShowEditTripModal(true);
+      } else if (index === 1) {
+        await updateTrip(trip.id, { is_public: !trip.is_public });
+      } else if (index === 2) {
+        await updateTrip(trip.id, { is_frequent: !trip.is_frequent });
+      }
+    };
+
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        { options, cancelButtonIndex: cancelIndex },
+        (index) => { handleSelect(index); },
+      );
+    } else {
+      Alert.alert('여행 설정', undefined, [
+        { text: '여행 수정', onPress: () => handleSelect(0) },
+        { text: publicLabel, onPress: () => handleSelect(1) },
+        { text: frequentLabel, onPress: () => handleSelect(2) },
+        { text: '취소', style: 'cancel' },
+      ]);
+    }
+  }, [trip, updateTrip]);
+
+  const handleEditTrip = async (data: TripFormData) => {
+    await updateTrip(trip.id, data);
+    setShowEditTripModal(false);
   };
 
   const handleCheckinDelete = async (id: string) => {
@@ -400,6 +438,9 @@ export default function TripScreen() {
           <Text style={styles.hamburgerText}>≡</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>{trip.title}</Text>
+        <TouchableOpacity onPress={handleTripOptions} style={styles.optionsButton}>
+          <Ionicons name="ellipsis-horizontal" size={20} color="#6B7280" />
+        </TouchableOpacity>
         <TouchableOpacity
           onPress={() => navigation.navigate('Settings')}
           style={styles.avatarButton}
@@ -498,6 +539,15 @@ export default function TripScreen() {
         onClose={() => setShowCreateTripModal(false)}
         onSubmit={handleCreateTrip}
       />
+
+      {/* Edit Trip Modal */}
+      <TripFormModal
+        visible={showEditTripModal}
+        onClose={() => setShowEditTripModal(false)}
+        onSubmit={handleEditTrip}
+        mode="edit"
+        initialTrip={trip}
+      />
     </SafeAreaView>
   );
 }
@@ -531,6 +581,12 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#1F2937',
     letterSpacing: -0.3,
+  },
+  optionsButton: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   avatarButton: {
     width: 32,

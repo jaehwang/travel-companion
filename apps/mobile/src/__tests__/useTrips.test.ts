@@ -1,5 +1,6 @@
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { useTrips } from '../hooks/useTrips';
+import { useTripsStore } from '../store/tripsStore';
 import { fetchTrips, createTrip, updateTrip, deleteTrip } from '../lib/api';
 
 jest.mock('../lib/api', () => ({
@@ -25,6 +26,8 @@ const makeTrip = (id: string, title: string) => ({
 
 beforeEach(() => {
   jest.clearAllMocks();
+  // Reset Zustand store before each test
+  useTripsStore.setState({ trips: [], loading: true, error: null });
 });
 
 describe('useTrips', () => {

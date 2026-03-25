@@ -1,42 +1,46 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
 import type { Trip, TripFormData } from '../../../../packages/shared/src/types';
-import { fetchTrips, createTrip, updateTrip, deleteTrip } from '../lib/api';
+import { useTripsStore } from '../store/tripsStore';
 
 export function useTrips() {
-  const [trips, setTrips] = useState<Trip[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const trips = useTripsStore((s) => s.trips);
+  const loading = useTripsStore((s) => s.loading);
+  const error = useTripsStore((s) => s.error);
+  const loadTrips = useTripsStore((s) => s.loadTrips);
+  const addTrip = useTripsStore((s) => s.addTrip);
+  const updateTripAction = useTripsStore((s) => s.updateTrip);
+  const removeTripAction = useTripsStore((s) => s.removeTrip);
 
-  const load = useCallback(async () => {
-    try {
-      setError(null);
-      const data = await fetchTrips();
-      setTrips(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load trips');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  useEffect(() => {
+    loadTrips();
+  }, [loadTrips]);
 
-  useEffect(() => { load(); }, [load]);
+  const reload = useCallback(async () => {
+    // Force reload by resetting loading state first
+    useTripsStore.setState({ loading: false });
+    await loadTrips();
+  }, [loadTrips]);
 
-  const create = useCallback(async (data: TripFormData): Promise<Trip> => {
-    const trip = await createTrip(data);
-    setTrips(prev => [trip, ...prev]);
-    return trip;
-  }, []);
+  const create = useCallback(
+    async (data: TripFormData): Promise<Trip> => {
+      return addTrip(data);
+    },
+    [addTrip],
+  );
 
-  const update = useCallback(async (id: string, data: Partial<TripFormData>): Promise<Trip> => {
-    const trip = await updateTrip(id, data);
-    setTrips(prev => prev.map(t => t.id === id ? trip : t));
-    return trip;
-  }, []);
+  const update = useCallback(
+    async (id: string, data: Partial<TripFormData>): Promise<Trip> => {
+      return updateTripAction(id, data);
+    },
+    [updateTripAction],
+  );
 
-  const remove = useCallback(async (id: string): Promise<void> => {
-    await deleteTrip(id);
-    setTrips(prev => prev.filter(t => t.id !== id));
-  }, []);
+  const remove = useCallback(
+    async (id: string): Promise<void> => {
+      return removeTripAction(id);
+    },
+    [removeTripAction],
+  );
 
-  return { trips, loading, error, reload: load, create, update, remove };
+  return { trips, loading, error, reload, create, update, remove };
 }

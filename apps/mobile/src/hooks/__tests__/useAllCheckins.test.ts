@@ -1,5 +1,6 @@
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { useAllCheckins } from '../useAllCheckins';
+import { useCheckinsStore } from '../../store/checkinsStore';
 import { fetchAllCheckins } from '../../lib/api';
 
 jest.mock('../../lib/supabase', () => ({ supabase: {} }));
@@ -37,6 +38,16 @@ const mockCheckins = [
 describe('useAllCheckins', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Reset Zustand store before each test
+    useCheckinsStore.setState({
+      checkins: [],
+      tripId: null,
+      loading: true,
+      error: null,
+      allCheckins: [],
+      allCheckinsLoading: true,
+      allCheckinsError: null,
+    });
   });
 
   it('마운트 시 전체 체크인을 로드한다', async () => {

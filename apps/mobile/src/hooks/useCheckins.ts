@@ -1,43 +1,61 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
+import { useShallow } from 'zustand/shallow';
 import type { Checkin, CheckinInsert } from '../../../../packages/shared/src/types';
-import { fetchCheckins, createCheckin, updateCheckin, deleteCheckin } from '../lib/api';
+import { useCheckinsStore } from '../store/checkinsStore';
+
+const EMPTY_CHECKINS: Checkin[] = [];
 
 export function useCheckins(tripId: string) {
-  const [checkins, setCheckins] = useState<Checkin[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { storeCheckins, storeTripId, storeLoading, storeError } = useCheckinsStore(
+    useShallow((s) => ({
+      storeCheckins: s.checkins,
+      storeTripId: s.tripId,
+      storeLoading: s.loading,
+      storeError: s.error,
+    })),
+  );
 
-  const load = useCallback(async () => {
-    if (!tripId) return;
-    try {
-      setError(null);
-      const data = await fetchCheckins(tripId);
-      setCheckins(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load checkins');
-    } finally {
-      setLoading(false);
+  const checkins = storeTripId === tripId ? storeCheckins : EMPTY_CHECKINS;
+  const loading = storeTripId === tripId ? storeLoading : true;
+  const error = storeTripId === tripId ? storeError : null;
+
+  const loadCheckins = useCheckinsStore((s) => s.loadCheckins);
+  const addCheckin = useCheckinsStore((s) => s.addCheckin);
+  const updateCheckinAction = useCheckinsStore((s) => s.updateCheckin);
+  const removeCheckinAction = useCheckinsStore((s) => s.removeCheckin);
+
+  useEffect(() => {
+    if (tripId) {
+      loadCheckins(tripId);
     }
-  }, [tripId]);
+  }, [tripId, loadCheckins]);
 
-  useEffect(() => { load(); }, [load]);
+  const reload = useCallback(async () => {
+    if (tripId) {
+      await loadCheckins(tripId);
+    }
+  }, [tripId, loadCheckins]);
 
-  const create = useCallback(async (data: CheckinInsert): Promise<Checkin> => {
-    const checkin = await createCheckin(data);
-    setCheckins(prev => [checkin, ...prev]);
-    return checkin;
-  }, []);
+  const create = useCallback(
+    async (data: CheckinInsert): Promise<Checkin> => {
+      return addCheckin(data);
+    },
+    [addCheckin],
+  );
 
-  const update = useCallback(async (id: string, data: Partial<CheckinInsert>): Promise<Checkin> => {
-    const checkin = await updateCheckin(id, data);
-    setCheckins(prev => prev.map(c => c.id === id ? checkin : c));
-    return checkin;
-  }, []);
+  const update = useCallback(
+    async (id: string, data: Partial<CheckinInsert>): Promise<Checkin> => {
+      return updateCheckinAction(id, data);
+    },
+    [updateCheckinAction],
+  );
 
-  const remove = useCallback(async (id: string): Promise<void> => {
-    await deleteCheckin(id);
-    setCheckins(prev => prev.filter(c => c.id !== id));
-  }, []);
+  const remove = useCallback(
+    async (id: string): Promise<void> => {
+      return removeCheckinAction(id);
+    },
+    [removeCheckinAction],
+  );
 
-  return { checkins, loading, error, reload: load, create, update, remove };
+  return { checkins, loading, error, reload, create, update, remove };
 }

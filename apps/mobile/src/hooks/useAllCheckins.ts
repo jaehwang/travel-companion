@@ -1,30 +1,23 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import type { Checkin } from '../../../../packages/shared/src/types';
-import { fetchAllCheckins } from '../lib/api';
+import { useCheckinsStore } from '../store/checkinsStore';
 
 export function useAllCheckins(tripId?: string) {
-  const [checkins, setCheckins] = useState<Checkin[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const checkins = useCheckinsStore((s) => s.allCheckins);
+  const loading = useCheckinsStore((s) => s.allCheckinsLoading);
+  const error = useCheckinsStore((s) => s.allCheckinsError);
+  const loadAllCheckins = useCheckinsStore((s) => s.loadAllCheckins);
 
   const load = useCallback(async () => {
-    try {
-      setError(null);
-      const data = await fetchAllCheckins(tripId);
-      setCheckins(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load checkins');
-    } finally {
-      setLoading(false);
-    }
-  }, [tripId]);
+    await loadAllCheckins(tripId);
+  }, [tripId, loadAllCheckins]);
 
   useFocusEffect(
     useCallback(() => {
-      setLoading(true);
+      useCheckinsStore.setState({ allCheckinsLoading: true });
       load();
-    }, [load])
+    }, [load]),
   );
 
   return { checkins, loading, error, reload: load };

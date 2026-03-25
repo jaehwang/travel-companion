@@ -54,6 +54,7 @@ export default function HomeScreen() {
   const [lastCheckin, setLastCheckin] = useState<NearbyCheckin | null>(null);
   const [checkinLoading, setCheckinLoading] = useState(true);
 
+
   // Load user avatar
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
