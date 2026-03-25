@@ -7,9 +7,6 @@ import {
   StyleSheet,
   Image,
   ActivityIndicator,
-  ActionSheetIOS,
-  Alert,
-  Platform,
   RefreshControl,
   Dimensions,
 } from 'react-native';
@@ -22,7 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAllCheckins } from '../hooks/useAllCheckins';
 import { useTrips } from '../hooks/useTrips';
 import { CATEGORY_META } from '../utils/categoryIcons';
-import type { CheckinsStackParamList, MainTabParamList, RootStackParamList, TripsStackParamList } from '../navigation/AppNavigator';
+import type { CheckinsStackParamList, MainTabParamList, RootStackParamList } from '../navigation/AppNavigator';
 import type { Checkin, Trip } from '../../../../packages/shared/src/types';
 
 type NavigationProp = CompositeNavigationProp<
@@ -43,6 +40,8 @@ interface Section {
   title: string;
   data: CheckinPair[];
 }
+
+type Filter = 'normal' | 'frequent';
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -85,7 +84,6 @@ function CheckinGridCard({ checkin, tripMap, onPress }: CheckinGridCardProps) {
       onPress={() => onPress(checkin, trip)}
       activeOpacity={0.75}
     >
-      {/* 사진 */}
       {checkin.photo_url ? (
         <Image source={{ uri: checkin.photo_url }} style={styles.cardPhoto} resizeMode="cover" />
       ) : (
@@ -94,7 +92,6 @@ function CheckinGridCard({ checkin, tripMap, onPress }: CheckinGridCardProps) {
         </View>
       )}
 
-      {/* 본문 */}
       <View style={styles.cardBody}>
         <Text style={styles.cardTitle} numberOfLines={2}>
           {checkin.title || '이름 없는 장소'}
@@ -111,10 +108,10 @@ function CheckinGridCard({ checkin, tripMap, onPress }: CheckinGridCardProps) {
 
 export default function CheckinsScreen() {
   const navigation = useNavigation<NavigationProp>();
-  const [selectedTripId, setSelectedTripId] = useState<string | undefined>(undefined);
+  const [filter, setFilter] = useState<Filter>('normal');
   const [refreshing, setRefreshing] = useState(false);
 
-  const { checkins, loading, error, reload } = useAllCheckins(selectedTripId);
+  const { checkins, loading, error, reload } = useAllCheckins();
   const { trips } = useTrips();
 
   const tripMap = useMemo(() => {
@@ -123,17 +120,22 @@ export default function CheckinsScreen() {
     return map;
   }, [trips]);
 
+  const filteredCheckins = useMemo(() => {
+    const targetTripIds = new Set(
+      trips.filter(t => filter === 'frequent' ? t.is_frequent : !t.is_frequent).map(t => t.id)
+    );
+    return checkins.filter(c => targetTripIds.has(c.trip_id));
+  }, [checkins, trips, filter]);
+
   const sections = useMemo((): Section[] => {
-    // 월별 그룹핑
     const monthMap = new Map<string, Checkin[]>();
-    checkins.forEach(c => {
+    filteredCheckins.forEach(c => {
       const key = getMonthKey(c.checked_in_at);
       const arr = monthMap.get(key) ?? [];
       arr.push(c);
       monthMap.set(key, arr);
     });
 
-    // 각 월의 체크인을 2개씩 쌍으로 묶기
     return Array.from(monthMap.entries()).map(([, items]) => ({
       title: formatMonthSection(items[0].checked_in_at),
       data: items.reduce<CheckinPair[]>((acc, item, i) => {
@@ -141,39 +143,13 @@ export default function CheckinsScreen() {
         return acc;
       }, []),
     }));
-  }, [checkins]);
+  }, [filteredCheckins]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await reload();
     setRefreshing(false);
   }, [reload]);
-
-  const handleFilterPress = useCallback(() => {
-    const options = ['전체', ...trips.map(t => t.title), '취소'];
-    const cancelIndex = options.length - 1;
-
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
-        { options, cancelButtonIndex: cancelIndex },
-        (index) => {
-          if (index === cancelIndex) return;
-          if (index === 0) {
-            setSelectedTripId(undefined);
-          } else {
-            setSelectedTripId(trips[index - 1].id);
-          }
-        },
-      );
-    } else {
-      const alertButtons = [
-        { text: '전체', onPress: () => setSelectedTripId(undefined) },
-        ...trips.map(t => ({ text: t.title, onPress: () => setSelectedTripId(t.id) })),
-        { text: '취소', style: 'cancel' as const },
-      ];
-      Alert.alert('여행 선택', undefined, alertButtons);
-    }
-  }, [trips]);
 
   const handleCheckinPress = useCallback((checkin: Checkin, trip: Trip | undefined) => {
     if (!trip) return;
@@ -203,17 +179,24 @@ export default function CheckinsScreen() {
     );
   }, [tripMap, handleCheckinPress]);
 
-  const selectedTripTitle = selectedTripId ? tripMap.get(selectedTripId)?.title : undefined;
-
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>체크인</Text>
-        <TouchableOpacity style={styles.filterButton} onPress={handleFilterPress}>
-          <Ionicons name="options-outline" size={20} color="#6B7280" />
-          {selectedTripTitle ? (
-            <Text style={styles.filterLabel} numberOfLines={1}>{selectedTripTitle}</Text>
-          ) : null}
+      </View>
+
+      <View style={styles.segmentContainer}>
+        <TouchableOpacity
+          style={[styles.segmentTab, filter === 'normal' && styles.segmentTabActive]}
+          onPress={() => setFilter('normal')}
+        >
+          <Text style={[styles.segmentText, filter === 'normal' && styles.segmentTextActive]}>일반</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.segmentTab, filter === 'frequent' && styles.segmentTabActive]}
+          onPress={() => setFilter('frequent')}
+        >
+          <Text style={[styles.segmentText, filter === 'frequent' && styles.segmentTextActive]}>자주 가는 곳</Text>
         </TouchableOpacity>
       </View>
 
@@ -258,9 +241,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF8F0',
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 12,
   },
@@ -270,20 +250,35 @@ const styles = StyleSheet.create({
     color: '#1F2937',
     letterSpacing: -0.3,
   },
-  filterButton: {
+  segmentContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 999,
+    marginHorizontal: 20,
+    marginBottom: 8,
     backgroundColor: '#F3F0EB',
+    borderRadius: 10,
+    padding: 3,
   },
-  filterLabel: {
-    fontSize: 12,
+  segmentTab: {
+    flex: 1,
+    paddingVertical: 7,
+    alignItems: 'center',
+    borderRadius: 8,
+  },
+  segmentTabActive: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  segmentText: {
+    fontSize: 13,
     fontWeight: '600',
-    color: '#6B7280',
-    maxWidth: 100,
+    color: '#9CA3AF',
+  },
+  segmentTextActive: {
+    color: '#1F2937',
   },
   sectionHeader: {
     paddingHorizontal: 16,
