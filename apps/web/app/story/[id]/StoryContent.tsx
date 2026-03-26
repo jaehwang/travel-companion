@@ -116,7 +116,7 @@ export default function StoryContent({ trip, checkins }: StoryContentProps) {
             </p>
           )}
           <div className="flex items-center gap-3 text-xs text-tc-warm-faint">
-            {dateDisplay && <span>{dateDisplay}</span>}
+            {dateDisplay && <span suppressHydrationWarning>{dateDisplay}</span>}
             <span>{checkins.length}곳 체크인</span>
           </div>
         </header>
@@ -144,7 +144,7 @@ export default function StoryContent({ trip, checkins }: StoryContentProps) {
                   {/* 날짜 구분선 */}
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-2 h-2 rounded-full shrink-0 bg-[#FF6B47]" />
-                    <span className="text-xs font-bold text-tc-warm-mid whitespace-nowrap tracking-[0.02em]">
+                    <span className="text-xs font-bold text-tc-warm-mid whitespace-nowrap tracking-[0.02em]" suppressHydrationWarning>
                       {formatDateHeader(group.dateStr)}
                     </span>
                     <div className="flex-1 h-px bg-tc-dot" />
@@ -172,7 +172,7 @@ export default function StoryContent({ trip, checkins }: StoryContentProps) {
                                   <meta.icon size={12} color={meta.color} />
                                   {meta.label}
                                 </span>
-                                <span className="text-[11px] text-tc-warm-faint">
+                                <span className="text-[11px] text-tc-warm-faint" suppressHydrationWarning>
                                   {formatTime(checkin.checked_in_at)}
                                 </span>
                               </div>

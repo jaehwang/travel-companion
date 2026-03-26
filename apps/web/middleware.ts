@@ -50,6 +50,6 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // 정적 파일 및 이미지 제외
-    '/((?!_next/static|_next/image|favicon.ico|icon\\.png|apple-icon\\.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|manifest\\.webmanifest|icon\\.png|apple-icon\\.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
