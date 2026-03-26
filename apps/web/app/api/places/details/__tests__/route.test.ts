@@ -85,7 +85,7 @@ describe('GET /api/places/details', () => {
     expect(body.place.lng).toBeUndefined();
   });
 
-  it('Google API가 에러 상태를 반환하면 500을 반환한다', async () => {
+  it('Google API가 NOT_FOUND를 반환하면 404를 반환한다', async () => {
     jest.spyOn(global, 'fetch').mockResolvedValue({
       ok: true,
       json: jest.fn().mockResolvedValue({ status: 'NOT_FOUND' }),
@@ -93,7 +93,7 @@ describe('GET /api/places/details', () => {
 
     const res = await GET(makeRequest({ place_id: 'invalid-id' }));
 
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(404);
   });
 
   it('네트워크 오류 시 500을 반환한다', async () => {
