@@ -13,6 +13,7 @@ import {
   Alert,
   Platform,
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -22,6 +23,7 @@ import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RouteProp } from '@react-navigation/native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { supabase } from '../lib/supabase';
+import { API_URL } from '../lib/api';
 import { useCheckins } from '../hooks/useCheckins';
 import { useTrips } from '../hooks/useTrips';
 import { useTripsStore } from '../store/tripsStore';
@@ -246,32 +248,63 @@ export default function TripScreen() {
   const handleTripOptions = useCallback(() => {
     const publicLabel = trip.is_public ? '비공개로 전환' : '공개로 전환';
     const frequentLabel = trip.is_frequent ? '자주 가는 곳에서 제거' : '자주 가는 곳 추가';
-    const options = ['여행 수정', publicLabel, frequentLabel, '취소'];
-    const cancelIndex = options.length - 1;
 
-    const handleSelect = async (index: number) => {
-      if (index === cancelIndex) return;
-      if (index === 0) {
-        setShowEditTripModal(true);
-      } else if (index === 1) {
-        await updateTrip(trip.id, { is_public: !trip.is_public });
-      } else if (index === 2) {
-        await updateTrip(trip.id, { is_frequent: !trip.is_frequent });
-      }
+    const handleCopyLink = async () => {
+      const url = `${API_URL}/story/${trip.id}`;
+      await Clipboard.setStringAsync(url);
+      Alert.alert('링크 복사됨', '클립보드에 복사되었습니다.');
     };
 
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
-        { options, cancelButtonIndex: cancelIndex },
-        (index) => { handleSelect(index); },
-      );
+    if (trip.is_public) {
+      const options = ['여행 수정', publicLabel, '공개 여행 링크 복사', frequentLabel, '취소'];
+      const cancelIndex = options.length - 1;
+
+      const handleSelect = async (index: number) => {
+        if (index === cancelIndex) return;
+        if (index === 0) setShowEditTripModal(true);
+        else if (index === 1) await updateTrip(trip.id, { is_public: !trip.is_public });
+        else if (index === 2) handleCopyLink();
+        else if (index === 3) await updateTrip(trip.id, { is_frequent: !trip.is_frequent });
+      };
+
+      if (Platform.OS === 'ios') {
+        ActionSheetIOS.showActionSheetWithOptions(
+          { options, cancelButtonIndex: cancelIndex },
+          (index) => { handleSelect(index); },
+        );
+      } else {
+        Alert.alert('여행 설정', undefined, [
+          { text: '여행 수정', onPress: () => handleSelect(0) },
+          { text: publicLabel, onPress: () => handleSelect(1) },
+          { text: '공개 여행 링크 복사', onPress: () => handleSelect(2) },
+          { text: frequentLabel, onPress: () => handleSelect(3) },
+          { text: '취소', style: 'cancel' },
+        ]);
+      }
     } else {
-      Alert.alert('여행 설정', undefined, [
-        { text: '여행 수정', onPress: () => handleSelect(0) },
-        { text: publicLabel, onPress: () => handleSelect(1) },
-        { text: frequentLabel, onPress: () => handleSelect(2) },
-        { text: '취소', style: 'cancel' },
-      ]);
+      const options = ['여행 수정', publicLabel, frequentLabel, '취소'];
+      const cancelIndex = options.length - 1;
+
+      const handleSelect = async (index: number) => {
+        if (index === cancelIndex) return;
+        if (index === 0) setShowEditTripModal(true);
+        else if (index === 1) await updateTrip(trip.id, { is_public: !trip.is_public });
+        else if (index === 2) await updateTrip(trip.id, { is_frequent: !trip.is_frequent });
+      };
+
+      if (Platform.OS === 'ios') {
+        ActionSheetIOS.showActionSheetWithOptions(
+          { options, cancelButtonIndex: cancelIndex },
+          (index) => { handleSelect(index); },
+        );
+      } else {
+        Alert.alert('여행 설정', undefined, [
+          { text: '여행 수정', onPress: () => handleSelect(0) },
+          { text: publicLabel, onPress: () => handleSelect(1) },
+          { text: frequentLabel, onPress: () => handleSelect(2) },
+          { text: '취소', style: 'cancel' },
+        ]);
+      }
     }
   }, [trip, updateTrip]);
 
@@ -438,7 +471,7 @@ export default function TripScreen() {
           <Text style={styles.hamburgerText}>≡</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>{trip.title}</Text>
-        <TouchableOpacity onPress={handleTripOptions} style={styles.optionsButton}>
+        <TouchableOpacity onPress={handleTripOptions} style={styles.optionsButton} testID="trip-options-button">
           <Ionicons name="ellipsis-horizontal" size={20} color="#6B7280" />
         </TouchableOpacity>
         <TouchableOpacity

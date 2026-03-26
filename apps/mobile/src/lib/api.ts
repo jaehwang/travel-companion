@@ -1,7 +1,7 @@
 import { supabase } from './supabase';
 import type { Trip, Checkin, TripFormData, CheckinInsert } from '../../../../packages/shared/src/types';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://travel-companion.vercel.app';
+export const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://travel-companion.vercel.app';
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
   const { data: { session } } = await supabase.auth.getSession();

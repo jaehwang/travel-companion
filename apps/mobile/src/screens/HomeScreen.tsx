@@ -16,10 +16,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
+import * as Clipboard from 'expo-clipboard';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
-import { fetchNearbyCheckins } from '../lib/api';
+import { fetchNearbyCheckins, API_URL } from '../lib/api';
 import { useTrips } from '../hooks/useTrips';
 import TripCard from '../components/TripCard';
 import TripFormModal from '../components/TripFormModal';
@@ -110,23 +111,54 @@ export default function HomeScreen() {
 
   const handleMenuPress = (trip: Trip) => {
     const toggleLabel = trip.is_public ? '비공개로 전환' : '공개로 전환';
-    const options = [toggleLabel, '수정', '삭제', '취소'];
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
-        { options, destructiveButtonIndex: 2, cancelButtonIndex: 3 },
-        (index) => {
-          if (index === 0) handleTogglePublic(trip);
-          if (index === 1) setEditingTrip(trip);
-          if (index === 2) confirmDelete(trip);
-        },
-      );
+    const copyLinkLabel = '공개 여행 링크 복사';
+
+    const handleCopyLink = async () => {
+      const url = `${API_URL}/story/${trip.id}`;
+      await Clipboard.setStringAsync(url);
+      Alert.alert('링크 복사됨', '클립보드에 복사되었습니다.');
+    };
+
+    if (trip.is_public) {
+      const options = [toggleLabel, copyLinkLabel, '수정', '삭제', '취소'];
+      if (Platform.OS === 'ios') {
+        ActionSheetIOS.showActionSheetWithOptions(
+          { options, destructiveButtonIndex: 3, cancelButtonIndex: 4 },
+          (index) => {
+            if (index === 0) handleTogglePublic(trip);
+            if (index === 1) handleCopyLink();
+            if (index === 2) setEditingTrip(trip);
+            if (index === 3) confirmDelete(trip);
+          },
+        );
+      } else {
+        Alert.alert(trip.title, undefined, [
+          { text: toggleLabel, onPress: () => handleTogglePublic(trip) },
+          { text: copyLinkLabel, onPress: handleCopyLink },
+          { text: '수정', onPress: () => setEditingTrip(trip) },
+          { text: '삭제', style: 'destructive', onPress: () => confirmDelete(trip) },
+          { text: '취소', style: 'cancel' },
+        ]);
+      }
     } else {
-      Alert.alert(trip.title, undefined, [
-        { text: toggleLabel, onPress: () => handleTogglePublic(trip) },
-        { text: '수정', onPress: () => setEditingTrip(trip) },
-        { text: '삭제', style: 'destructive', onPress: () => confirmDelete(trip) },
-        { text: '취소', style: 'cancel' },
-      ]);
+      const options = [toggleLabel, '수정', '삭제', '취소'];
+      if (Platform.OS === 'ios') {
+        ActionSheetIOS.showActionSheetWithOptions(
+          { options, destructiveButtonIndex: 2, cancelButtonIndex: 3 },
+          (index) => {
+            if (index === 0) handleTogglePublic(trip);
+            if (index === 1) setEditingTrip(trip);
+            if (index === 2) confirmDelete(trip);
+          },
+        );
+      } else {
+        Alert.alert(trip.title, undefined, [
+          { text: toggleLabel, onPress: () => handleTogglePublic(trip) },
+          { text: '수정', onPress: () => setEditingTrip(trip) },
+          { text: '삭제', style: 'destructive', onPress: () => confirmDelete(trip) },
+          { text: '취소', style: 'cancel' },
+        ]);
+      }
     }
   };
 
