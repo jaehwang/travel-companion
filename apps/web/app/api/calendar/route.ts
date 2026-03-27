@@ -9,15 +9,20 @@ interface Period {
 
 interface PlaceDetails {
   periods: Period[] | null;
-  open_now_fallback: boolean | null;
+  open_now: boolean | null;   // Google이 직접 계산한 현재 영업 여부 (timezone 정확)
+  utc_offset: number | null;  // 장소의 UTC 오프셋 (분 단위)
   hours_text: string[];
   website?: string;
   rating?: number;
 }
 
-function isOpenAt(periods: Period[], date: Date): boolean {
-  const day = date.getDay();
-  const time = date.getHours() * 100 + date.getMinutes();
+// utcOffsetMinutes: 장소의 UTC 오프셋(분). 이를 사용해 UTC 시각을 장소 현지 시각으로 변환
+function isOpenAt(periods: Period[], utcDate: Date, utcOffsetMinutes: number): boolean {
+  // 장소 현지 시각 계산 (UTC 메서드 사용)
+  const localMs = utcDate.getTime() + utcOffsetMinutes * 60 * 1000;
+  const local = new Date(localMs);
+  const day = local.getUTCDay();
+  const time = local.getUTCHours() * 100 + local.getUTCMinutes();
   for (const period of periods) {
     if (!period.close) return true; // 24/7
     const openDay = period.open.day;
@@ -60,7 +65,7 @@ async function fetchPlaceDetails(location: string): Promise<PlaceDetails | null>
     }
 
     const detailsRes = await fetch(
-      `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=opening_hours,website,rating&language=ko&key=${apiKey}`
+      `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=opening_hours,utc_offset,website,rating&language=ko&key=${apiKey}`
     );
     if (!detailsRes.ok) {
       console.warn('[Places] Place Details HTTP error', detailsRes.status);
@@ -78,10 +83,11 @@ async function fetchPlaceDetails(location: string): Promise<PlaceDetails | null>
       return null;
     }
 
-    console.log('[Places] OK (periods:', !!openingHours.periods, '):', location);
+    console.log('[Places] OK (periods:', !!openingHours.periods, 'utc_offset:', result.utc_offset, '):', location);
     return {
       periods: openingHours.periods ?? null,
-      open_now_fallback: openingHours.open_now ?? null,
+      open_now: openingHours.open_now ?? null,
+      utc_offset: result.utc_offset ?? null,
       hours_text: openingHours.weekday_text ?? [],
       website: result.website,
       rating: result.rating,
@@ -229,11 +235,11 @@ export async function GET(request: Request) {
     const startStr = (event.start as Record<string, string> | undefined)?.dateTime;
     const eventStart = startStr ? new Date(startStr) : null;
 
-    const open_now = details.periods
-      ? isOpenAt(details.periods, now)
-      : (details.open_now_fallback ?? null);
-    const open_at_event = details.periods && eventStart
-      ? isOpenAt(details.periods, eventStart)
+    // open_now: Google이 직접 계산한 값 사용 (timezone 정확)
+    // open_at_event: periods + utc_offset으로 장소 현지 시각 기준 계산
+    const open_now = details.open_now;
+    const open_at_event = (details.periods && eventStart && details.utc_offset !== null)
+      ? isOpenAt(details.periods, eventStart, details.utc_offset)
       : null;
 
     return {
