@@ -207,7 +207,7 @@ export default function TripFormModal({ visible, onClose, onSubmit, mode = 'crea
               {/* 날짜 섹션 */}
               <View style={styles.dateSection}>
                 <TouchableOpacity
-                  onPress={() => setShowStartPicker(!showStartPicker)}
+                  onPress={() => { setShowStartPicker(!showStartPicker); setShowEndPicker(false); }}
                   style={styles.dateCard}
                 >
                   <View style={styles.dateLabelRow}>
@@ -219,21 +219,29 @@ export default function TripFormModal({ visible, onClose, onSubmit, mode = 'crea
                   </Text>
                 </TouchableOpacity>
                 {showStartPicker && (
-                  <DateTimePicker
-                    value={startDate || new Date()}
-                    mode="date"
-                    display="spinner"
-                    onChange={(_, date) => {
-                      if (Platform.OS === 'android') setShowStartPicker(false);
-                      if (date) setStartDate(date);
-                    }}
-                  />
+                  <View style={styles.pickerContainer}>
+                    <DateTimePicker
+                      value={startDate || new Date()}
+                      mode="date"
+                      display="spinner"
+                      onChange={(_, date) => {
+                        if (Platform.OS === 'android') setShowStartPicker(false);
+                        if (date) setStartDate(date);
+                      }}
+                    />
+                    <TouchableOpacity
+                      onPress={() => setShowStartPicker(false)}
+                      style={styles.pickerDoneButton}
+                    >
+                      <Text style={styles.pickerDoneText}>완료</Text>
+                    </TouchableOpacity>
+                  </View>
                 )}
               </View>
 
               <View style={styles.dateSection}>
                 <TouchableOpacity
-                  onPress={() => setShowEndPicker(!showEndPicker)}
+                  onPress={() => { setShowEndPicker(!showEndPicker); setShowStartPicker(false); }}
                   style={styles.dateCard}
                 >
                   <View style={styles.dateLabelRow}>
@@ -245,15 +253,23 @@ export default function TripFormModal({ visible, onClose, onSubmit, mode = 'crea
                   </Text>
                 </TouchableOpacity>
                 {showEndPicker && (
-                  <DateTimePicker
-                    value={endDate || new Date()}
-                    mode="date"
-                    display="spinner"
-                    onChange={(_, date) => {
-                      if (Platform.OS === 'android') setShowEndPicker(false);
-                      if (date) setEndDate(date);
-                    }}
-                  />
+                  <View style={styles.pickerContainer}>
+                    <DateTimePicker
+                      value={endDate || new Date()}
+                      mode="date"
+                      display="spinner"
+                      onChange={(_, date) => {
+                        if (Platform.OS === 'android') setShowEndPicker(false);
+                        if (date) setEndDate(date);
+                      }}
+                    />
+                    <TouchableOpacity
+                      onPress={() => setShowEndPicker(false)}
+                      style={styles.pickerDoneButton}
+                    >
+                      <Text style={styles.pickerDoneText}>완료</Text>
+                    </TouchableOpacity>
+                  </View>
                 )}
               </View>
 
@@ -419,6 +435,29 @@ const styles = StyleSheet.create({
   },
   dateSection: {
     marginBottom: 12,
+  },
+  pickerContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    marginTop: 4,
+    overflow: 'hidden',
+    shadowColor: '#2D2416',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  pickerDoneButton: {
+    alignItems: 'flex-end',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#E8E0D4',
+  },
+  pickerDoneText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FF6B47',
   },
   dateCard: {
     backgroundColor: '#FFFFFF',

@@ -336,7 +336,7 @@ export default function CheckinFormScreen() {
             <View style={styles.timePickerHeader}>
               <Text style={styles.timePickerTitle}>언제 방문했나요?</Text>
               <TouchableOpacity onPress={() => setShowTimePicker(false)}>
-                <Text style={styles.timePickerClose}>닫기</Text>
+                <Text style={styles.timePickerClose}>완료</Text>
               </TouchableOpacity>
             </View>
             <DateTimePicker
