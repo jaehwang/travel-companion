@@ -20,7 +20,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
-import { createCheckin, updateCheckin } from '../lib/api';
+import { useCheckinsStore } from '../store/checkinsStore';
 import { usePhotoPicker } from '../components/PhotoPickerButton';
 import CheckinFormToolbar from '../components/CheckinFormToolbar';
 import CategorySelector from '../components/CategorySelector';
@@ -34,6 +34,8 @@ type FormRouteProp = RouteProp<RootStackParamList, 'CheckinForm'>;
 export default function CheckinFormScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<FormRouteProp>();
+  const addCheckin = useCheckinsStore((s) => s.addCheckin);
+  const updateCheckinAction = useCheckinsStore((s) => s.updateCheckin);
   const { tripId, tripTitle, initialLatitude, initialLongitude, initialPlace, initialPlaceId, checkin: editingCheckin } = route.params;
   const isEditMode = !!editingCheckin;
 
@@ -143,9 +145,9 @@ export default function CheckinFormScreen() {
         checked_in_at: checkedInAt ? checkedInAt.toISOString() : undefined,
       };
       if (isEditMode && editingCheckin) {
-        await updateCheckin(editingCheckin.id, payload);
+        await updateCheckinAction(editingCheckin.id, payload);
       } else {
-        await createCheckin({ trip_id: tripId, ...payload });
+        await addCheckin({ trip_id: tripId, ...payload });
       }
       navigation.goBack();
     } catch (err) {
