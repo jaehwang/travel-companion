@@ -138,6 +138,24 @@ export default function TodayCalendarSection({ tripEndDate }: Props) {
                     </Text>
                   </TouchableOpacity>
                 )}
+                {event.place && (
+                  <View style={styles.placeInfoRow}>
+                    {event.place.open_now !== null && (
+                      <View style={[styles.placeBadge, event.place.open_now ? styles.placeBadgeOpen : styles.placeBadgeClosed]}>
+                        <Text style={[styles.placeBadgeText, event.place.open_now ? styles.placeBadgeTextOpen : styles.placeBadgeTextClosed]}>
+                          {event.place.open_now ? '● 지금 영업 중' : '● 지금 영업 종료'}
+                        </Text>
+                      </View>
+                    )}
+                    {event.place.open_at_event !== null && (
+                      <View style={[styles.placeBadge, event.place.open_at_event ? styles.placeBadgeOpen : styles.placeBadgeClosed]}>
+                        <Text style={[styles.placeBadgeText, event.place.open_at_event ? styles.placeBadgeTextOpen : styles.placeBadgeTextClosed]}>
+                          {event.place.open_at_event ? '● 방문 시 영업 중' : '● 방문 시 영업 종료'}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                )}
               </View>
             </View>
           ))}
@@ -227,6 +245,33 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#4285F4',
     flex: 1,
+  },
+  placeInfoRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+    marginTop: 3,
+  },
+  placeBadge: {
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+  },
+  placeBadgeOpen: {
+    backgroundColor: '#ECFDF5',
+  },
+  placeBadgeClosed: {
+    backgroundColor: '#FEF2F2',
+  },
+  placeBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  placeBadgeTextOpen: {
+    color: '#059669',
+  },
+  placeBadgeTextClosed: {
+    color: '#DC2626',
   },
   expiredContainer: {
     marginHorizontal: 16,

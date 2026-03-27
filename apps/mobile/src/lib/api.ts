@@ -155,12 +155,21 @@ export async function updateSettings(settings: Partial<UserSettings>): Promise<U
 
 // ── Calendar ───────────────────────────────────────────────────────────
 
+export interface PlaceInfo {
+  open_now: boolean | null;
+  open_at_event: boolean | null;
+  hours_text: string[];
+  website?: string;
+  rating?: number;
+}
+
 export interface CalendarEvent {
   id: string;
   summary?: string;
   location?: string;
   start: { dateTime?: string; date?: string };
   end: { dateTime?: string; date?: string };
+  place?: PlaceInfo;
 }
 
 export async function fetchCalendarEvents(timeMin: string, timeMax?: string, maxResults = 10): Promise<CalendarEvent[]> {

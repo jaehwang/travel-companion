@@ -3,12 +3,21 @@
 import { useEffect, useState } from 'react';
 import { MapPin } from 'lucide-react';
 
+interface PlaceInfo {
+  open_now: boolean | null;
+  open_at_event: boolean | null;
+  hours_text: string[];
+  website?: string;
+  rating?: number;
+}
+
 interface CalendarEvent {
   id: string;
   summary?: string;
   location?: string;
   start: { dateTime?: string; date?: string };
   end: { dateTime?: string; date?: string };
+  place?: PlaceInfo;
 }
 
 function formatEventWhen(event: CalendarEvent): string {
@@ -243,6 +252,30 @@ export default function TodayCalendar({ tripEndDate }: { tripEndDate?: string })
                   >
                     <MapPin size={12} style={{ flexShrink: 0 }} />{event.location}
                   </a>
+                )}
+                {event.place && (
+                  <div style={{ display: 'flex', gap: 6, marginTop: 3, flexWrap: 'wrap' }}>
+                    {event.place.open_now !== null && (
+                    <span style={{
+                      fontSize: 10, fontWeight: 600,
+                      color: event.place.open_now ? '#059669' : '#DC2626',
+                      background: event.place.open_now ? '#ECFDF5' : '#FEF2F2',
+                      borderRadius: 4, padding: '1px 5px',
+                    }}>
+                      {event.place.open_now ? '● 지금 영업 중' : '● 지금 영업 종료'}
+                    </span>
+                    )}
+                    {event.place.open_at_event !== null && (
+                      <span style={{
+                        fontSize: 10, fontWeight: 600,
+                        color: event.place.open_at_event ? '#059669' : '#DC2626',
+                        background: event.place.open_at_event ? '#ECFDF5' : '#FEF2F2',
+                        borderRadius: 4, padding: '1px 5px',
+                      }}>
+                        {event.place.open_at_event ? '● 방문 시 영업 중' : '● 방문 시 영업 종료'}
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

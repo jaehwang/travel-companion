@@ -5,11 +5,15 @@ import { GET } from '../route';
 import { NextRequest } from 'next/server';
 
 const mockGetSession = jest.fn();
+const mockGetUser = jest.fn();
 const mockProfileSelect = jest.fn();
 
 jest.mock('@/lib/supabase/server', () => ({
   createClient: jest.fn().mockResolvedValue({
-    auth: { getSession: (...args: any[]) => mockGetSession(...args) },
+    auth: {
+      getSession: (...args: any[]) => mockGetSession(...args),
+      getUser: (...args: any[]) => mockGetUser(...args),
+    },
     from: jest.fn().mockReturnValue({
       select: jest.fn().mockReturnThis(),
       eq: jest.fn().mockReturnThis(),
@@ -81,12 +85,14 @@ const SESSION_NO_TOKENS = {
 describe('GET /api/calendar', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'test-user-id' } } });
     mockProfileSelect.mockResolvedValue({ data: { google_refresh_token: null }, error: null });
     process.env.GOOGLE_CLIENT_ID = 'test-client-id';
     process.env.GOOGLE_CLIENT_SECRET = 'test-client-secret';
   });
 
   it('세션이 없으면 401 Unauthorized를 반환한다', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: null } });
     mockGetSession.mockResolvedValue({ data: { session: null } });
 
     const res = await GET(makeRequest());
