@@ -47,6 +47,9 @@ next-env.d.ts
 
 backup/
 
+advice.md
+docs/db_and_auth.md
+
 pass.txt
 test-*.ts
 
