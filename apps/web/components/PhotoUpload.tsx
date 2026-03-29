@@ -85,7 +85,7 @@ export default function PhotoUpload({ onUploadComplete, onUploadError }: PhotoUp
       const { data, error } = await supabase.storage
         .from('trip-photos')
         .upload(filePath, compressedFile, {
-          cacheControl: '3600',
+          cacheControl: '31536000',
           upsert: false
         });
 
@@ -95,16 +95,13 @@ export default function PhotoUpload({ onUploadComplete, onUploadError }: PhotoUp
 
       setUploadProgress(100);
 
-      // Signed URL 생성 (1년 유효)
-      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+      const { data: publicData } = supabase.storage
         .from('trip-photos')
-        .createSignedUrl(filePath, 31536000); // 1년 = 365 * 24 * 60 * 60
-
-      if (signedUrlError) {
-        throw signedUrlError;
-      }
-
-      const photoUrl = signedUrlData.signedUrl;
+        .getPublicUrl(filePath);
+      const photoUrl = publicData.publicUrl.replace(
+        'https://xdqxccochovzcdkmdrpp.supabase.co',
+        'https://travel-companion-photo.kim-jaehwang.workers.dev'
+      );
 
       // 업로드 완료 콜백
       onUploadComplete?.(photoUrl, metadata);

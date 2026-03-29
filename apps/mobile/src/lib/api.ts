@@ -423,14 +423,16 @@ export async function uploadPhoto(
     .upload(filePath, arrayBuffer, {
       contentType: 'image/jpeg',
       upsert: false,
+      cacheControl: '31536000',
     });
 
   if (error) throw error;
 
-  const { data: signedData, error: signedError } = await supabase.storage
+  const { data: publicData } = supabase.storage
     .from('trip-photos')
-    .createSignedUrl(filePath, 31536000); // 1년
-  if (signedError) throw signedError;
-
-  return signedData.signedUrl;
+    .getPublicUrl(filePath);
+  return publicData.publicUrl.replace(
+    'https://xdqxccochovzcdkmdrpp.supabase.co',
+    'https://travel-companion-photo.kim-jaehwang.workers.dev'
+  );
 }

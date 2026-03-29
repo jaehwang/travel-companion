@@ -84,15 +84,18 @@ export function usePhotoUpload({
 
       const { error: uploadError } = await supabase.storage
         .from('trip-photos')
-        .upload(filePath, compressed, { cacheControl: '3600', upsert: false });
+        .upload(filePath, compressed, { cacheControl: '31536000', upsert: false });
       if (uploadError) throw uploadError;
 
-      const { data: signedData, error: signedError } = await supabase.storage
+      const { data: publicData } = supabase.storage
         .from('trip-photos')
-        .createSignedUrl(filePath, 31536000);
-      if (signedError) throw signedError;
+        .getPublicUrl(filePath);
+      const photoUrl = publicData.publicUrl.replace(
+        'https://xdqxccochovzcdkmdrpp.supabase.co',
+        'https://travel-companion-photo.kim-jaehwang.workers.dev'
+      );
 
-      setPhotoUrl(signedData.signedUrl);
+      setPhotoUrl(photoUrl);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : '사진 업로드에 실패했습니다.';
       onError?.(msg);
