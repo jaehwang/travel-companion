@@ -7,7 +7,8 @@
 
 ## 성능 개선
 
-- [ ] 모바일 → Supabase 직접 호출로 전환 (Vercel API hop 제거)
+- [x] 모바일 → Supabase 직접 호출로 전환 (Vercel API hop 제거)
+- [x] 홈 화면 trips/checkins 병렬 조회 (Promise.all)
 - [ ] React Query 캐싱 + 낙관적 업데이트 적용
 
 ## 보안
