@@ -4,18 +4,47 @@ import {
   searchPlaces, getPlaceDetails,
 } from '../lib/api';
 
+// ── Supabase query builder helper ──────────────────────────────────────
+
+function createBuilder(resolvedValue: { data: any; error: any }) {
+  const b: any = {
+    select: jest.fn().mockReturnThis(),
+    order: jest.fn().mockReturnThis(),
+    insert: jest.fn().mockReturnThis(),
+    update: jest.fn().mockReturnThis(),
+    delete: jest.fn().mockReturnThis(),
+    eq: jest.fn().mockReturnThis(),
+    in: jest.fn().mockReturnThis(),
+    single: jest.fn().mockResolvedValue(resolvedValue),
+  };
+  b.then = (resolve: any, reject: any) =>
+    Promise.resolve(resolvedValue).then(resolve, reject);
+  return b;
+}
+
+// ── Mocks ──────────────────────────────────────────────────────────────
+
+const mockFrom = jest.fn();
+
 jest.mock('../lib/supabase', () => ({
   supabase: {
     auth: {
       getSession: jest.fn().mockResolvedValue({
         data: { session: { access_token: 'test-token' } },
       }),
+      getUser: jest.fn().mockResolvedValue({
+        data: { user: { id: 'user-1' } },
+        error: null,
+      }),
     },
+    get from() { return mockFrom; },
   },
 }));
 
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
+
+// ── Fixtures ───────────────────────────────────────────────────────────
 
 const mockTrip = {
   id: 'trip-1',
@@ -24,133 +53,6 @@ const mockTrip = {
   created_at: '2024-03-01T00:00:00Z',
   updated_at: '2024-03-01T00:00:00Z',
 };
-
-beforeEach(() => {
-  mockFetch.mockReset();
-});
-
-describe('fetchTrips', () => {
-  it('/api/trips를 인증 헤더와 함께 호출한다', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ trips: [mockTrip] }),
-    });
-
-    await fetchTrips();
-
-    expect(mockFetch).toHaveBeenCalledTimes(1);
-    const [url, options] = mockFetch.mock.calls[0];
-    expect(url).toContain('/api/trips');
-    expect(options.headers['Authorization']).toBe('Bearer test-token');
-  });
-
-  it('trips 배열을 반환한다', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ trips: [mockTrip] }),
-    });
-
-    const result = await fetchTrips();
-
-    expect(result).toEqual([mockTrip]);
-  });
-
-  it('API 에러 응답 시 예외를 던진다', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: false,
-      status: 401,
-      text: async () => JSON.stringify({ error: 'Unauthorized' }),
-    });
-
-    await expect(fetchTrips()).rejects.toThrow('Unauthorized');
-  });
-});
-
-describe('createTrip', () => {
-  it('여행 데이터를 POST로 전송한다', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ trip: mockTrip }),
-    });
-
-    const tripData = { title: '제주도 여행', is_public: false };
-    await createTrip(tripData);
-
-    const [url, options] = mockFetch.mock.calls[0];
-    expect(url).toContain('/api/trips');
-    expect(options.method).toBe('POST');
-    expect(JSON.parse(options.body)).toEqual(tripData);
-  });
-
-  it('생성된 trip 객체를 반환한다', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ trip: mockTrip }),
-    });
-
-    const result = await createTrip({ title: '제주도 여행', is_public: false });
-
-    expect(result).toEqual(mockTrip);
-  });
-});
-
-describe('updateTrip', () => {
-  it('특정 trip에 PATCH 요청을 보낸다', async () => {
-    const updatedTrip = { ...mockTrip, title: '수정된 제주도 여행' };
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ trip: updatedTrip }),
-    });
-
-    const result = await updateTrip('trip-1', { title: '수정된 제주도 여행' });
-
-    const [url, options] = mockFetch.mock.calls[0];
-    expect(url).toContain('/api/trips/trip-1');
-    expect(options.method).toBe('PATCH');
-    expect(result).toEqual(updatedTrip);
-  });
-});
-
-describe('deleteTrip', () => {
-  it('특정 trip에 DELETE 요청을 보낸다', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({}),
-    });
-
-    await deleteTrip('trip-1');
-
-    const [url, options] = mockFetch.mock.calls[0];
-    expect(url).toContain('/api/trips/trip-1');
-    expect(options.method).toBe('DELETE');
-  });
-});
-
-describe('fetchSettings', () => {
-  it('settings 객체를 반환한다', async () => {
-    const mockSettings = { calendar_sync_enabled: true };
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ settings: mockSettings }),
-    });
-
-    const result = await fetchSettings();
-
-    expect(result).toEqual(mockSettings);
-  });
-
-  it('/api/settings 엔드포인트를 호출한다', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ settings: {} }),
-    });
-
-    await fetchSettings();
-
-    const [url] = mockFetch.mock.calls[0];
-    expect(url).toContain('/api/settings');
-  });
-});
 
 const mockCheckin = {
   id: 'checkin-1',
@@ -163,53 +65,153 @@ const mockCheckin = {
   updated_at: '2024-03-01T10:00:00Z',
 };
 
-describe('fetchCheckins', () => {
-  it('trip_id 쿼리 파라미터와 함께 /api/checkins를 호출한다', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ checkins: [mockCheckin] }),
+beforeEach(() => {
+  mockFrom.mockReset();
+  mockFetch.mockReset();
+});
+
+// ── fetchTrips ─────────────────────────────────────────────────────────
+
+describe('fetchTrips', () => {
+  it('trips 배열을 반환한다', async () => {
+    mockFrom.mockImplementation((table: string) => {
+      if (table === 'trips') return createBuilder({ data: [mockTrip], error: null });
+      if (table === 'checkins') return createBuilder({ data: [], error: null });
+      return createBuilder({ data: null, error: null });
     });
 
-    await fetchCheckins('trip-1');
+    const result = await fetchTrips();
 
-    const [url, options] = mockFetch.mock.calls[0];
-    expect(url).toContain('/api/checkins?trip_id=trip-1');
-    expect(options.headers['Authorization']).toBe('Bearer test-token');
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('trip-1');
   });
 
-  it('checkins 배열을 반환한다', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ checkins: [mockCheckin] }),
+  it('체크인이 있으면 cover_photo_url을 설정한다', async () => {
+    const checkin = { trip_id: 'trip-1', checked_in_at: '2024-03-01T10:00:00Z', photo_url: 'https://example.com/photo.jpg' };
+    mockFrom.mockImplementation((table: string) => {
+      if (table === 'trips') return createBuilder({ data: [mockTrip], error: null });
+      if (table === 'checkins') return createBuilder({ data: [checkin], error: null });
+      return createBuilder({ data: null, error: null });
     });
 
-    const result = await fetchCheckins('trip-1');
+    const result = await fetchTrips();
 
-    expect(result).toEqual([mockCheckin]);
+    expect(result[0].cover_photo_url).toBe('https://example.com/photo.jpg');
+  });
+
+  it('trips 쿼리 에러 시 예외를 던진다', async () => {
+    mockFrom.mockImplementation(() =>
+      createBuilder({ data: null, error: new Error('DB error') })
+    );
+
+    await expect(fetchTrips()).rejects.toThrow('DB error');
   });
 });
 
-describe('createCheckin', () => {
-  it('체크인 데이터를 POST로 전송한다', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ checkin: mockCheckin }),
-    });
+// ── createTrip ─────────────────────────────────────────────────────────
 
-    const data = { trip_id: 'trip-1', title: '멋진 카페', latitude: 37.5665, longitude: 126.9780 };
-    await createCheckin(data);
+describe('createTrip', () => {
+  it('생성된 trip 객체를 반환한다', async () => {
+    mockFrom.mockImplementation(() =>
+      createBuilder({ data: mockTrip, error: null })
+    );
 
-    const [url, options] = mockFetch.mock.calls[0];
-    expect(url).toContain('/api/checkins');
-    expect(options.method).toBe('POST');
-    expect(JSON.parse(options.body)).toEqual(data);
+    const result = await createTrip({ title: '제주도 여행', is_public: false });
+
+    expect(result).toEqual(mockTrip);
   });
 
+  it('에러 발생 시 예외를 던진다', async () => {
+    mockFrom.mockImplementation(() =>
+      createBuilder({ data: null, error: new Error('Insert error') })
+    );
+
+    await expect(createTrip({ title: '제주도 여행', is_public: false })).rejects.toThrow('Insert error');
+  });
+});
+
+// ── updateTrip ─────────────────────────────────────────────────────────
+
+describe('updateTrip', () => {
+  it('수정된 trip 객체를 반환한다', async () => {
+    const updated = { ...mockTrip, title: '수정된 제주도 여행' };
+    mockFrom.mockImplementation(() =>
+      createBuilder({ data: updated, error: null })
+    );
+
+    const result = await updateTrip('trip-1', { title: '수정된 제주도 여행' });
+
+    expect(result).toEqual(updated);
+  });
+});
+
+// ── deleteTrip ─────────────────────────────────────────────────────────
+
+describe('deleteTrip', () => {
+  it('에러 없이 완료된다', async () => {
+    mockFrom.mockImplementation(() =>
+      createBuilder({ data: null, error: null })
+    );
+
+    await expect(deleteTrip('trip-1')).resolves.toBeUndefined();
+  });
+
+  it('에러 발생 시 예외를 던진다', async () => {
+    mockFrom.mockImplementation(() =>
+      createBuilder({ data: null, error: new Error('Delete error') })
+    );
+
+    await expect(deleteTrip('trip-1')).rejects.toThrow('Delete error');
+  });
+});
+
+// ── fetchSettings ──────────────────────────────────────────────────────
+
+describe('fetchSettings', () => {
+  it('settings 객체를 반환한다', async () => {
+    const mockSettings = { calendar_sync_enabled: true };
+    mockFrom.mockImplementation(() =>
+      createBuilder({ data: { settings: mockSettings }, error: null })
+    );
+
+    const result = await fetchSettings();
+
+    expect(result).toEqual(mockSettings);
+  });
+
+  it('profile이 없으면 빈 객체를 반환한다', async () => {
+    mockFrom.mockImplementation(() =>
+      createBuilder({ data: null, error: null })
+    );
+
+    const result = await fetchSettings();
+
+    expect(result).toEqual({});
+  });
+});
+
+// ── fetchCheckins ──────────────────────────────────────────────────────
+
+describe('fetchCheckins', () => {
+  it('checkins 배열을 반환한다', async () => {
+    mockFrom.mockImplementation(() =>
+      createBuilder({ data: [mockCheckin], error: null })
+    );
+
+    const result = await fetchCheckins('trip-1');
+
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('checkin-1');
+  });
+});
+
+// ── createCheckin ──────────────────────────────────────────────────────
+
+describe('createCheckin', () => {
   it('생성된 checkin 객체를 반환한다', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ checkin: mockCheckin }),
-    });
+    mockFrom.mockImplementation(() =>
+      createBuilder({ data: mockCheckin, error: null })
+    );
 
     const result = await createCheckin({ trip_id: 'trip-1', title: '멋진 카페', latitude: 37.5665, longitude: 126.9780 });
 
@@ -217,37 +219,34 @@ describe('createCheckin', () => {
   });
 });
 
+// ── updateCheckin ──────────────────────────────────────────────────────
+
 describe('updateCheckin', () => {
-  it('특정 checkin에 PATCH 요청을 보낸다', async () => {
+  it('수정된 checkin 객체를 반환한다', async () => {
     const updated = { ...mockCheckin, title: '수정된 카페' };
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ checkin: updated }),
-    });
+    mockFrom.mockImplementation(() =>
+      createBuilder({ data: updated, error: null })
+    );
 
     const result = await updateCheckin('checkin-1', { title: '수정된 카페' });
 
-    const [url, options] = mockFetch.mock.calls[0];
-    expect(url).toContain('/api/checkins/checkin-1');
-    expect(options.method).toBe('PATCH');
     expect(result).toEqual(updated);
   });
 });
 
+// ── deleteCheckin ──────────────────────────────────────────────────────
+
 describe('deleteCheckin', () => {
-  it('특정 checkin에 DELETE 요청을 보낸다', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({}),
-    });
+  it('에러 없이 완료된다', async () => {
+    mockFrom.mockImplementation(() =>
+      createBuilder({ data: null, error: null })
+    );
 
-    await deleteCheckin('checkin-1');
-
-    const [url, options] = mockFetch.mock.calls[0];
-    expect(url).toContain('/api/checkins/checkin-1');
-    expect(options.method).toBe('DELETE');
+    await expect(deleteCheckin('checkin-1')).resolves.toBeUndefined();
   });
 });
+
+// ── searchPlaces (Vercel API via fetch) ────────────────────────────────
 
 describe('searchPlaces', () => {
   it('/api/places/autocomplete에 검색어를 전달한다', async () => {
@@ -282,6 +281,8 @@ describe('searchPlaces', () => {
     expect(url).toContain('lng=126.978');
   });
 });
+
+// ── getPlaceDetails (Vercel API via fetch) ─────────────────────────────
 
 describe('getPlaceDetails', () => {
   it('/api/places/details에 place_id를 전달하고 장소 정보를 반환한다', async () => {

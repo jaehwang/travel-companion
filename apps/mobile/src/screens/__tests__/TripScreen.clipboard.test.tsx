@@ -28,6 +28,10 @@ jest.mock('@expo/vector-icons', () => ({
   Ionicons: 'Ionicons',
 }));
 
+jest.mock('../../navigation/AppNavigator', () => ({
+  setTabPlusOverride: jest.fn(),
+}));
+
 jest.mock('react-native-safe-area-context', () => ({
   SafeAreaView: ({ children }: { children: React.ReactNode }) => children,
   useSafeAreaInsets: () => ({ bottom: 0, top: 0, left: 0, right: 0 }),
@@ -36,6 +40,7 @@ jest.mock('react-native-safe-area-context', () => ({
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: jest.fn() }),
   useRoute: jest.fn(),
+  useFocusEffect: jest.fn((cb: () => void) => cb()),
 }));
 
 jest.mock('../../hooks/useCheckins', () => ({

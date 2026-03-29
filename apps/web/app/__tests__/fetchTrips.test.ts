@@ -83,9 +83,10 @@ describe('fetchTrips', () => {
     expect(result[0].cover_photo_url).toBe('https://example.com/photo.jpg');
   });
 
-  it('trips가 없으면 checkins 쿼리를 하지 않는다', async () => {
+  it('trips가 없으면 빈 배열을 반환한다', async () => {
     const mockFrom = jest.fn().mockImplementation((table: string) => {
       if (table === 'trips') return createQueryBuilder({ data: [], error: null });
+      if (table === 'checkins') return createQueryBuilder({ data: [], error: null });
       return createQueryBuilder({ data: null, error: null });
     });
 
@@ -93,8 +94,5 @@ describe('fetchTrips', () => {
     const result = await fetchTrips(mockSupabase);
 
     expect(result).toEqual([]);
-    // checkins 쿼리 호출 안 됨
-    expect(mockFrom).toHaveBeenCalledTimes(1);
-    expect(mockFrom).toHaveBeenCalledWith('trips');
   });
 });

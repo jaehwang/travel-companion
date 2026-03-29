@@ -4,10 +4,10 @@ import { usePhotoUpload } from '../usePhotoUpload';
 // ─── Mocks ───
 
 const mockUpload = jest.fn();
-const mockCreateSignedUrl = jest.fn();
+const mockGetPublicUrl = jest.fn();
 const mockStorageFrom = jest.fn(() => ({
   upload: mockUpload,
-  createSignedUrl: mockCreateSignedUrl,
+  getPublicUrl: mockGetPublicUrl,
 }));
 
 jest.mock('@/lib/supabase', () => ({
@@ -84,7 +84,7 @@ describe('usePhotoUpload', () => {
       mockExtractPhotoMetadata.mockResolvedValue({ gps: null });
       mockImageCompression.mockResolvedValue(makeImageFile());
       mockUpload.mockResolvedValue({ error: null });
-      mockCreateSignedUrl.mockResolvedValue({ data: { signedUrl: 'https://example.com/photo.jpg' }, error: null });
+      mockGetPublicUrl.mockReturnValue({ data: { publicUrl: 'https://example.com/photo.jpg' } });
 
       const { result } = renderHook(() => usePhotoUpload());
       await act(async () => {
@@ -101,10 +101,7 @@ describe('usePhotoUpload', () => {
       });
       mockImageCompression.mockResolvedValue(makeImageFile());
       mockUpload.mockResolvedValue({ error: null });
-      mockCreateSignedUrl.mockResolvedValue({
-        data: { signedUrl: 'https://example.com/photo.jpg' },
-        error: null,
-      });
+      mockGetPublicUrl.mockReturnValue({ data: { publicUrl: 'https://example.com/photo.jpg' } });
 
       const { result } = renderHook(() => usePhotoUpload({ onGpsExtracted }));
       await act(async () => {
@@ -119,10 +116,7 @@ describe('usePhotoUpload', () => {
       mockExtractPhotoMetadata.mockResolvedValue({ gps: null });
       mockImageCompression.mockResolvedValue(makeImageFile());
       mockUpload.mockResolvedValue({ error: null });
-      mockCreateSignedUrl.mockResolvedValue({
-        data: { signedUrl: 'https://example.com/photo.jpg' },
-        error: null,
-      });
+      mockGetPublicUrl.mockReturnValue({ data: { publicUrl: 'https://example.com/photo.jpg' } });
 
       const { result } = renderHook(() => usePhotoUpload({ onGpsExtracted }));
       await act(async () => {
@@ -132,21 +126,18 @@ describe('usePhotoUpload', () => {
       expect(onGpsExtracted).not.toHaveBeenCalled();
     });
 
-    it('업로드 성공 시 photoUrl이 signed URL로 설정된다', async () => {
+    it('업로드 성공 시 photoUrl이 public URL로 설정된다', async () => {
       mockExtractPhotoMetadata.mockResolvedValue({ gps: null });
       mockImageCompression.mockResolvedValue(makeImageFile());
       mockUpload.mockResolvedValue({ error: null });
-      mockCreateSignedUrl.mockResolvedValue({
-        data: { signedUrl: 'https://example.com/signed.jpg' },
-        error: null,
-      });
+      mockGetPublicUrl.mockReturnValue({ data: { publicUrl: 'https://example.com/public.jpg' } });
 
       const { result } = renderHook(() => usePhotoUpload());
       await act(async () => {
         await result.current.handleFileSelect(makeFileEvent(makeImageFile()));
       });
 
-      expect(result.current.photoUrl).toBe('https://example.com/signed.jpg');
+      expect(result.current.photoUrl).toBe('https://example.com/public.jpg');
       expect(result.current.isUploadingPhoto).toBe(false);
     });
 
@@ -167,20 +158,6 @@ describe('usePhotoUpload', () => {
       expect(result.current.isUploadingPhoto).toBe(false);
     });
 
-    it('signed URL 생성 실패 시 onError를 호출한다', async () => {
-      const onError = jest.fn();
-      mockExtractPhotoMetadata.mockResolvedValue({ gps: null });
-      mockImageCompression.mockResolvedValue(makeImageFile());
-      mockUpload.mockResolvedValue({ error: null });
-      mockCreateSignedUrl.mockResolvedValue({ data: null, error: new Error('Signed URL error') });
-
-      const { result } = renderHook(() => usePhotoUpload({ onError }));
-      await act(async () => {
-        await result.current.handleFileSelect(makeFileEvent(makeImageFile()));
-      });
-
-      expect(onError).toHaveBeenCalledWith('Signed URL error');
-    });
   });
 
   describe('clearPhoto', () => {
@@ -188,10 +165,7 @@ describe('usePhotoUpload', () => {
       mockExtractPhotoMetadata.mockResolvedValue({ gps: { latitude: 37.5, longitude: 127.0 } });
       mockImageCompression.mockResolvedValue(makeImageFile());
       mockUpload.mockResolvedValue({ error: null });
-      mockCreateSignedUrl.mockResolvedValue({
-        data: { signedUrl: 'https://example.com/photo.jpg' },
-        error: null,
-      });
+      mockGetPublicUrl.mockReturnValue({ data: { publicUrl: 'https://example.com/photo.jpg' } });
 
       const { result } = renderHook(() => usePhotoUpload());
       await act(async () => {
