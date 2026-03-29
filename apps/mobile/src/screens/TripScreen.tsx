@@ -321,7 +321,7 @@ export default function TripScreen() {
     }
   };
 
-  const renderHeader = () => {
+  const renderHeader = useCallback(() => {
     const earliest = checkins.length > 0
       ? [...checkins].sort((a, b) => new Date(a.checked_in_at).getTime() - new Date(b.checked_in_at).getTime())[0]
       : null;
@@ -458,7 +458,7 @@ export default function TripScreen() {
       </View>
     </View>
   );
-};
+  }, [trip, checkins, mapRegion, dedupedMarkers, handleMyLocation, selectedCheckin, sortedCheckins, selectedCheckinId, filteredCheckins, sortOrder, handleMarkerPress]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>

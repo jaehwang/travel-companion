@@ -124,7 +124,9 @@ export default function CheckinsScreen() {
     const targetTripIds = new Set(
       trips.filter(t => filter === 'frequent' ? t.is_frequent : !t.is_frequent).map(t => t.id)
     );
-    return checkins.filter(c => targetTripIds.has(c.trip_id));
+    return checkins
+      .filter(c => targetTripIds.has(c.trip_id))
+      .sort((a, b) => new Date(b.checked_in_at).getTime() - new Date(a.checked_in_at).getTime());
   }, [checkins, trips, filter]);
 
   const sections = useMemo((): Section[] => {

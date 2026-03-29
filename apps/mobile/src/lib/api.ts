@@ -1,21 +1,19 @@
 import { supabase } from './supabase';
-import type { Trip, Checkin, TripFormData, CheckinInsert } from '../../../../packages/shared/src/types';
+import type { Trip, Checkin, TripFormData, CheckinInsert, UserProfileSettings } from '../../../../packages/shared/src/types';
 
 export const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://travel-companion.vercel.app';
 
-async function getAuthHeaders(): Promise<Record<string, string>> {
+// ── Vercel API fetch (Places, Calendar, AI 전용) ─────────────────────
+
+async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.access_token) {
     throw new Error('Not authenticated');
   }
-  return {
+  const headers: Record<string, string> = {
     'Authorization': `Bearer ${session.access_token}`,
     'Content-Type': 'application/json',
   };
-}
-
-async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
-  const headers = await getAuthHeaders();
   const url = `${API_URL}${path}`;
   const response = await fetch(url, {
     ...options,
@@ -35,31 +33,102 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   return response.json();
 }
 
-// ── Trips ──────────────────────────────────────────────────────────────
+// ── Auth helper ───────────────────────────────────────────────────────
+
+async function getUser() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Unauthorized');
+  return user;
+}
+
+// ── Trips (Supabase 직접 호출) ────────────────────────────────────────
 
 export async function fetchTrips(): Promise<Trip[]> {
-  const data = await apiFetch<{ trips: Trip[] }>('/api/trips');
-  return data.trips;
+  await getUser();
+
+  const { data, error } = await supabase
+    .from('trips')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  const trips = data as any[];
+  const tripIds = trips.map((t) => t.id);
+
+  // 체크인 추가 조회: cover_photo_url, first_checkin_date 계산
+  const firstCheckinMap: Record<string, string> = {};
+  const photoMap: Record<string, string[]> = {};
+
+  if (tripIds.length > 0) {
+    const { data: checkins } = await supabase
+      .from('checkins')
+      .select('trip_id, checked_in_at, photo_url')
+      .in('trip_id', tripIds)
+      .order('checked_in_at', { ascending: true });
+
+    if (checkins) {
+      for (const c of checkins as any[]) {
+        if (!firstCheckinMap[c.trip_id]) {
+          firstCheckinMap[c.trip_id] = c.checked_in_at;
+        }
+        if (c.photo_url) {
+          if (!photoMap[c.trip_id]) photoMap[c.trip_id] = [];
+          photoMap[c.trip_id].push(c.photo_url);
+        }
+      }
+    }
+  }
+
+  return trips.map((t) => {
+    const photos = photoMap[t.id] ?? [];
+    const cover_photo_url = photos.length > 0
+      ? photos[Math.floor(Math.random() * photos.length)]
+      : null;
+    return {
+      ...t,
+      first_checkin_date: firstCheckinMap[t.id] ?? null,
+      cover_photo_url,
+    };
+  });
 }
 
 export async function createTrip(tripData: TripFormData): Promise<Trip> {
-  const data = await apiFetch<{ trip: Trip }>('/api/trips', {
-    method: 'POST',
-    body: JSON.stringify(tripData),
-  });
-  return data.trip;
+  const user = await getUser();
+
+  const { data, error } = await supabase
+    .from('trips')
+    .insert({ ...tripData, user_id: user.id } as any)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as Trip;
 }
 
 export async function updateTrip(id: string, tripData: Partial<TripFormData>): Promise<Trip> {
-  const data = await apiFetch<{ trip: Trip }>(`/api/trips/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify(tripData),
-  });
-  return data.trip;
+  await getUser();
+
+  const { data, error } = await supabase
+    .from('trips')
+    .update(tripData as any)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as Trip;
 }
 
 export async function deleteTrip(id: string): Promise<void> {
-  await apiFetch(`/api/trips/${id}`, { method: 'DELETE' });
+  await getUser();
+
+  const { error } = await supabase
+    .from('trips')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
 }
 
 export async function fetchTripTagline(tripId: string): Promise<string> {
@@ -69,40 +138,77 @@ export async function fetchTripTagline(tripId: string): Promise<string> {
   return data.tagline;
 }
 
-// ── Checkins ───────────────────────────────────────────────────────────
+// ── Checkins (Supabase 직접 호출) ─────────────────────────────────────
 
 export async function fetchCheckins(tripId: string): Promise<Checkin[]> {
-  const data = await apiFetch<{ checkins: Checkin[] }>(`/api/checkins?trip_id=${tripId}`);
-  return data.checkins;
+  await getUser();
+
+  const { data, error } = await supabase
+    .from('checkins')
+    .select('*')
+    .eq('trip_id', tripId)
+    .order('checked_in_at', { ascending: true });
+
+  if (error) throw error;
+  return data as Checkin[];
 }
 
 export async function fetchAllCheckins(tripId?: string): Promise<Checkin[]> {
-  const path = tripId ? `/api/checkins?trip_id=${tripId}` : '/api/checkins';
-  const data = await apiFetch<{ checkins: Checkin[] }>(path);
-  return data.checkins;
+  await getUser();
+
+  let query = supabase
+    .from('checkins')
+    .select('*');
+
+  if (tripId) {
+    query = query.eq('trip_id', tripId);
+  }
+
+  const { data, error } = await query.order('checked_in_at', { ascending: true });
+
+  if (error) throw error;
+  return data as Checkin[];
 }
 
 export async function createCheckin(checkinData: CheckinInsert): Promise<Checkin> {
-  const data = await apiFetch<{ checkin: Checkin }>('/api/checkins', {
-    method: 'POST',
-    body: JSON.stringify(checkinData),
-  });
-  return data.checkin;
+  await getUser();
+
+  const { data, error } = await supabase
+    .from('checkins')
+    .insert(checkinData as any)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as Checkin;
 }
 
 export async function updateCheckin(id: string, checkinData: Partial<CheckinInsert>): Promise<Checkin> {
-  const data = await apiFetch<{ checkin: Checkin }>(`/api/checkins/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify(checkinData),
-  });
-  return data.checkin;
+  await getUser();
+
+  const { data, error } = await supabase
+    .from('checkins')
+    .update(checkinData as any)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as Checkin;
 }
 
 export async function deleteCheckin(id: string): Promise<void> {
-  await apiFetch(`/api/checkins/${id}`, { method: 'DELETE' });
+  await getUser();
+
+  const { error } = await supabase
+    .from('checkins')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
 }
 
-// ── Places ─────────────────────────────────────────────────────────────
+// ── Places (Vercel API 경유) ──────────────────────────────────────────
 
 export interface PlacePrediction {
   place_id: string;
@@ -134,26 +240,43 @@ export async function getPlaceDetails(placeId: string): Promise<PlaceDetails> {
   return data.place;
 }
 
-// ── Settings ────────────────────────────────────────────────────────────
+// ── Settings (Supabase 직접 호출) ─────────────────────────────────────
 
 export interface UserSettings {
   calendar_sync_enabled?: boolean;
 }
 
 export async function fetchSettings(): Promise<UserSettings> {
-  const data = await apiFetch<{ settings: UserSettings }>('/api/settings');
-  return data.settings;
+  const user = await getUser();
+
+  const { data: profile, error } = await supabase
+    .from('user_profiles')
+    .select('settings')
+    .eq('id', user.id)
+    .single();
+
+  if (error) throw error;
+
+  return ((profile as any)?.settings as UserSettings) ?? {};
 }
 
 export async function updateSettings(settings: Partial<UserSettings>): Promise<UserSettings> {
-  const data = await apiFetch<{ settings: UserSettings }>('/api/settings', {
-    method: 'PATCH',
-    body: JSON.stringify(settings),
-  });
-  return data.settings;
+  const user = await getUser();
+
+  // Fetch current settings to merge
+  const current = await fetchSettings();
+  const updated: UserSettings = { ...current, ...settings };
+
+  const { error } = await supabase
+    .from('user_profiles')
+    .update({ settings: updated } as any)
+    .eq('id', user.id);
+
+  if (error) throw error;
+  return updated;
 }
 
-// ── Calendar ───────────────────────────────────────────────────────────
+// ── Calendar (Vercel API 경유) ────────────────────────────────────────
 
 export interface PlaceInfo {
   open_now: boolean | null;
@@ -194,7 +317,7 @@ export async function disconnectCalendar(): Promise<void> {
   await apiFetch('/api/calendar/disconnect', { method: 'POST' });
 }
 
-// ── Nearby Checkins ────────────────────────────────────────────────────
+// ── Nearby Checkins (Supabase 직접 호출) ──────────────────────────────
 
 export interface NearbyCheckin {
   id: string;
@@ -210,18 +333,73 @@ export interface NearbyCheckin {
   distance: number;
 }
 
+function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371000;
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 export async function fetchNearbyCheckins(
   lat: number,
   lng: number,
   radius = 1000,
 ): Promise<NearbyCheckin[]> {
-  const data = await apiFetch<{ checkins: NearbyCheckin[] }>(
-    `/api/checkins/nearby?lat=${lat}&lng=${lng}&radius=${radius}`,
+  await getUser();
+
+  // Step 1: is_frequent 여행 조회
+  const { data: trips, error: tripsError } = await supabase
+    .from('trips')
+    .select('id, title')
+    .eq('is_frequent', true);
+
+  if (tripsError) throw tripsError;
+  if (!trips || trips.length === 0) return [];
+
+  const tripIds = (trips as any[]).map((t) => t.id);
+  const tripTitleMap: Record<string, string> = Object.fromEntries(
+    (trips as any[]).map((t) => [t.id, t.title])
   );
-  return data.checkins;
+
+  // Step 2: 해당 여행의 체크인 전체 조회
+  const { data: checkins, error: checkinsError } = await supabase
+    .from('checkins')
+    .select('*')
+    .in('trip_id', tripIds)
+    .order('checked_in_at', { ascending: false });
+
+  if (checkinsError) throw checkinsError;
+
+  // Step 3: Haversine 필터링
+  const nearby = ((checkins ?? []) as any[])
+    .map((c) => ({
+      ...c,
+      trip_title: tripTitleMap[c.trip_id],
+      distance: haversineDistance(lat, lng, c.latitude, c.longitude),
+    }))
+    .filter((c) => c.distance <= radius)
+    .sort((a, b) =>
+      new Date(b.checked_in_at).getTime() - new Date(a.checked_in_at).getTime()
+    );
+
+  return nearby;
 }
 
-// ── Storage (direct Supabase) ──────────────────────────────────────────
+// ── AI Tagline (Vercel API 경유) ──────────────────────────────────────
+
+export async function generateTagline(tripId: string): Promise<string> {
+  const data = await apiFetch<{ tagline: string }>(`/api/trips/${tripId}/tagline`, {
+    method: 'POST',
+  });
+  return data.tagline;
+}
+
+// ── Storage (direct Supabase) ─────────────────────────────────────────
 
 export async function uploadPhoto(
   fileUri: string,
