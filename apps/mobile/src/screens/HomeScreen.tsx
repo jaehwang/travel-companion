@@ -46,8 +46,7 @@ type NavigationProp = CompositeNavigationProp<
 
 export default function HomeScreen() {
   const navigation = useNavigation<NavigationProp>();
-  const { trips, loading, error, reload, create, update, remove } = useTrips();
-  const [showCreateModal, setShowCreateModal] = useState(false);
+const { trips, loading, error, reload, update, remove } = useTrips();
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
@@ -87,11 +86,6 @@ export default function HomeScreen() {
   }, [reload]);
 
   const handleTripPress = (trip: Trip) => {
-    navigation.navigate('Trip', { trip });
-  };
-
-  const handleCreateTrip = async (data: TripFormData) => {
-    const trip = await create(data);
     navigation.navigate('Trip', { trip });
   };
 
@@ -231,12 +225,6 @@ export default function HomeScreen() {
       {/* Section Header */}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>내 여행</Text>
-        <TouchableOpacity
-          onPress={() => setShowCreateModal(true)}
-          style={styles.addButton}
-        >
-          <Text style={styles.addButtonText}>+</Text>
-        </TouchableOpacity>
       </View>
 
       {/* Trip List */}
@@ -264,18 +252,11 @@ export default function HomeScreen() {
             <View style={styles.emptyContainer}>
               <Ionicons name="airplane-outline" size={64} color="#C4B49A" />
               <Text style={styles.emptyTitle}>아직 여행이 없습니다</Text>
-              <Text style={styles.emptySubtitle}>+ 버튼을 눌러 첫 여행을 시작하세요</Text>
+              <Text style={styles.emptySubtitle}>아래 + 버튼을 눌러 첫 여행을 시작하세요</Text>
             </View>
           }
         />
       )}
-
-      {/* Create Trip Modal */}
-      <TripFormModal
-        visible={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onSubmit={handleCreateTrip}
-      />
 
       {/* Edit Trip Modal */}
       <TripFormModal
@@ -344,25 +325,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800',
     color: '#1F2937',
-  },
-  addButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#F97316',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#F97316',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  addButtonText: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: '700',
-    lineHeight: 22,
   },
   listContent: {
     paddingTop: 8,

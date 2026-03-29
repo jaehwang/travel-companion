@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -16,7 +17,7 @@ import {
 import * as Clipboard from 'expo-clipboard';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
@@ -33,6 +34,7 @@ import TodayCalendarSection from '../components/TodayCalendarSection';
 import SideDrawer from '../components/SideDrawer';
 import TripFormModal from '../components/TripFormModal';
 import type { TripsStackParamList, RootStackParamList } from '../navigation/AppNavigator';
+import { setTabPlusOverride } from '../navigation/AppNavigator';
 import type { Trip, Checkin, TripFormData } from '../../../../packages/shared/src/types';
 
 
@@ -81,8 +83,7 @@ const formatCheckinTime = (dateStr: string): string => {
 export default function TripScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<TripRouteProp>();
-  const insets = useSafeAreaInsets();
-  const [selectedTripId, setSelectedTripId] = useState<string>(route.params.trip.id);
+const [selectedTripId, setSelectedTripId] = useState<string>(route.params.trip.id);
   useEffect(() => {
     setSelectedTripId(route.params.trip.id);
   }, [route.params.trip.id]);
@@ -220,6 +221,21 @@ export default function TripScreen() {
     });
     return Array.from(map.values());
   }, [filteredCheckins]);
+
+  // 탭바 + 버튼 → 체크인 추가
+  useFocusEffect(
+    useCallback(() => {
+      setTabPlusOverride(() => navigation.navigate('CheckinForm', {
+        tripId: trip.id,
+        tripTitle: trip.title,
+        initialLatitude: trip.latitude ?? undefined,
+        initialLongitude: trip.longitude ?? undefined,
+        initialPlace: trip.place ?? undefined,
+        initialPlaceId: trip.place_id ?? undefined,
+      }), '체크인 추가');
+      return () => setTabPlusOverride(null);
+    }, [trip, navigation])
+  );
 
   const handleMyLocation = useCallback(async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -537,21 +553,6 @@ export default function TripScreen() {
           contentContainerStyle={styles.listContent}
         />
       )}
-
-      {/* FAB */}
-      <TouchableOpacity
-        onPress={() => navigation.navigate('CheckinForm', {
-          tripId: trip.id,
-          tripTitle: trip.title,
-          initialLatitude: trip.latitude ?? undefined,
-          initialLongitude: trip.longitude ?? undefined,
-          initialPlace: trip.place ?? undefined,
-          initialPlaceId: trip.place_id ?? undefined,
-        })}
-        style={[styles.fab, { bottom: insets.bottom + 16 }]}
-      >
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
 
       {/* Side Drawer */}
       <SideDrawer
@@ -886,26 +887,5 @@ const styles = StyleSheet.create({
   emptySubtext: {
     fontSize: 13,
     color: '#9CA3AF',
-  },
-  fab: {
-    position: 'absolute',
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#F97316',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#F97316',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  fabText: {
-    color: '#FFFFFF',
-    fontSize: 28,
-    fontWeight: '700',
-    lineHeight: 30,
   },
 });

@@ -22,8 +22,9 @@
 ### 사이드 드로어 (햄버거 메뉴)
 - **문제**: iOS는 탭 바(Tab Bar) 기반 네비게이션이 표준. 사이드 드로어는 Android 패턴이며 iOS HIG에 어긋남
 - **해결**: 하단 탭 바로 전환
-- [ ] `@react-navigation/bottom-tabs` 도입
-- [ ] 탭 구성: 여행 목록 / 체크인 / 설정 (또는 홈 / 여행 / 설정)
+- [x] `@react-navigation/bottom-tabs` 도입
+- [x] 탭 구성: 여행 / 여행 추가(중앙) / 체크인
+- [ ] 설정 탭 추가 (현재는 헤더 아바타 → Settings)
 - [ ] SideDrawer 컴포넌트 제거
 
 ---
@@ -39,8 +40,8 @@
 ### FAB (Floating Action Button)
 - **문제**: 56×56 오렌지 원형 버튼은 Android FAB 패턴. iOS는 네비게이션 바 버튼 선호
 - **해결**: 각 화면 네비게이션 바 우측 `+` 버튼으로 이동
-- [ ] HomeScreen FAB → 네비게이션 바 우측 버튼으로 변경
-- [ ] TripScreen FAB → 네비게이션 바 우측 버튼으로 변경
+- [x] HomeScreen + → 탭바 중앙 버튼으로 이동 (여행 추가)
+- [x] TripScreen FAB → 제거, 탭바 중앙 버튼으로 대체 (체크인 추가, 화면 포커스 시 동작/레이블 전환)
 
 ---
 
