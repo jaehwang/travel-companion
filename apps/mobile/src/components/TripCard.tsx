@@ -37,6 +37,7 @@ export default function TripCard({ trip, onPress, onMenuPress }: TripCardProps) 
       onPress={onPress}
       activeOpacity={0.85}
       style={styles.card}
+      testID="trip-card"
     >
       {/* Cover Photo */}
       <View style={styles.coverContainer}>

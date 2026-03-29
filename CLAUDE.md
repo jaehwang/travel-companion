@@ -29,6 +29,10 @@
 - `apps/mobile/.env.production` — 실기기/배포용 (`https://PRODUCTION_URL`)
 - 시뮬레이터: `npx expo run:ios`
 - 실기기: `npx expo run:ios --device --configuration Release`
+- E2E 빌드: `cd apps/mobile && npm run e2e:build` (.env.development 사용, Metro 불필요)
+- E2E 테스트: `cd apps/mobile && npm run e2e:test`
+- **E2E 실행 전 웹 dev 서버 필수**: `npm run dev` (모바일 앱이 localhost:3000 API 사용)
+- 네이티브 코드 변경 시에만 `e2e:build` 재실행 필요, 시뮬레이터에 로그인 세션 필요
 
 ### 백엔드
 - **데이터베이스**: Supabase PostgreSQL

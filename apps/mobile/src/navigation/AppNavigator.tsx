@@ -89,6 +89,7 @@ function AddTripTabButton({ style, accessibilityState }: BottomTabBarButtonProps
       style={[style, { alignItems: 'center', justifyContent: 'center', gap: 2 }]}
       onPress={() => (_overridePlusHandler ?? _defaultPlusHandler)?.()}
       activeOpacity={0.7}
+      testID="btn-tab-add"
     >
       <Ionicons name="add-circle-outline" size={24} color={color} />
       <Text style={{ fontSize: 10, color }}>{label}</Text>

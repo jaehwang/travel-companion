@@ -42,6 +42,11 @@ travel-companion/
 │       │   ├── navigation/        # 네비게이션 설정
 │       │   ├── hooks/             # 커스텀 훅
 │       │   └── lib/               # 유틸리티 (Supabase 등)
+│       ├── e2e/                   # Detox E2E 테스트
+│       │   ├── home.test.ts       # 홈 화면 테스트
+│       │   ├── navigation.test.ts # 네비게이션 테스트
+│       │   └── jest.config.js     # E2E Jest 설정
+│       ├── .detoxrc.js            # Detox 설정
 │       └── App.tsx
 ├── packages/
 │   └── shared/                    # 공통 TypeScript 타입
@@ -149,6 +154,36 @@ npm run test:coverage                # 커버리지 리포트 포함 실행 (웹
 - `useTrips.test.ts` - useTrips 훅 테스트
 - `useCheckins.test.ts` - useCheckins 훅 테스트
 - `utils.test.ts` - 날짜 포맷 유틸리티 테스트
+
+### E2E 테스트 (Detox) — 모바일
+
+iOS 시뮬레이터(iPhone 17 Pro)에서 실행합니다. Release 빌드를 사용하므로 Metro 서버가 불필요합니다.
+
+```bash
+# 웹 개발 서버를 먼저 실행한다 (모바일 앱이 localhost:3000 API를 사용)
+npm run dev   # 루트에서 또는 cd apps/web && npm run dev
+
+cd apps/mobile
+
+# 최초 1회 또는 네이티브 코드 변경 시 빌드 (.env.development 사용)
+npm run e2e:build
+
+# E2E 테스트 실행
+npm run e2e:test
+```
+
+| 커맨드 | 환경 파일 | 용도 |
+|--------|-----------|------|
+| `npm run e2e:build` | `.env.development` | 기본 (권장) |
+| `npm run e2e:build:release` | `.env.production` | 프로덕션 환경 검증 시 |
+| `npm run e2e:test` | `.env.development` | 기본 테스트 실행 |
+| `npm run e2e:test:release` | `.env.production` | 프로덕션 환경 테스트 |
+
+E2E 테스트 파일 위치 (`apps/mobile/e2e/`):
+- `home.test.ts` — 홈 화면 표시, 여행 목록, 탭바 버튼, 로드 시간 측정
+- `navigation.test.ts` — 여행 카드 탭, TripScreen 진입, 스와이프 백
+
+> **참고**: E2E 테스트는 읽기 전용(조회)만 테스트합니다. 시뮬레이터에 이미 로그인된 세션이 있어야 합니다.
 
 ### E2E 테스트 (Playwright) — 웹
 

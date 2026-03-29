@@ -477,7 +477,7 @@ const [selectedTripId, setSelectedTripId] = useState<string>(route.params.trip.i
   }, [trip, checkins, mapRegion, dedupedMarkers, handleMyLocation, selectedCheckin, sortedCheckins, selectedCheckinId, filteredCheckins, sortOrder, handleMarkerPress]);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top']} testID="screen-trip">
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -515,6 +515,7 @@ const [selectedTripId, setSelectedTripId] = useState<string>(route.params.trip.i
         </View>
       ) : (
         <FlatList
+          testID="list-checkins"
           data={groupedData}
           keyExtractor={(item) => item.type === 'date' ? `date-${item.date}` : item.checkin.id}
           renderItem={({ item }) => {

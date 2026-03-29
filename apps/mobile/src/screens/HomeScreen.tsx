@@ -182,7 +182,7 @@ const { trips, loading, error, reload, update, remove } = useTrips();
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top']} testID="screen-home">
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Travel Companion</Text>
@@ -236,6 +236,7 @@ const { trips, loading, error, reload, update, remove } = useTrips();
         </View>
       ) : (
         <FlatList
+          testID="list-trips"
           data={trips}
           keyExtractor={(item) => item.id}
           renderItem={renderTrip}
