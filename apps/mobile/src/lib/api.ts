@@ -431,8 +431,8 @@ export async function uploadPhoto(
   const { data: publicData } = supabase.storage
     .from('trip-photos')
     .getPublicUrl(filePath);
-  return publicData.publicUrl.replace(
-    'https://xdqxccochovzcdkmdrpp.supabase.co',
-    'https://travel-companion-photo.kim-jaehwang.workers.dev'
-  );
+  const cdnUrl = process.env.EXPO_PUBLIC_PHOTO_CDN_URL;
+  return cdnUrl
+    ? publicData.publicUrl.replace(process.env.EXPO_PUBLIC_SUPABASE_URL!, cdnUrl)
+    : publicData.publicUrl;
 }

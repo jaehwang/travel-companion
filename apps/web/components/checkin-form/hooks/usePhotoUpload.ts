@@ -90,10 +90,10 @@ export function usePhotoUpload({
       const { data: publicData } = supabase.storage
         .from('trip-photos')
         .getPublicUrl(filePath);
-      const photoUrl = publicData.publicUrl.replace(
-        'https://xdqxccochovzcdkmdrpp.supabase.co',
-        'https://travel-companion-photo.kim-jaehwang.workers.dev'
-      );
+      const cdnUrl = process.env.NEXT_PUBLIC_PHOTO_CDN_URL;
+      const photoUrl = cdnUrl
+        ? publicData.publicUrl.replace(process.env.NEXT_PUBLIC_SUPABASE_URL!, cdnUrl)
+        : publicData.publicUrl;
 
       setPhotoUrl(photoUrl);
     } catch (err: unknown) {
