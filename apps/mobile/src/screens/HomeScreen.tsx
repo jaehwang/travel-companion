@@ -222,11 +222,6 @@ const { trips, loading, error, reload, update, remove } = useTrips();
         <Text style={styles.quickCheckinArrow}>›</Text>
       </TouchableOpacity>
 
-      {/* Section Header */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>내 여행</Text>
-      </View>
-
       {/* Trip List */}
       {loading && !refreshing ? (
         <View style={styles.centerContainer}>
@@ -313,20 +308,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    marginBottom: 4,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#1F2937',
-  },
-  listContent: {
+listContent: {
     paddingTop: 8,
     paddingBottom: 24,
   },
