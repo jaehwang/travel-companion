@@ -69,6 +69,60 @@ Google Calendar 연동 해제. refresh token을 revoke하고 DB에서 삭제.
 
 ---
 
+## GET /api/calendar/schedule
+오늘부터 2주간의 Google Calendar 일정을 조회하고, 위치가 있는 이벤트에 날씨 정보를 첨부한 뒤 Gemini AI 조언을 함께 반환한다.
+
+**인증**: 필요 + Google Calendar 연동 완료 상태
+**외부 의존**: `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (Geocoding), Open-Meteo (무료, 키 불필요), `GEMINI_API_KEY`
+
+**Query Parameters**: 없음 (항상 오늘~+14일)
+
+**응답 200**
+```json
+{
+  "items": [
+    {
+      "id": "abc123",
+      "summary": "묵호 여행",
+      "location": "동해비치호텔, 강원도 동해시",
+      "start": { "date": "2026-04-10" },
+      "end": { "date": "2026-04-12" },
+      "weather": {
+        "date": "2026-04-10",
+        "tempMax": 18,
+        "tempMin": 11,
+        "precipitation": 0.0,
+        "weatherCode": 3,
+        "windspeedMax": 17,
+        "description": "흐림",
+        "emoji": "☁️"
+      }
+    }
+  ],
+  "advice": "묵호 여행 첫날은 흐리지만 비는 없으니 해변 산책 괜찮아요. 4월 11일은 비와 강풍 예보라 실내 일정을 준비해두세요!"
+}
+```
+
+`weather` 필드는 위치 정보가 있는 이벤트에만 포함된다. Geocoding 실패 시 미포함.
+
+**WMO 날씨 코드 → 한국어**
+| 코드 | 설명 |
+|------|------|
+| 0 | ☀️ 맑음 |
+| 1 | 🌤️ 대체로 맑음 |
+| 2 | 🌤️ 구름 조금 |
+| 3 | ☁️ 흐림 |
+| 45–48 | 🌫️ 안개 |
+| 51–55 | 🌦️ 이슬비 |
+| 61–67 | 🌧️ 비 |
+| 71–77 | 🌨️ 눈 |
+| 80–82 | 🌦️ 소나기 |
+| 95–99 | ⛈️ 뇌우 |
+
+**응답 401 (토큰 만료)**: `GET /api/calendar`와 동일
+
+---
+
 ## POST /api/calendar/advice
 캘린더 이벤트 목록을 받아 Gemini AI로 한 줄 여행 조언 생성.
 

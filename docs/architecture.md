@@ -85,6 +85,7 @@
 | 장소 검색 (Google Places) | `/api/places/*` (API Key 서버 보관) |
 | Google Calendar 연동 | `/api/calendar/*` (OAuth refresh token 서버 보관) |
 | AI 태그라인 생성 | `/api/trips/[id]/tagline` (Gemini API Key 서버 보관) |
+| 2주 일정 + 날씨 + AI 조언 | `/api/calendar/schedule` (Open-Meteo + Gemini) |
 | 설정 조회/변경 | `/api/settings` |
 
 ---
@@ -122,6 +123,7 @@
 | `/api/checkins` | 체크인 CRUD, 근처 조회 | 웹 |
 | `/api/places/*` | Google Places API 프록시 | 웹, 모바일 |
 | `/api/calendar/*` | Google Calendar 연동 | 웹, 모바일 |
+| `/api/calendar/schedule` | 2주 일정 + Open-Meteo 날씨 + Gemini AI 조언 | 모바일 |
 | `/api/settings` | 사용자 설정 | 웹, 모바일 |
 | `/api/story/[id]` | 공개 여행 스토리 조회 (비인증 허용) | 웹 |
 
@@ -399,7 +401,38 @@ Supabase redirect URL에는 등록된 scheme(`travel-companion://`)과 개발용
 - 금지 조건: 이모지, 따옴표, 해시태그, 줄바꿈, 광고 문구
 - 예시 문구를 프롬프트에 포함해 톤을 고정
 
-### 2. 캘린더 기반 일정 조언
+### 2. 2주 일정 + 날씨 + AI 조언
+
+**엔드포인트**: `GET /api/calendar/schedule`
+**호출 주체**: 모바일
+**구현**: `apps/web/app/api/calendar/schedule/route.ts`
+
+오늘부터 2주간의 Google Calendar 일정을 조회하고, 위치 정보가 있는 이벤트에 날씨를 첨부한 뒤 Gemini로 전체 일정 조언을 생성한다.
+
+**설계**
+
+```
+클라이언트
+  → GET /api/calendar/schedule
+  → Google Calendar API: 오늘~+14일 이벤트 조회 (최대 50개)
+  → 위치별 Google Geocoding API → 좌표 변환 (중복 제거 후 병렬)
+  → Open-Meteo API → 날짜별 날씨 조회 (미래: forecast, 과거: archive)
+  → Gemini API → 2주 일정 + 날씨 기반 조언 (2~3문장)
+  → { items: CalendarEventWithWeather[], advice: string | null } 반환
+```
+
+날씨 데이터 구조 (`WeatherInfo`):
+```
+{ date, tempMax, tempMin, precipitation, weatherCode, windspeedMax, description, emoji }
+```
+
+WMO 코드 → 한국어: 맑음/대체로 맑음/구름 조금/흐림/안개/이슬비/비/눈/소나기/뇌우
+
+**Open-Meteo 사용 이유**: 무료, API 키 불필요, 과거/예보 모두 지원
+
+---
+
+### 3. 캘린더 기반 당일 일정 조언
 
 **엔드포인트**: `POST /api/calendar/advice`
 **호출 주체**: 웹, 모바일

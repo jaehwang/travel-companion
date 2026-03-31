@@ -295,6 +295,21 @@ export interface CalendarEvent {
   place?: PlaceInfo;
 }
 
+export interface WeatherInfo {
+  date: string;
+  tempMax: number;
+  tempMin: number;
+  precipitation: number;
+  weatherCode: number;
+  windspeedMax: number;
+  description: string;
+  emoji: string;
+}
+
+export interface CalendarEventWithWeather extends CalendarEvent {
+  weather?: WeatherInfo;
+}
+
 export async function fetchCalendarEvents(timeMin: string, timeMax?: string, maxResults = 10): Promise<CalendarEvent[]> {
   let path = `/api/calendar?timeMin=${encodeURIComponent(timeMin)}&maxResults=${maxResults}`;
   if (timeMax) path += `&timeMax=${encodeURIComponent(timeMax)}`;
@@ -315,6 +330,16 @@ export async function fetchCalendarAdvice(
 
 export async function disconnectCalendar(): Promise<void> {
   await apiFetch('/api/calendar/disconnect', { method: 'POST' });
+}
+
+export async function fetchScheduleWithWeather(): Promise<{
+  items: CalendarEventWithWeather[];
+  advice: string | null;
+}> {
+  const data = await apiFetch<{ items?: CalendarEventWithWeather[]; advice?: string }>(
+    '/api/calendar/schedule'
+  );
+  return { items: data.items ?? [], advice: data.advice ?? null };
 }
 
 // ── Nearby Checkins (Supabase 직접 호출) ──────────────────────────────

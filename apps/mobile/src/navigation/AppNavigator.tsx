@@ -12,6 +12,7 @@ import CheckinFormScreen from '../screens/CheckinFormScreen';
 import LocationPickerScreen from '../screens/LocationPickerScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import CheckinsScreen from '../screens/CheckinsScreen';
+import ScheduleScreen from '../screens/ScheduleScreen';
 import TripFormModal from '../components/TripFormModal';
 import { useTripsStore } from '../store/tripsStore';
 import type { Trip, TripFormData } from '../../../../packages/shared/src/types';
@@ -35,6 +36,7 @@ export type CheckinsStackParamList = {
 export type MainTabParamList = {
   TripsTab: NavigatorScreenParams<TripsStackParamList>;
   AddTripTab: undefined;
+  ScheduleTab: undefined;
   CheckinsTab: NavigatorScreenParams<CheckinsStackParamList>;
 };
 
@@ -181,6 +183,16 @@ function MainTabs() {
             tabBarLabel: '체크인',
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="location-outline" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="ScheduleTab"
+          component={ScheduleScreen}
+          options={{
+            tabBarLabel: '일정',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="calendar-outline" size={size} color={color} />
             ),
           }}
         />

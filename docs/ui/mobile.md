@@ -18,8 +18,10 @@ App.tsx
             │    ├─ TripsTab → TripsStack
             │    │    ├─ Home (여행 목록)
             │    │    └─ Trip (여행 상세)
-            │    └─ CheckinsTab → CheckinsStack
-            │         └─ Checkins (전체 체크인)
+            │    ├─ AddTripTab (+ 버튼)
+            │    ├─ CheckinsTab → CheckinsStack
+            │    │    └─ Checkins (전체 체크인)
+            │    └─ ScheduleTab → ScheduleScreen (2주 일정 + 날씨)
             ├─ CheckinForm (modal)
             ├─ LocationPicker (modal)
             └─ Settings
@@ -41,7 +43,9 @@ type CheckinsStackParamList = {
 
 type MainTabParamList = {
   TripsTab: NavigatorScreenParams<TripsStackParamList>;
+  AddTripTab: undefined;
   CheckinsTab: NavigatorScreenParams<CheckinsStackParamList>;
+  ScheduleTab: undefined;
 };
 
 type RootStackParamList = {
@@ -339,7 +343,31 @@ await signInWithGoogle();
 
 ---
 
-### 2.7 SettingsScreen (설정)
+### 2.7 ScheduleScreen (2주 일정)
+
+**파일**: `apps/mobile/src/screens/ScheduleScreen.tsx`
+
+**기능**
+- 오늘부터 2주간 Google Calendar 일정 표시
+- 위치 정보가 있는 이벤트에 날씨 배지 표시 (Open-Meteo)
+- 상단 Gemini AI 조언 카드
+- 당겨서 새로고침
+
+**디자인**
+- 헤더: "일정" 제목 + "오늘부터 2주" 부제
+- AI 조언 카드 (주황색 좌측 보더, 상단 고정)
+- 날짜별 섹션 헤더 (오늘/내일/모레 강조, 오늘은 주황색)
+- 이벤트 카드: 시간 | 제목 + 위치 링크 + 날씨 배지
+  - 위치 텍스트 탭 → Google Maps 열기
+  - 날씨 배지: 이모지, 한국어 설명, 최저~최고°C, 강수량(있을 때), 강풍 경고(30km/h↑)
+- 빈 상태 / 토큰 만료 안내 화면
+
+**백엔드 연계**
+- `fetchScheduleWithWeather()` → `GET /api/calendar/schedule` (Vercel API 경유)
+
+---
+
+### 2.8 SettingsScreen (설정)
 
 **파일**: `apps/mobile/src/screens/SettingsScreen.tsx`
 
@@ -536,6 +564,7 @@ Supabase 직접 호출과 Vercel API 경유로 구분된다.
 | `getPlaceDetails(place_id)` | Vercel API | `GET /api/places/details` |
 | `fetchCalendarEvents()` | Vercel API | `GET /api/calendar` |
 | `fetchCalendarAdvice(events)` | Vercel API | `POST /api/calendar/advice` |
+| `fetchScheduleWithWeather()` | Vercel API | `GET /api/calendar/schedule` — 2주 일정 + 날씨 + AI 조언 |
 | `disconnectCalendar()` | Vercel API | `POST /api/calendar/disconnect` |
 | `generateTagline(tripId)` | Vercel API | `POST /api/trips/[id]/tagline` |
 

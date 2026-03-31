@@ -1,7 +1,7 @@
 import {
   fetchTrips, createTrip, updateTrip, deleteTrip, fetchSettings,
   fetchCheckins, createCheckin, updateCheckin, deleteCheckin,
-  searchPlaces, getPlaceDetails,
+  searchPlaces, getPlaceDetails, fetchScheduleWithWeather,
 } from '../lib/api';
 
 // ── Supabase query builder helper ──────────────────────────────────────
@@ -297,5 +297,67 @@ describe('getPlaceDetails', () => {
     const [url] = mockFetch.mock.calls[0];
     expect(url).toContain('/api/places/details?place_id=place-1');
     expect(result).toEqual(mockPlace);
+  });
+});
+
+// ── fetchScheduleWithWeather (Vercel API via fetch) ────────────────────
+
+describe('fetchScheduleWithWeather', () => {
+  const mockItem = {
+    id: 'ev-1',
+    summary: '묵호 여행',
+    location: '동해비치호텔',
+    start: { date: '2026-04-10' },
+    end: { date: '2026-04-12' },
+    weather: {
+      date: '2026-04-10',
+      tempMax: 18,
+      tempMin: 11,
+      precipitation: 0,
+      weatherCode: 3,
+      windspeedMax: 17,
+      description: '흐림',
+      emoji: '☁️',
+    },
+  };
+
+  it('/api/calendar/schedule를 호출하고 items와 advice를 반환한다', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        items: [mockItem],
+        advice: '묵호 첫날은 흐리지만 비는 없어요.',
+      }),
+    });
+
+    const result = await fetchScheduleWithWeather();
+
+    const [url] = mockFetch.mock.calls[0];
+    expect(url).toContain('/api/calendar/schedule');
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0].weather?.description).toBe('흐림');
+    expect(result.advice).toBe('묵호 첫날은 흐리지만 비는 없어요.');
+  });
+
+  it('items가 없으면 빈 배열을 반환한다', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({}),
+    });
+
+    const result = await fetchScheduleWithWeather();
+
+    expect(result.items).toEqual([]);
+    expect(result.advice).toBeNull();
+  });
+
+  it('API 오류 시 예외를 던진다', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 401,
+      text: async () => JSON.stringify({ error: 'TOKEN_EXPIRED' }),
+    });
+
+    await expect(fetchScheduleWithWeather()).rejects.toThrow('TOKEN_EXPIRED');
   });
 });
