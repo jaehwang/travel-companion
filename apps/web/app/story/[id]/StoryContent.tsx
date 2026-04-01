@@ -21,6 +21,7 @@ function formatTripDate(dateStr: string | null | undefined): string | null {
 function formatDateHeader(dateStr: string): string {
   const d = new Date(dateStr);
   return new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -31,6 +32,7 @@ function formatDateHeader(dateStr: string): string {
 function formatTime(dateString: string): string {
   const date = new Date(dateString);
   return new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul',
     hour: '2-digit',
     minute: '2-digit',
   }).format(date);
@@ -71,7 +73,10 @@ export default function StoryContent({ trip, checkins }: StoryContentProps) {
   // 날짜별 그룹핑
   const groups: { dateKey: string; dateStr: string; items: Checkin[] }[] = [];
   for (const checkin of checkins) {
-    const dateKey = new Date(checkin.checked_in_at).toDateString();
+    const dateKey = new Intl.DateTimeFormat('ko-KR', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+    }).format(new Date(checkin.checked_in_at));
     const last = groups[groups.length - 1];
     if (last && last.dateKey === dateKey) {
       last.items.push(checkin);
