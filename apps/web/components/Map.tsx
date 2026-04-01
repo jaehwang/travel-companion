@@ -182,8 +182,6 @@ export default function Map({
                       src={selectedPhoto.url}
                       alt={selectedPhoto.title || 'Photo'}
                       className="w-full h-40 object-cover rounded mb-2"
-                      crossOrigin="anonymous"
-                      referrerPolicy="no-referrer"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
                       }}
