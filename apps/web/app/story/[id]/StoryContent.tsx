@@ -151,7 +151,7 @@ export default function StoryContent({ trip, checkins }: StoryContentProps) {
                   </div>
 
                   {/* 체크인 카드 그리드 */}
-                  <div className="checkin-grid">
+                  <div className="flex flex-col gap-[10px]">
                     {group.items.map((checkin) => {
                       const meta = CATEGORY_META[checkin.category ?? 'other'] ?? CATEGORY_META.other;
                       const mapsUrl = checkin.place_id
