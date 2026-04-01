@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import * as Clipboard from 'expo-clipboard';
@@ -53,7 +53,7 @@ const { trips, loading, error, reload, update, remove } = useTrips();
   const [showQuickCheckin, setShowQuickCheckin] = useState(false);
   const [lastCheckin, setLastCheckin] = useState<NearbyCheckin | null>(null);
   const [checkinLoading, setCheckinLoading] = useState(true);
-
+  const locationPermissionGranted = useRef(false);
 
   // Load user avatar
   useEffect(() => {
@@ -64,20 +64,27 @@ const { trips, loading, error, reload, update, remove } = useTrips();
     });
   }, []);
 
-  // Load current nearby checkin for status display
-  useEffect(() => {
-    (async () => {
-      try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') return;
-        const loc = await Location.getCurrentPositionAsync({});
-        const checkins = await fetchNearbyCheckins(loc.coords.latitude, loc.coords.longitude);
-        if (checkins.length > 0) setLastCheckin(checkins[0]);
-      } catch { /* silent */ } finally {
-        setCheckinLoading(false);
-      }
-    })();
-  }, []);
+  // 홈 화면에 포커스될 때마다 최신 체크인 정보를 갱신한다.
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      (async () => {
+        try {
+          if (!locationPermissionGranted.current) {
+            const { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== 'granted') return;
+            locationPermissionGranted.current = true;
+          }
+          const loc = await Location.getCurrentPositionAsync({});
+          const checkins = await fetchNearbyCheckins(loc.coords.latitude, loc.coords.longitude);
+          if (!cancelled && checkins.length > 0) setLastCheckin(checkins[0]);
+        } catch { /* silent */ } finally {
+          if (!cancelled) setCheckinLoading(false);
+        }
+      })();
+      return () => { cancelled = true; };
+    }, [])
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
