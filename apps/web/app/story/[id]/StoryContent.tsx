@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MapPin, Map as MapIcon } from 'lucide-react';
 import Map, { MapPhoto } from '@/components/Map';
 import type { Trip, Checkin } from '@/types/database';
@@ -21,7 +21,6 @@ function formatTripDate(dateStr: string | null | undefined): string | null {
 function formatDateHeader(dateStr: string): string {
   const d = new Date(dateStr);
   return new Intl.DateTimeFormat('ko-KR', {
-    timeZone: 'Asia/Seoul',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -32,7 +31,6 @@ function formatDateHeader(dateStr: string): string {
 function formatTime(dateString: string): string {
   const date = new Date(dateString);
   return new Intl.DateTimeFormat('ko-KR', {
-    timeZone: 'Asia/Seoul',
     hour: '2-digit',
     minute: '2-digit',
   }).format(date);
@@ -45,6 +43,8 @@ interface StoryContentProps {
 
 export default function StoryContent({ trip, checkins }: StoryContentProps) {
   const [copied, setCopied] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => setIsClient(true), []);
 
   const mapPhotos: MapPhoto[] = checkins.map((c) => ({
     id: c.id,
@@ -73,10 +73,7 @@ export default function StoryContent({ trip, checkins }: StoryContentProps) {
   // 날짜별 그룹핑
   const groups: { dateKey: string; dateStr: string; items: Checkin[] }[] = [];
   for (const checkin of checkins) {
-    const dateKey = new Intl.DateTimeFormat('ko-KR', {
-      timeZone: 'Asia/Seoul',
-      year: 'numeric', month: '2-digit', day: '2-digit',
-    }).format(new Date(checkin.checked_in_at));
+    const dateKey = new Date(checkin.checked_in_at).toDateString();
     const last = groups[groups.length - 1];
     if (last && last.dateKey === dateKey) {
       last.items.push(checkin);
@@ -149,8 +146,8 @@ export default function StoryContent({ trip, checkins }: StoryContentProps) {
                   {/* 날짜 구분선 */}
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-2 h-2 rounded-full shrink-0 bg-[#FF6B47]" />
-                    <span className="text-xs font-bold text-tc-warm-mid whitespace-nowrap tracking-[0.02em]" suppressHydrationWarning>
-                      {formatDateHeader(group.dateStr)}
+                    <span className="text-xs font-bold text-tc-warm-mid whitespace-nowrap tracking-[0.02em]">
+                      {isClient ? formatDateHeader(group.dateStr) : ''}
                     </span>
                     <div className="flex-1 h-px bg-tc-dot" />
                   </div>
@@ -177,8 +174,8 @@ export default function StoryContent({ trip, checkins }: StoryContentProps) {
                                   <meta.icon size={12} color={meta.color} />
                                   {meta.label}
                                 </span>
-                                <span className="text-[11px] text-tc-warm-faint" suppressHydrationWarning>
-                                  {formatTime(checkin.checked_in_at)}
+                                <span className="text-[11px] text-tc-warm-faint">
+                                  {isClient ? formatTime(checkin.checked_in_at) : ''}
                                 </span>
                               </div>
 
