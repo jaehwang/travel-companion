@@ -222,21 +222,23 @@ Travel Companion을 단순한 여행 기록 앱에서 **유머 있는 AI 비서*
 
 ### US-013: 여행 없이 체크인 (Default Trip)
 
+**Status:** ✅ 완료
+
 **Description:** 여행자로서, 여행을 먼저 만들지 않고 바로 체크인을 기록한 뒤 나중에 원하는 여행에 추가하고 싶다.
 
 **Acceptance Criteria:**
-- [ ] 탭바에 "+체크인" 탭 추가 (+여행 탭과 나란히 배치) — 탭 시 `trip_id` 없이 `CheckinFormScreen` 열림
-- [ ] `trip_id` 없이 체크인 저장 시 서버에서 `{userId}_default` 이름의 default trip 자동 조회/생성 후 할당
-- [ ] Default trip은 여행 목록(HomeScreen)에 표시되지 않음
-- [ ] Default trip에 속한 체크인은 `CheckinsScreen`에서 "미할당" 뱃지와 함께 표시
-- [ ] `CheckinFormScreen`에 여행 선택 드롭다운 추가 — 미할당 체크인을 특정 여행으로 이동 가능
-- [ ] `CheckinCard` 롱프레스 → "여행으로 이동" 액션 → 여행 선택 시트 → `trip_id` 업데이트
-- [ ] 여행 지정 완료 후 "미할당" 뱃지 즉시 제거
-- [ ] `trips` 테이블에 `is_default boolean DEFAULT false` 컬럼 추가
-- [ ] `POST /api/checkins` — `trip_id` 선택적 허용, 미전달 시 default trip 자동 조회/생성
-- [ ] `GET /api/trips` — `is_default = false` 필터 적용
-- [ ] `PATCH /api/checkins/[id]` — `trip_id` 변경 허용 (여행 이동)
-- [ ] Typecheck 통과
+- [x] 탭바에 "+체크인" 탭 추가 (+여행 탭과 나란히 배치) — 탭 시 `trip_id` 없이 `CheckinFormScreen` 열림
+- [x] `trip_id` 없이 체크인 저장 시 서버에서 `{userId}_default` 이름의 default trip 자동 조회/생성 후 할당
+- [x] Default trip은 여행 목록(HomeScreen)에 표시되지 않음
+- [x] Default trip에 속한 체크인은 `CheckinsScreen`에서 "미할당" 뱃지와 함께 표시
+- [x] `CheckinFormScreen`에 여행 선택 드롭다운 추가 — 미할당 체크인을 특정 여행으로 이동 가능
+- [x] `CheckinCard` 롱프레스 → "여행으로 이동" 액션 → 여행 선택 시트 → `trip_id` 업데이트
+- [x] 여행 지정 완료 후 "미할당" 뱃지 즉시 제거
+- [x] `trips` 테이블에 `is_default boolean DEFAULT false` 컬럼 추가
+- [x] `POST /api/checkins` — `trip_id` 선택적 허용, 미전달 시 default trip 자동 조회/생성
+- [x] `GET /api/trips` — `is_default = false` 필터 적용
+- [x] `PATCH /api/checkins/[id]` — `trip_id` 변경 허용 (여행 이동)
+- [x] Typecheck 통과
 
 **테스트 힌트:**
 - E2E (Detox): +체크인 탭 → 저장 → CheckinsScreen "미할당" 뱃지 확인 → 여행 선택 → 뱃지 제거 확인
