@@ -36,6 +36,7 @@ export type CheckinsStackParamList = {
 export type MainTabParamList = {
   TripsTab: NavigatorScreenParams<TripsStackParamList>;
   AddTripTab: undefined;
+  AddCheckinTab: undefined;
   ScheduleTab: undefined;
   CheckinsTab: NavigatorScreenParams<CheckinsStackParamList>;
 };
@@ -43,8 +44,8 @@ export type MainTabParamList = {
 export type RootStackParamList = {
   MainTabs: NavigatorScreenParams<MainTabParamList>;
   CheckinForm: {
-    tripId: string;
-    tripTitle: string;
+    tripId?: string;
+    tripTitle?: string;
     initialLatitude?: number;
     initialLongitude?: number;
     initialPlace?: string;
@@ -52,8 +53,8 @@ export type RootStackParamList = {
     checkin?: import('../../../../packages/shared/src/types').Checkin;
   };
   LocationPicker: {
-    tripId: string;
-    tripTitle: string;
+    tripId?: string;
+    tripTitle?: string;
     initialLatitude?: number;
     initialLongitude?: number;
   };
@@ -74,6 +75,23 @@ export function setTabPlusOverride(handler: (() => void) | null, label?: string)
   const newLabel = handler ? (label ?? '추가') : '여행 추가';
   _plusLabel = newLabel;
   _plusLabelListeners.forEach(fn => fn(newLabel));
+}
+
+export function AddCheckinTabButton({ style, accessibilityState }: BottomTabBarButtonProps) {
+  const navigation = useNavigation<any>();
+  const color = accessibilityState?.selected ? '#F97316' : '#9CA3AF';
+
+  return (
+    <TouchableOpacity
+      style={[style, { alignItems: 'center', justifyContent: 'center', gap: 2 }]}
+      onPress={() => navigation.navigate('CheckinForm', {})}
+      activeOpacity={0.7}
+      testID="btn-tab-add-checkin"
+    >
+      <Ionicons name="add-circle" size={24} color={color} />
+      <Text style={{ fontSize: 10, color }}>+체크인</Text>
+    </TouchableOpacity>
+  );
 }
 
 function AddTripTabButton({ style, accessibilityState }: BottomTabBarButtonProps) {
@@ -174,6 +192,14 @@ function MainTabs() {
           options={{
             tabBarLabel: '',
             tabBarButton: (props) => <AddTripTabButton {...props} />,
+          }}
+        />
+        <Tab.Screen
+          name="AddCheckinTab"
+          component={TripsStackNavigator}
+          options={{
+            tabBarLabel: '',
+            tabBarButton: (props) => <AddCheckinTabButton {...props} />,
           }}
         />
         <Tab.Screen

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAuthenticatedClient } from '@/lib/supabase/server';
+import { getOrCreateDefaultTrip } from '@/lib/defaultTrip';
 import type { CheckinInsert } from '@/types/database';
 
 // GET /api/checkins?trip_id={id} - 체크인 목록 조회
@@ -65,13 +66,6 @@ export async function POST(request: Request) {
       checked_in_at,
     } = body;
 
-    if (!trip_id || typeof trip_id !== 'string') {
-      return NextResponse.json(
-        { error: 'trip_id is required' },
-        { status: 400 }
-      );
-    }
-
     if (typeof latitude !== 'number' || typeof longitude !== 'number') {
       return NextResponse.json(
         { error: 'latitude and longitude are required and must be numbers' },
@@ -93,8 +87,12 @@ export async function POST(request: Request) {
       );
     }
 
+    const resolvedTripId = trip_id && typeof trip_id === 'string'
+      ? trip_id
+      : (await getOrCreateDefaultTrip(supabase, user.id)).id;
+
     const checkinData: CheckinInsert = {
-      trip_id,
+      trip_id: resolvedTripId,
       latitude,
       longitude,
       title: title?.trim(),

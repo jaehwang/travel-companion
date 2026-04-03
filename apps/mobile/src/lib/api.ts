@@ -49,6 +49,7 @@ export async function fetchTrips(): Promise<Trip[]> {
   const { data, error } = await supabase
     .from('trips')
     .select('*')
+    .eq('is_default', false)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -170,12 +171,46 @@ export async function fetchAllCheckins(tripId?: string): Promise<Checkin[]> {
   return data as Checkin[];
 }
 
-export async function createCheckin(checkinData: CheckinInsert): Promise<Checkin> {
-  await getUser();
+async function getOrCreateDefaultTrip(userId: string): Promise<Trip> {
+  const { data, error } = await supabase
+    .from('trips')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_default', true)
+    .single();
+
+  if (!error) return data as Trip;
+
+  if (error.code !== 'PGRST116') {
+    throw new Error(`default trip 조회 실패: ${error.message}`);
+  }
+
+  const { data: created, error: insertError } = await supabase
+    .from('trips')
+    .insert({
+      user_id: userId,
+      title: `${userId}_default`,
+      is_default: true,
+      is_public: false,
+      is_frequent: false,
+    } as any)
+    .select()
+    .single();
+
+  if (insertError) throw new Error(`default trip 생성 실패: ${insertError.message}`);
+  return created as Trip;
+}
+
+export async function createCheckin(checkinData: CheckinInsert & { trip_id?: string }): Promise<Checkin> {
+  const user = await getUser();
+
+  const resolvedTripId = checkinData.trip_id
+    ? checkinData.trip_id
+    : (await getOrCreateDefaultTrip(user.id)).id;
 
   const { data, error } = await supabase
     .from('checkins')
-    .insert(checkinData as any)
+    .insert({ ...checkinData, trip_id: resolvedTripId } as any)
     .select()
     .single();
 

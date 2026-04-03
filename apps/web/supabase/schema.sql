@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS trips (
   latitude float8,
   longitude float8,
   is_frequent BOOLEAN NOT NULL DEFAULT false,
+  is_default BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

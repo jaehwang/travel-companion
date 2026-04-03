@@ -1,12 +1,15 @@
 import React from 'react';
+import { Alert } from 'react-native';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import CheckinsScreen from '../CheckinsScreen';
 import { useAllCheckins } from '../../hooks/useAllCheckins';
 import { useTrips } from '../../hooks/useTrips';
+import { useCheckinsStore } from '../../store/checkinsStore';
 
 jest.mock('../../lib/supabase', () => ({ supabase: {} }));
 jest.mock('../../hooks/useAllCheckins');
 jest.mock('../../hooks/useTrips');
+jest.mock('../../store/checkinsStore');
 jest.mock('../../utils/categoryIcons', () => ({
   CATEGORY_META: {
     other: { icon: 'location', color: '#9CA3AF', label: '기타' },
@@ -25,12 +28,16 @@ jest.mock('react-native-safe-area-context', () => ({
 
 const mockUseAllCheckins = useAllCheckins as jest.MockedFunction<typeof useAllCheckins>;
 const mockUseTrips = useTrips as jest.MockedFunction<typeof useTrips>;
+const mockUseCheckinsStore = useCheckinsStore as jest.MockedFunction<typeof useCheckinsStore>;
 
-const makeTrip = (id: string, title: string, isFrequent: boolean) => ({
+const mockUpdateCheckin = jest.fn();
+
+const makeTrip = (id: string, title: string, isFrequent: boolean, isDefault = false) => ({
   id,
   title,
   is_public: false,
   is_frequent: isFrequent,
+  is_default: isDefault,
   created_at: '2026-03-01T00:00:00Z',
   updated_at: '2026-03-01T00:00:00Z',
 });
@@ -69,6 +76,7 @@ function setupMocks(checkins = [normalCheckin, frequentCheckin], trips = [normal
     update: jest.fn(),
     remove: jest.fn(),
   });
+  mockUseCheckinsStore.mockReturnValue(mockUpdateCheckin as any);
 }
 
 describe('CheckinsScreen', () => {
@@ -172,5 +180,68 @@ describe('CheckinsScreen', () => {
     setupMocks();
     render(<CheckinsScreen />);
     expect(mockUseAllCheckins).toHaveBeenCalledWith();
+  });
+
+  describe('미할당 뱃지', () => {
+    // fetchTrips는 is_default=false 필터 → default trip이 trips 배열에 없음
+    // 따라서 미할당 체크인의 trip은 tripMap에서 undefined
+    const defaultCheckin = makeCheckin('c-default', 't-default', '미할당 체크인');
+
+    it('tripMap에 없는 trip의 체크인에 미할당 뱃지가 표시된다', () => {
+      // defaultCheckin의 trip_id('t-default')는 trips 목록에 없음
+      setupMocks([defaultCheckin, normalCheckin], [normalTrip]);
+      const { getAllByTestId } = render(<CheckinsScreen />);
+      expect(getAllByTestId('badge-unassigned')).toHaveLength(1);
+    });
+
+    it('tripMap에 있는 trip의 체크인에는 미할당 뱃지가 표시되지 않는다', () => {
+      setupMocks([normalCheckin], [normalTrip]);
+      const { queryByTestId } = render(<CheckinsScreen />);
+      expect(queryByTestId('badge-unassigned')).toBeNull();
+    });
+  });
+
+  describe('여행으로 이동', () => {
+    const defaultCheckin = makeCheckin('c-default', 't-default', '미할당 체크인');
+
+    it('카드 롱프레스 시 여행으로 이동 Alert가 표시된다', () => {
+      // default trip은 trips에 없으므로 normalTrip만 전달
+      setupMocks([defaultCheckin, normalCheckin], [normalTrip]);
+      const alertSpy = jest.spyOn(Alert, 'alert');
+
+      const { getByTestId } = render(<CheckinsScreen />);
+      fireEvent(getByTestId('checkin-card-unassigned'), 'longPress');
+
+      expect(alertSpy).toHaveBeenCalledWith(
+        expect.any(String),
+        undefined,
+        expect.arrayContaining([
+          expect.objectContaining({ text: expect.stringContaining('제주도 여행') }),
+        ])
+      );
+    });
+
+    it('Alert에서 여행 선택 시 updateCheckin 호출 후 reload된다', async () => {
+      setupMocks([defaultCheckin, normalCheckin], [normalTrip]);
+      mockUpdateCheckin.mockResolvedValue({});
+      let capturedButtons: { text: string; onPress?: () => void }[] = [];
+      jest.spyOn(Alert, 'alert').mockImplementation((_title, _msg, buttons) => {
+        capturedButtons = buttons as typeof capturedButtons;
+      });
+
+      const { getByTestId } = render(<CheckinsScreen />);
+      fireEvent(getByTestId('checkin-card-unassigned'), 'longPress');
+
+      const tripButton = capturedButtons.find(b => b.text.includes('제주도 여행'));
+      tripButton?.onPress?.();
+
+      await waitFor(() => {
+        expect(mockUpdateCheckin).toHaveBeenCalledWith(
+          'c-default',
+          expect.objectContaining({ trip_id: 't1' })
+        );
+        expect(defaultReload).toHaveBeenCalled();
+      });
+    });
   });
 });

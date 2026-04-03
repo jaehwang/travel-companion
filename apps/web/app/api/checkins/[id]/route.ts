@@ -16,6 +16,7 @@ export async function PATCH(
     const { id } = await params;
     const body = await request.json();
     const {
+      trip_id,
       latitude,
       longitude,
       title,
@@ -27,6 +28,17 @@ export async function PATCH(
       photo_metadata,
       checked_in_at,
     } = body;
+
+    if (trip_id !== undefined) {
+      const { data: targetTrip } = await supabase
+        .from('trips')
+        .select('user_id')
+        .eq('id', trip_id)
+        .single() as any;
+      if (!targetTrip || targetTrip.user_id !== user.id) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    }
 
     if (latitude !== undefined) {
       if (typeof latitude !== 'number' || latitude < -90 || latitude > 90) {
@@ -45,7 +57,8 @@ export async function PATCH(
       }
     }
 
-    const updateData: Partial<CheckinInsert> = {};
+    const updateData: Partial<CheckinInsert> & { trip_id?: string } = {};
+    if (trip_id !== undefined) updateData.trip_id = trip_id;
     if (latitude !== undefined) updateData.latitude = latitude;
     if (longitude !== undefined) updateData.longitude = longitude;
     if (title !== undefined) updateData.title = title?.trim() || undefined;

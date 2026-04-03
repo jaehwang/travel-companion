@@ -18,7 +18,8 @@ App.tsx
             │    ├─ TripsTab → TripsStack
             │    │    ├─ Home (여행 목록)
             │    │    └─ Trip (여행 상세)
-            │    ├─ AddTripTab (+ 버튼)
+            │    ├─ AddTripTab (+ 여행 버튼)
+            │    ├─ AddCheckinTab (+ 체크인 버튼)
             │    ├─ CheckinsTab → CheckinsStack
             │    │    └─ Checkins (전체 체크인)
             │    └─ ScheduleTab → ScheduleScreen (2주 일정 + 날씨)
@@ -44,6 +45,7 @@ type CheckinsStackParamList = {
 type MainTabParamList = {
   TripsTab: NavigatorScreenParams<TripsStackParamList>;
   AddTripTab: undefined;
+  AddCheckinTab: undefined;
   CheckinsTab: NavigatorScreenParams<CheckinsStackParamList>;
   ScheduleTab: undefined;
 };
@@ -51,8 +53,8 @@ type MainTabParamList = {
 type RootStackParamList = {
   MainTabs: NavigatorScreenParams<MainTabParamList>;
   CheckinForm: {
-    tripId: string;
-    tripTitle: string;
+    tripId?: string;       // 생략 시 저장 전 여행 선택 UI 표시
+    tripTitle?: string;
     initialLatitude?: number;
     initialLongitude?: number;
     initialPlace?: string;
@@ -60,8 +62,8 @@ type RootStackParamList = {
     checkin?: Checkin;  // 수정 모드
   };
   LocationPicker: {
-    tripId: string;
-    tripTitle: string;
+    tripId?: string;
+    tripTitle?: string;
     initialLatitude?: number;
     initialLongitude?: number;
   };
@@ -200,10 +202,12 @@ type ListItem =
 - 월별 섹션 헤더 (SectionList)
 - 2열 그리드 레이아웃
 - 세그먼트 탭 필터: `일반` (기본) / `자주 가는 곳`
-  - `일반`: `is_frequent = false` 여행의 체크인만 표시
+  - `일반`: `is_frequent = false` 여행의 체크인 + **미할당 체크인** (tripMap에 없는 체크인) 표시
   - `자주 가는 곳`: `is_frequent = true` 여행의 체크인만 표시
   - 클라이언트 사이드 필터링 (trips 스토어 기반)
 - 카드 탭 → 해당 TripScreen으로 이동 (TripsTab 전환)
+  - 미할당 체크인(tripMap 미포함) 탭 시 이동 없음
+- **카드 롱프레스 → "여행으로 이동" Alert** — 여행 목록 중 하나를 선택하면 `trip_id` 변경 후 목록 갱신
 - 당겨 새로고침, 탭 포커스 시 자동 새로고침
 
 **디자인**
@@ -212,17 +216,20 @@ type ListItem =
 - 2열 그리드 카드 (`CARD_WIDTH = (screenWidth - 16*2 - 8) / 2`)
   - 상단: 사진 있으면 정사각형 이미지, 없으면 카테고리 아이콘 플레이스홀더 (동일 높이)
   - 하단 고정 높이(80px): 제목, 여행명(주황색), 카테고리 라벨, 날짜·시간
+  - **미할당 체크인**: 카드 우상단에 주황색 `미할당` 뱃지 (`testID="badge-unassigned"`)
 - 섹션 헤더: "2026년 3월" 형식
 - 빈 상태: 안내 메시지
 
 **데이터 흐름**
 1. `useAllCheckins()` — 전체 체크인 목록 (스토어에서)
-2. `useTrips()` — `Map<tripId, Trip>` 생성
+2. `useTrips()` — `Map<tripId, Trip>` 생성 (`fetchTrips`는 `is_default=false` 필터 적용)
 3. `filter` state (`'normal' | 'frequent'`)로 `trips.is_frequent` 기준 클라이언트 필터링
+   - `normal` 필터: `normalTripIds.has(c.trip_id) || !tripMap.has(c.trip_id)` (미할당 포함)
 4. `useMemo`로 체크인을 `[Checkin, Checkin | null]` 쌍으로 묶어 SectionList sections 생성
 
 **백엔드 연계**
 - `useAllCheckins` 훅 → `fetchAllCheckins(tripId?)` → Supabase `checkins` 테이블 직접 조회
+- `updateCheckin(id, { trip_id })` → Supabase `checkins` UPDATE (여행으로 이동 시)
 
 ---
 
@@ -232,6 +239,9 @@ type ListItem =
 
 **기능**
 - 체크인 신규 생성 또는 수정 (route.params.checkin 유무로 판별)
+- **여행 없이 진입 시** (`tripId` 미전달): 저장 전 여행 선택 UI 표시 (FlatList 칩 목록)
+  - 여행 선택 전까지 저장 버튼 비활성화
+  - 여행 선택 없이 저장하면 `trip_id` 없이 `createCheckin` 호출 → default trip 자동 할당
 - 사진 첨부 (PhotoPickerButton → 라이브러리 또는 카메라)
 - 위치 선택 → LocationPickerScreen 이동 후 결과 수신
 - 장소 검색 (PlaceSearchPanel)
@@ -242,6 +252,7 @@ type ListItem =
 **디자인**
 - 전체화면 모달 스타일 (RootStack modal 모드)
 - 상단: 취소 / 저장 버튼
+- `tripId` 없을 때: 여행 선택 칩 목록 (`testID="trip-selector"`)
 - 사진 미리보기 영역
 - 입력 필드: 제목, 메모
 - 위치 표시 행: 장소명 + 지도 아이콘
@@ -547,13 +558,13 @@ Supabase 직접 호출과 Vercel API 경유로 구분된다.
 
 | 함수 | 호출 방식 | 비고 |
 |---|---|---|
-| `fetchTrips()` | Supabase 직접 | checkins 조인으로 `first_checkin_date`, `cover_photo_url` 보강 |
+| `fetchTrips()` | Supabase 직접 | `is_default=false` 필터 적용. checkins 조인으로 `first_checkin_date`, `cover_photo_url` 보강 |
 | `createTrip(data)` | Supabase 직접 | |
 | `updateTrip(id, data)` | Supabase 직접 | |
 | `deleteTrip(id)` | Supabase 직접 | |
 | `fetchCheckins(tripId)` | Supabase 직접 | |
 | `fetchAllCheckins(tripId?)` | Supabase 직접 | |
-| `createCheckin(data)` | Supabase 직접 | |
+| `createCheckin(data)` | Supabase 직접 | `trip_id` 생략 시 `getOrCreateDefaultTrip`으로 자동 할당 |
 | `updateCheckin(id, data)` | Supabase 직접 | |
 | `deleteCheckin(id)` | Supabase 직접 | |
 | `fetchSettings()` | Supabase 직접 | `user_profiles.settings` 조회 |

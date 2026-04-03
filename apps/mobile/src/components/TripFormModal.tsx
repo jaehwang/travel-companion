@@ -166,6 +166,7 @@ export default function TripFormModal({ visible, onClose, onSubmit, mode = 'crea
                   <Text style={styles.cancelText}>취소</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
+                  testID="btn-save-trip"
                   onPress={handleSubmit}
                   disabled={!canSubmit}
                   style={[styles.submitButton, !canSubmit && styles.submitButtonDisabled]}
@@ -184,6 +185,7 @@ export default function TripFormModal({ visible, onClose, onSubmit, mode = 'crea
             {/* 본문 */}
             <ScrollView style={styles.body} keyboardShouldPersistTaps="handled">
               <TextInput
+                testID="input-trip-title"
                 value={title}
                 onChangeText={setTitle}
                 placeholder="여행 이름을 지어주세요"

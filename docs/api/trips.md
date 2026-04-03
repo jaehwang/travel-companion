@@ -3,6 +3,8 @@
 ## GET /api/trips
 여행 목록 조회. 각 여행에 첫 번째 체크인 날짜와 랜덤 커버 사진 URL이 포함됩니다.
 
+`is_default = true`인 default trip은 응답에서 제외됩니다 (내부 전용).
+
 **인증**: 필요
 
 **응답 200**
@@ -17,6 +19,7 @@
       "end_date": "2026-01-04",
       "is_public": false,
       "is_frequent": false,
+      "is_default": false,
       "place": "제주도",
       "place_id": "google_place_id",
       "latitude": 33.4996,

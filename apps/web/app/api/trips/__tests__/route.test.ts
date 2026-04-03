@@ -9,6 +9,7 @@ function createQueryBuilder(resolvedValue: { data: any; error: any }) {
   const builder: any = {
     select: jest.fn(() => builder),
     order: jest.fn(() => builder),
+    eq: jest.fn(() => builder),
     in: jest.fn(() => builder),
     insert: jest.fn(() => builder),
     single: jest.fn().mockResolvedValue(resolvedValue),
@@ -128,6 +129,28 @@ describe('GET /api/trips', () => {
     const res = await GET(req);
 
     expect(res.status).toBe(500);
+  });
+
+  it('is_default=true 여행은 응답에 포함되지 않는다', async () => {
+    const regularTrip = { id: 'trip-regular', title: '도쿄 여행', is_default: false };
+    const defaultTrip = { id: 'trip-default', title: 'user-1_default', is_default: true };
+
+    let tripsBuilder: any;
+    mockFrom.mockImplementation((table: string) => {
+      if (table === 'trips') {
+        tripsBuilder = createQueryBuilder({ data: [regularTrip, defaultTrip], error: null });
+        return tripsBuilder;
+      }
+      return createQueryBuilder({ data: [], error: null });
+    });
+
+    const req = new NextRequest('http://localhost:3000/api/trips');
+    const res = await GET(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    // is_default=false 필터가 쿼리에 적용되었는지 확인
+    expect(tripsBuilder.eq).toHaveBeenCalledWith('is_default', false);
   });
 
   it('비인증 요청 시 401을 반환한다', async () => {

@@ -138,6 +138,43 @@ describe('PATCH /api/checkins/[id]', () => {
     expect(res.status).toBe(500);
   });
 
+  it('trip_id PATCH 성공 — 자신의 여행으로 이동하면 200을 반환한다', async () => {
+    const targetTrip = { id: 'trip-mine', user_id: 'user-1' };
+    const updated = { ...fullCheckin, trip_id: 'trip-mine' };
+
+    mockFrom.mockImplementation((table: string) => {
+      if (table === 'trips') return createQueryBuilder({ data: targetTrip, error: null });
+      return createQueryBuilder({ data: updated, error: null });
+    });
+
+    const req = new NextRequest('http://localhost:3000/api/checkins/checkin-123', {
+      method: 'PATCH',
+      body: JSON.stringify({ trip_id: 'trip-mine' }),
+    });
+    const res = await PATCH(req, { params });
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.checkin.trip_id).toBe('trip-mine');
+  });
+
+  it('trip_id PATCH — 타인 소유 trip_id로 변경 시도 시 403을 반환한다', async () => {
+    const otherTrip = { id: 'trip-other', user_id: 'user-999' };
+
+    mockFrom.mockImplementation((table: string) => {
+      if (table === 'trips') return createQueryBuilder({ data: otherTrip, error: null });
+      return createQueryBuilder({ data: null, error: null });
+    });
+
+    const req = new NextRequest('http://localhost:3000/api/checkins/checkin-123', {
+      method: 'PATCH',
+      body: JSON.stringify({ trip_id: 'trip-other' }),
+    });
+    const res = await PATCH(req, { params });
+
+    expect(res.status).toBe(403);
+  });
+
   it('비인증 요청 시 401을 반환한다', async () => {
     mockGetUser.mockReturnValue(null);
 

@@ -56,7 +56,7 @@ GET /api/checkins?trip_id=uuid
 **요청 Body**
 ```json
 {
-  "trip_id": "uuid",               // 필수
+  "trip_id": "uuid",               // 선택 — 생략 시 사용자의 default trip에 자동 할당
   "latitude": 33.4585,             // 필수 (-90 ~ 90)
   "longitude": 126.9422,           // 필수 (-180 ~ 180)
   "title": "성산일출봉",           // 선택 (사용자 입력 제목)
@@ -69,6 +69,8 @@ GET /api/checkins?trip_id=uuid
   "checked_in_at": "2026-01-02T06:00:00Z"  // 선택 (기본값: 현재 시각)
 }
 ```
+
+`trip_id`를 생략하면 서버가 `is_default = true`인 사용자 전용 default trip을 조회하거나 자동 생성하여 할당한다.
 
 **응답 201**
 ```json
@@ -85,6 +87,7 @@ GET /api/checkins?trip_id=uuid
 **요청 Body** (모두 선택)
 ```json
 {
+  "trip_id": "uuid",
   "latitude": 33.4585,
   "longitude": 126.9422,
   "title": "수정된 제목",
@@ -97,6 +100,8 @@ GET /api/checkins?trip_id=uuid
   "checked_in_at": "2026-01-02T06:00:00Z"
 }
 ```
+
+`trip_id`를 전달하면 체크인을 다른 여행으로 이동한다. 대상 여행이 현재 사용자 소유가 아닌 경우 403을 반환한다.
 
 **응답 200**
 ```json

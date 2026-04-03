@@ -40,6 +40,7 @@ export interface Trip {
   end_date?: string;
   is_public: boolean;
   is_frequent: boolean;
+  is_default: boolean;
   created_at: string;
   updated_at: string;
   first_checkin_date?: string | null;
@@ -92,6 +93,7 @@ export interface TripInsert {
   end_date?: string;
   is_public?: boolean;
   is_frequent?: boolean;
+  is_default?: boolean;
   place?: string | null;
   place_id?: string | null;
   latitude?: number | null;

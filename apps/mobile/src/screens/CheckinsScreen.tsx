@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -18,6 +19,7 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useAllCheckins } from '../hooks/useAllCheckins';
 import { useTrips } from '../hooks/useTrips';
+import { useCheckinsStore } from '../store/checkinsStore';
 import { CATEGORY_META } from '../utils/categoryIcons';
 import type { CheckinsStackParamList, MainTabParamList, RootStackParamList } from '../navigation/AppNavigator';
 import type { Checkin, Trip } from '../../../../packages/shared/src/types';
@@ -72,18 +74,27 @@ interface CheckinGridCardProps {
   checkin: Checkin;
   tripMap: Map<string, Trip>;
   onPress: (checkin: Checkin, trip: Trip | undefined) => void;
+  onLongPress: (checkin: Checkin) => void;
 }
 
-function CheckinGridCard({ checkin, tripMap, onPress }: CheckinGridCardProps) {
+function CheckinGridCard({ checkin, tripMap, onPress, onLongPress }: CheckinGridCardProps) {
   const trip = tripMap.get(checkin.trip_id);
+  const isUnassigned = trip === undefined;
   const meta = CATEGORY_META[checkin.category ?? 'other'] ?? CATEGORY_META.other;
 
   return (
     <TouchableOpacity
+      testID={isUnassigned ? 'checkin-card-unassigned' : `checkin-card-${checkin.id}`}
       style={styles.card}
       onPress={() => onPress(checkin, trip)}
+      onLongPress={() => onLongPress(checkin)}
       activeOpacity={0.75}
     >
+      {isUnassigned && (
+        <View testID="badge-unassigned" style={styles.unassignedBadge}>
+          <Text style={styles.unassignedBadgeText}>미할당</Text>
+        </View>
+      )}
       {checkin.photo_url ? (
         <Image source={{ uri: checkin.photo_url }} style={styles.cardPhoto} resizeMode="cover" />
       ) : (
@@ -113,6 +124,7 @@ export default function CheckinsScreen() {
 
   const { checkins, loading, error, reload } = useAllCheckins();
   const { trips } = useTrips();
+  const updateCheckin = useCheckinsStore((s: any) => s.updateCheckin);
 
   const tripMap = useMemo(() => {
     const map = new Map<string, Trip>();
@@ -121,13 +133,18 @@ export default function CheckinsScreen() {
   }, [trips]);
 
   const filteredCheckins = useMemo(() => {
-    const targetTripIds = new Set(
-      trips.filter(t => filter === 'frequent' ? t.is_frequent : !t.is_frequent).map(t => t.id)
-    );
+    if (filter === 'frequent') {
+      const frequentTripIds = new Set(trips.filter(t => t.is_frequent).map(t => t.id));
+      return checkins
+        .filter(c => frequentTripIds.has(c.trip_id))
+        .sort((a, b) => new Date(b.checked_in_at).getTime() - new Date(a.checked_in_at).getTime());
+    }
+    // 일반: non-frequent 여행 + tripMap에 없는 미할당 체크인
+    const normalTripIds = new Set(trips.filter(t => !t.is_frequent).map(t => t.id));
     return checkins
-      .filter(c => targetTripIds.has(c.trip_id))
+      .filter(c => normalTripIds.has(c.trip_id) || !tripMap.has(c.trip_id))
       .sort((a, b) => new Date(b.checked_in_at).getTime() - new Date(a.checked_in_at).getTime());
-  }, [checkins, trips, filter]);
+  }, [checkins, trips, tripMap, filter]);
 
   const sections = useMemo((): Section[] => {
     const monthMap = new Map<string, Checkin[]>();
@@ -161,6 +178,25 @@ export default function CheckinsScreen() {
     });
   }, [navigation]);
 
+  const assignableTrips = useMemo(
+    () => trips.filter((t) => !(t as any).is_default),
+    [trips]
+  );
+
+  const handleCheckinLongPress = useCallback((checkin: Checkin) => {
+    const buttons = [
+      ...assignableTrips.map((t) => ({
+        text: t.title,
+        onPress: async () => {
+          await updateCheckin(checkin.id, { trip_id: t.id });
+          reload();
+        },
+      })),
+      { text: '취소', style: 'cancel' as const },
+    ];
+    Alert.alert('여행으로 이동', undefined, buttons);
+  }, [assignableTrips, updateCheckin, reload]);
+
   const renderSectionHeader = useCallback(({ section }: { section: Section }) => (
     <View style={styles.sectionHeader}>
       <Text style={styles.sectionHeaderText}>{section.title}</Text>
@@ -171,18 +207,18 @@ export default function CheckinsScreen() {
     const [left, right] = item;
     return (
       <View style={styles.row}>
-        <CheckinGridCard checkin={left} tripMap={tripMap} onPress={handleCheckinPress} />
+        <CheckinGridCard checkin={left} tripMap={tripMap} onPress={handleCheckinPress} onLongPress={handleCheckinLongPress} />
         {right ? (
-          <CheckinGridCard checkin={right} tripMap={tripMap} onPress={handleCheckinPress} />
+          <CheckinGridCard checkin={right} tripMap={tripMap} onPress={handleCheckinPress} onLongPress={handleCheckinLongPress} />
         ) : (
           <View style={styles.cardPlaceholder} />
         )}
       </View>
     );
-  }, [tripMap, handleCheckinPress]);
+  }, [tripMap, handleCheckinPress, handleCheckinLongPress]);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView testID="screen-checkins" style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>체크인</Text>
       </View>
@@ -350,6 +386,21 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: 24,
+  },
+  unassignedBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    zIndex: 1,
+    backgroundColor: '#F97316',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  unassignedBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   centerContainer: {
     flex: 1,

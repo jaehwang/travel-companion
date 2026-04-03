@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
@@ -26,6 +27,7 @@ import CheckinFormToolbar from '../components/CheckinFormToolbar';
 import CategorySelector from '../components/CategorySelector';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { CHECKIN_CATEGORY_LABELS } from '../../../../packages/shared/src/types';
+import { useTrips } from '../hooks/useTrips';
 import { CATEGORY_ICONS, CATEGORY_COLORS } from '../utils/categoryIcons';
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'CheckinForm'>;
@@ -36,8 +38,10 @@ export default function CheckinFormScreen() {
   const route = useRoute<FormRouteProp>();
   const addCheckin = useCheckinsStore((s) => s.addCheckin);
   const updateCheckinAction = useCheckinsStore((s) => s.updateCheckin);
-  const { tripId, tripTitle, initialLatitude, initialLongitude, initialPlace, initialPlaceId, checkin: editingCheckin } = route.params;
+  const { tripId: paramTripId, tripTitle, initialLatitude, initialLongitude, initialPlace, initialPlaceId, checkin: editingCheckin } = route.params;
   const isEditMode = !!editingCheckin;
+  const { trips } = useTrips();
+  const [selectedTripId, setSelectedTripId] = useState<string | undefined>(paramTripId);
 
   const [title, setTitle] = useState(editingCheckin?.title ?? '');
   const [message, setMessage] = useState(editingCheckin?.message ?? '');
@@ -147,7 +151,10 @@ export default function CheckinFormScreen() {
       if (isEditMode && editingCheckin) {
         await updateCheckinAction(editingCheckin.id, payload);
       } else {
-        await addCheckin({ trip_id: tripId, ...payload });
+        const checkinPayload = selectedTripId
+          ? { trip_id: selectedTripId, ...payload }
+          : payload;
+        await addCheckin(checkinPayload as Parameters<typeof addCheckin>[0]);
       }
       navigation.goBack();
     } catch (err) {
@@ -159,7 +166,7 @@ export default function CheckinFormScreen() {
 
   const handleLocationPicker = () => {
     navigation.navigate('LocationPicker', {
-      tripId,
+      tripId: selectedTripId,
       tripTitle,
       initialLatitude: latitude,
       initialLongitude: longitude,
@@ -170,7 +177,7 @@ export default function CheckinFormScreen() {
   const catIconName = CATEGORY_ICONS[category] ?? 'pricetag-outline';
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView testID="screen-checkin-form" style={styles.container} edges={['top']}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -185,13 +192,41 @@ export default function CheckinFormScreen() {
                 <Ionicons name="person-outline" size={16} color="#9CA3AF" />
               </View>
             )}
-            <Text style={styles.headerTripName} numberOfLines={1}>{tripTitle}</Text>
+            {paramTripId ? (
+              <Text style={styles.headerTripName} numberOfLines={1}>{tripTitle}</Text>
+            ) : (
+              <FlatList
+                testID="trip-selector"
+                data={trips}
+                keyExtractor={(item) => item.id}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    onPress={() => setSelectedTripId(item.id === selectedTripId ? undefined : item.id)}
+                    style={[
+                      styles.tripChip,
+                      item.id === selectedTripId && styles.tripChipSelected,
+                    ]}
+                  >
+                    <Text style={[
+                      styles.tripChipText,
+                      item.id === selectedTripId && styles.tripChipTextSelected,
+                    ]}>
+                      {item.title}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                style={{ flex: 1 }}
+              />
+            )}
           </View>
           <View style={styles.headerButtons}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.cancelButton}>
               <Text style={styles.cancelText}>취소</Text>
             </TouchableOpacity>
             <TouchableOpacity
+              testID="btn-save-checkin"
               onPress={handleSubmit}
               disabled={!canSubmit}
               style={[styles.submitButton, !canSubmit && styles.submitButtonDisabled]}
@@ -215,6 +250,7 @@ export default function CheckinFormScreen() {
         >
           {/* Title */}
           <TextInput
+            testID="input-checkin-title"
             value={title}
             onChangeText={setTitle}
             placeholder="어디에 다녀왔나요?"
@@ -575,5 +611,23 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: '#C4B49A',
+  },
+  tripChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: '#F3F0EB',
+    marginRight: 6,
+  },
+  tripChipSelected: {
+    backgroundColor: '#FF6B47',
+  },
+  tripChipText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  tripChipTextSelected: {
+    color: '#FFFFFF',
   },
 });

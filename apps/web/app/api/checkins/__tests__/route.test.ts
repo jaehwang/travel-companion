@@ -4,6 +4,11 @@
 import { GET, POST } from '../route';
 import { NextRequest } from 'next/server';
 
+const mockGetOrCreateDefaultTrip = jest.fn();
+jest.mock('@/lib/defaultTrip', () => ({
+  getOrCreateDefaultTrip: (...args: unknown[]) => mockGetOrCreateDefaultTrip(...args),
+}));
+
 // Supabase 체이닝 패턴을 지원하는 mock builder
 function createQueryBuilder(resolvedValue: { data: any; error: any }) {
   const builder: any = {
@@ -157,14 +162,39 @@ describe('POST /api/checkins', () => {
     expect(typeof body.checkin.longitude).toBe('number');
   });
 
-  it('trip_id 누락 시 400을 반환한다', async () => {
+  it('trip_id 없이 POST하면 default trip id가 할당된다', async () => {
+    const defaultTrip = { id: 'default-trip-id', title: 'user-1_default', is_default: true };
+    mockGetOrCreateDefaultTrip.mockResolvedValue(defaultTrip);
+    const createdCheckin = { id: 'new-id', trip_id: 'default-trip-id', latitude: 37.5665, longitude: 126.9780 };
+    mockFrom.mockReturnValue(createQueryBuilder({ data: createdCheckin, error: null }));
+
     const req = new NextRequest('http://localhost:3000/api/checkins', {
       method: 'POST',
       body: JSON.stringify({ latitude: 37.5665, longitude: 126.9780 }),
     });
     const res = await POST(req);
+    const body = await res.json();
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(201);
+    expect(body.checkin.trip_id).toBe('default-trip-id');
+    expect(mockGetOrCreateDefaultTrip).toHaveBeenCalledWith(expect.anything(), 'user-1');
+  });
+
+  it('두 번째 trip_id 없는 POST도 동일 default trip id를 사용한다', async () => {
+    const defaultTrip = { id: 'default-trip-id', title: 'user-1_default', is_default: true };
+    mockGetOrCreateDefaultTrip.mockResolvedValue(defaultTrip);
+    const createdCheckin = { id: 'new-id-2', trip_id: 'default-trip-id', latitude: 37.5665, longitude: 126.9780 };
+    mockFrom.mockReturnValue(createQueryBuilder({ data: createdCheckin, error: null }));
+
+    const req = new NextRequest('http://localhost:3000/api/checkins', {
+      method: 'POST',
+      body: JSON.stringify({ latitude: 37.5665, longitude: 126.9780 }),
+    });
+    const res = await POST(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(201);
+    expect(body.checkin.trip_id).toBe('default-trip-id');
   });
 
   it('위도 범위 초과 시 400을 반환한다', async () => {

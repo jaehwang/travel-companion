@@ -13,6 +13,7 @@ export async function GET(request: Request) {
     const { data, error } = await supabase
       .from('trips')
       .select('*')
+      .eq('is_default', false)
       .order('created_at', { ascending: false }) as any;
 
     if (error) {
