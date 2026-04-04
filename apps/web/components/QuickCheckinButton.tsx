@@ -76,7 +76,7 @@ export default function QuickCheckinButton() {
       >
         <Zap size={24} color="currentColor" />
         <div style={{ flex: 1 }}>
-          <p style={{ fontSize: 15, fontWeight: 800, color: '#1F2937', marginBottom: 2 }}>빠른 체크인</p>
+          <p style={{ fontSize: 15, fontWeight: 800, color: '#1F2937', marginBottom: 2 }}>자주 가는 곳에 체크인하기</p>
           <p style={{ fontSize: 12, color: current ? '#F97316' : '#9CA3AF' }}>{subtitle}</p>
         </div>
         <span style={{ fontSize: 20, color: '#D1D5DB', fontWeight: 300 }}>›</span>

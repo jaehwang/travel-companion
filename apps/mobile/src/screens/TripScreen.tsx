@@ -34,7 +34,7 @@ import TodayCalendarSection from '../components/TodayCalendarSection';
 import SideDrawer from '../components/SideDrawer';
 import TripFormModal from '../components/TripFormModal';
 import type { TripsStackParamList, RootStackParamList } from '../navigation/AppNavigator';
-import { setTabPlusOverride } from '../navigation/AppNavigator';
+import { setTripCheckinContext } from '../navigation/AppNavigator';
 import type { Trip, Checkin, TripFormData } from '../../../../packages/shared/src/types';
 
 
@@ -222,19 +222,19 @@ const [selectedTripId, setSelectedTripId] = useState<string>(route.params.trip.i
     return Array.from(map.values());
   }, [filteredCheckins]);
 
-  // 탭바 + 버튼 → 체크인 추가
+  // 만들기 탭 → 체크인 시 현재 여행 컨텍스트 제공
   useFocusEffect(
     useCallback(() => {
-      setTabPlusOverride(() => navigation.navigate('CheckinForm', {
+      setTripCheckinContext({
         tripId: trip.id,
         tripTitle: trip.title,
         initialLatitude: trip.latitude ?? undefined,
         initialLongitude: trip.longitude ?? undefined,
         initialPlace: trip.place ?? undefined,
         initialPlaceId: trip.place_id ?? undefined,
-      }), '체크인 추가');
-      return () => setTabPlusOverride(null);
-    }, [trip, navigation])
+      });
+      return () => setTripCheckinContext(null);
+    }, [trip])
   );
 
   const handleMyLocation = useCallback(async () => {

@@ -214,7 +214,7 @@ const { trips, loading, error, reload, update, remove } = useTrips();
       >
         <Ionicons name="flash-outline" size={22} color="#F97316" />
         <View style={{ flex: 1 }}>
-          <Text style={styles.quickCheckinLabel}>빠른 체크인</Text>
+          <Text style={styles.quickCheckinLabel}>자주 가는 곳에 체크인하기</Text>
           <Text
             style={[styles.quickCheckinStatus, lastCheckin ? { color: '#F97316' } : undefined]}
             numberOfLines={1}

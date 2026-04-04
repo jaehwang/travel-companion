@@ -83,7 +83,7 @@ export default function QuickCheckinSheet({ visible, onClose, onCheckedIn }: Qui
         <View style={styles.header}>
           <View style={styles.headerTitleRow}>
             <Ionicons name="flash-outline" size={18} color="#F97316" />
-            <Text style={styles.headerTitle}> 빠른 체크인</Text>
+            <Text style={styles.headerTitle}> 자주 가는 곳에 체크인하기</Text>
           </View>
           <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
             <Text style={styles.closeBtnText}>닫기</Text>

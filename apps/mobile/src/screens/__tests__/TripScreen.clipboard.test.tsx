@@ -29,7 +29,7 @@ jest.mock('@expo/vector-icons', () => ({
 }));
 
 jest.mock('../../navigation/AppNavigator', () => ({
-  setTabPlusOverride: jest.fn(),
+  setTripCheckinContext: jest.fn(),
 }));
 
 jest.mock('react-native-safe-area-context', () => ({

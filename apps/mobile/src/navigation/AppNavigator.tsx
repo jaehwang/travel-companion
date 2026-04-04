@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TouchableOpacity, Text } from 'react-native';
+import { TouchableOpacity, Text, View, Modal, StyleSheet, Dimensions } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,10 +35,9 @@ export type CheckinsStackParamList = {
 
 export type MainTabParamList = {
   TripsTab: NavigatorScreenParams<TripsStackParamList>;
-  AddTripTab: undefined;
-  AddCheckinTab: undefined;
-  ScheduleTab: undefined;
   CheckinsTab: NavigatorScreenParams<CheckinsStackParamList>;
+  ScheduleTab: undefined;
+  MakeTab: undefined;
 };
 
 export type RootStackParamList = {
@@ -64,58 +63,145 @@ export type RootStackParamList = {
 // 하위 호환성을 위한 alias
 export type AppStackParamList = RootStackParamList & TripsStackParamList;
 
-// 탭바 + 버튼 동작/레이블 override (TripScreen 등에서 설정)
+// TripScreen에서 설정하는 체크인 컨텍스트 (여행 화면에 있을 때만 non-null)
+type TripCheckinContext = {
+  tripId: string;
+  tripTitle: string;
+  initialLatitude?: number;
+  initialLongitude?: number;
+  initialPlace?: string;
+  initialPlaceId?: string;
+} | null;
+
+let _tripCheckinContext: TripCheckinContext = null;
 let _defaultPlusHandler: (() => void) | null = null;
-let _overridePlusHandler: (() => void) | null = null;
-let _plusLabel = '여행 추가';
-const _plusLabelListeners = new Set<(label: string) => void>();
 
-export function setTabPlusOverride(handler: (() => void) | null, label?: string) {
-  _overridePlusHandler = handler;
-  const newLabel = handler ? (label ?? '추가') : '여행 추가';
-  _plusLabel = newLabel;
-  _plusLabelListeners.forEach(fn => fn(newLabel));
+export function setTripCheckinContext(ctx: TripCheckinContext) {
+  _tripCheckinContext = ctx;
 }
 
-export function AddCheckinTabButton({ style, accessibilityState }: BottomTabBarButtonProps) {
+function MakeTabButton({ style }: BottomTabBarButtonProps) {
+  const [showSheet, setShowSheet] = useState(false);
   const navigation = useNavigation<any>();
-  const color = accessibilityState?.selected ? '#F97316' : '#9CA3AF';
+
+  const handleTrip = () => {
+    setShowSheet(false);
+    setTimeout(() => _defaultPlusHandler?.(), 50);
+  };
+
+  const handleCheckin = () => {
+    const ctx = _tripCheckinContext;
+    setShowSheet(false);
+    setTimeout(() => navigation.navigate('CheckinForm', ctx ? {
+      tripId: ctx.tripId,
+      tripTitle: ctx.tripTitle,
+      initialLatitude: ctx.initialLatitude,
+      initialLongitude: ctx.initialLongitude,
+      initialPlace: ctx.initialPlace,
+      initialPlaceId: ctx.initialPlaceId,
+    } : {}), 50);
+  };
 
   return (
-    <TouchableOpacity
-      style={[style, { alignItems: 'center', justifyContent: 'center', gap: 2 }]}
-      onPress={() => navigation.navigate('CheckinForm', {})}
-      activeOpacity={0.7}
-      testID="btn-tab-add-checkin"
-    >
-      <Ionicons name="add-circle" size={24} color={color} />
-      <Text style={{ fontSize: 10, color }}>+체크인</Text>
-    </TouchableOpacity>
+    <>
+      <TouchableOpacity
+        style={[style, { alignItems: 'center', justifyContent: 'center', gap: 2 }]}
+        onPress={() => setShowSheet(true)}
+        activeOpacity={0.7}
+        testID="btn-tab-make"
+      >
+        <Ionicons name="add-circle-outline" size={24} color="#9CA3AF" />
+        <Text style={{ fontSize: 10, color: '#9CA3AF' }}>만들기</Text>
+      </TouchableOpacity>
+
+      <Modal
+        visible={showSheet}
+        transparent
+        animationType="slide"
+        presentationStyle="overFullScreen"
+        onRequestClose={() => setShowSheet(false)}
+      >
+        <TouchableOpacity style={sheetStyles.backdrop} activeOpacity={1} onPress={() => setShowSheet(false)} />
+        <View style={sheetStyles.sheet}>
+          <View style={sheetStyles.handle} />
+          <TouchableOpacity style={sheetStyles.item} onPress={handleTrip} activeOpacity={0.7} testID="btn-make-trip">
+            <View style={sheetStyles.iconWrap}>
+              <Ionicons name="airplane-outline" size={22} color="#F97316" />
+            </View>
+            <Text style={sheetStyles.itemLabel}>여행</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={sheetStyles.item} onPress={handleCheckin} activeOpacity={0.7} testID="btn-make-checkin">
+            <View style={sheetStyles.iconWrap}>
+              <Ionicons name="location-outline" size={22} color="#F97316" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={sheetStyles.itemLabel}>체크인</Text>
+              {_tripCheckinContext && (
+                <Text style={sheetStyles.itemSub}>{_tripCheckinContext.tripTitle}</Text>
+              )}
+            </View>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+    </>
   );
 }
 
-function AddTripTabButton({ style, accessibilityState }: BottomTabBarButtonProps) {
-  const color = accessibilityState?.selected ? '#F97316' : '#9CA3AF';
-  const [label, setLabel] = useState(_plusLabel);
+const sheetStyles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+  },
+  sheet: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 32,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+  },
+  handle: {
+    width: 36,
+    height: 4,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  item: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    gap: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F0EB',
+  },
+  iconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFF3E8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  itemLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  itemSub: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    marginTop: 2,
+  },
+});
 
-  useEffect(() => {
-    setLabel(_plusLabel);
-    _plusLabelListeners.add(setLabel);
-    return () => { _plusLabelListeners.delete(setLabel); };
-  }, []);
-
-  return (
-    <TouchableOpacity
-      style={[style, { alignItems: 'center', justifyContent: 'center', gap: 2 }]}
-      onPress={() => (_overridePlusHandler ?? _defaultPlusHandler)?.()}
-      activeOpacity={0.7}
-      testID="btn-tab-add"
-    >
-      <Ionicons name="add-circle-outline" size={24} color={color} />
-      <Text style={{ fontSize: 10, color }}>{label}</Text>
-    </TouchableOpacity>
-  );
-}
+const TAB_ITEM_WIDTH = 64;
+const TAB_COUNT = 4;
+const TAB_BAR_SIDE_INSET = Math.max(
+  0,
+  (Dimensions.get('window').width - TAB_COUNT * TAB_ITEM_WIDTH) / 2
+);
 
 const TripsStack = createStackNavigator<TripsStackParamList>();
 const CheckinsStack = createStackNavigator<CheckinsStackParamList>();
@@ -166,6 +252,12 @@ function MainTabs() {
           tabBarStyle: {
             backgroundColor: '#FFFFFF',
             borderTopColor: '#E8E0D4',
+            paddingLeft: TAB_BAR_SIDE_INSET,
+            paddingRight: TAB_BAR_SIDE_INSET,
+          },
+          tabBarItemStyle: {
+            flex: 0,
+            width: TAB_ITEM_WIDTH,
           },
           tabBarActiveTintColor: '#F97316',
           tabBarInactiveTintColor: '#9CA3AF',
@@ -187,22 +279,6 @@ function MainTabs() {
           })}
         />
         <Tab.Screen
-          name="AddTripTab"
-          component={TripsStackNavigator}
-          options={{
-            tabBarLabel: '',
-            tabBarButton: (props) => <AddTripTabButton {...props} />,
-          }}
-        />
-        <Tab.Screen
-          name="AddCheckinTab"
-          component={TripsStackNavigator}
-          options={{
-            tabBarLabel: '',
-            tabBarButton: (props) => <AddCheckinTabButton {...props} />,
-          }}
-        />
-        <Tab.Screen
           name="CheckinsTab"
           component={CheckinsStackNavigator}
           options={{
@@ -220,6 +296,14 @@ function MainTabs() {
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="calendar-outline" size={size} color={color} />
             ),
+          }}
+        />
+        <Tab.Screen
+          name="MakeTab"
+          component={TripsStackNavigator}
+          options={{
+            tabBarLabel: '',
+            tabBarButton: (props) => <MakeTabButton {...props} />,
           }}
         />
       </Tab.Navigator>

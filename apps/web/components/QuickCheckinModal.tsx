@@ -119,7 +119,7 @@ export default function QuickCheckinModal({ onClose, onCheckedIn }: QuickCheckin
           borderBottom: '1px solid #F3F0EB',
           flexShrink: 0,
         }}>
-          <span style={{ fontSize: 17, fontWeight: 800, color: '#1F2937', display: 'flex', alignItems: 'center', gap: 6 }}><Zap size={16} color="#FF6B47" />빠른 체크인</span>
+          <span style={{ fontSize: 17, fontWeight: 800, color: '#1F2937', display: 'flex', alignItems: 'center', gap: 6 }}><Zap size={16} color="#FF6B47" />자주 가는 곳에 체크인하기</span>
           <button
             onClick={onClose}
             style={{
