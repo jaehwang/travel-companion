@@ -10,6 +10,7 @@ import {
   RefreshControl,
   Dimensions,
   Alert,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -75,12 +76,29 @@ interface CheckinGridCardProps {
   tripMap: Map<string, Trip>;
   onPress: (checkin: Checkin, trip: Trip | undefined) => void;
   onLongPress: (checkin: Checkin) => void;
+  onEdit: (checkin: Checkin) => void;
+  onDelete: (checkinId: string) => void;
 }
 
-function CheckinGridCard({ checkin, tripMap, onPress, onLongPress }: CheckinGridCardProps) {
+function CheckinGridCard({ checkin, tripMap, onPress, onLongPress, onEdit, onDelete }: CheckinGridCardProps) {
   const trip = tripMap.get(checkin.trip_id);
   const isUnassigned = trip === undefined;
   const meta = CATEGORY_META[checkin.category ?? 'other'] ?? CATEGORY_META.other;
+
+  const handleMenuPress = () => {
+    Alert.alert('', '', [
+      { text: '수정', onPress: () => onEdit(checkin) },
+      {
+        text: '삭제', style: 'destructive', onPress: () => {
+          Alert.alert('삭제 확인', '이 체크인을 삭제하시겠습니까?', [
+            { text: '취소', style: 'cancel' },
+            { text: '삭제', style: 'destructive', onPress: () => onDelete(checkin.id) },
+          ]);
+        },
+      },
+      { text: '취소', style: 'cancel' },
+    ]);
+  };
 
   return (
     <TouchableOpacity
@@ -95,6 +113,9 @@ function CheckinGridCard({ checkin, tripMap, onPress, onLongPress }: CheckinGrid
           <Text style={styles.unassignedBadgeText}>미할당</Text>
         </View>
       )}
+      <TouchableOpacity style={styles.menuButton} onPress={handleMenuPress} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
+        <Text style={styles.menuButtonText}>⋮</Text>
+      </TouchableOpacity>
       {checkin.photo_url ? (
         <Image source={{ uri: checkin.photo_url }} style={styles.cardPhoto} resizeMode="cover" />
       ) : (
@@ -110,7 +131,20 @@ function CheckinGridCard({ checkin, tripMap, onPress, onLongPress }: CheckinGrid
         {trip && (
           <Text style={styles.cardTrip} numberOfLines={1}>{trip.title}</Text>
         )}
-        <Text style={styles.cardMeta} numberOfLines={1}>{meta.label}</Text>
+        <TouchableOpacity
+          onPress={() => {
+            const url = checkin.place_id
+              ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(checkin.place || '')}&query_place_id=${checkin.place_id}`
+              : `https://www.google.com/maps?q=${checkin.latitude},${checkin.longitude}`;
+            Linking.openURL(url);
+          }}
+          activeOpacity={0.6}
+        >
+          <Text style={styles.cardPlace} numberOfLines={1}>
+            <Ionicons name="location-outline" size={10} color="#C4B49A" />
+            {' '}{checkin.place || '지도에서 보기'}
+          </Text>
+        </TouchableOpacity>
         <Text style={styles.cardDate} numberOfLines={1}>{formatDateTime(checkin.checked_in_at)}</Text>
       </View>
     </TouchableOpacity>
@@ -125,6 +159,7 @@ export default function CheckinsScreen() {
   const { checkins, loading, error, reload } = useAllCheckins();
   const { trips } = useTrips();
   const updateCheckin = useCheckinsStore((s: any) => s.updateCheckin);
+  const removeCheckin = useCheckinsStore((s: any) => s.removeCheckin);
 
   const tripMap = useMemo(() => {
     const map = new Map<string, Trip>();
@@ -183,6 +218,23 @@ export default function CheckinsScreen() {
     [trips]
   );
 
+  const handleCheckinEdit = useCallback((checkin: Checkin) => {
+    const trip = tripMap.get(checkin.trip_id);
+    navigation.navigate('CheckinForm', {
+      tripId: checkin.trip_id,
+      tripTitle: trip?.title,
+      checkin,
+    });
+  }, [navigation, tripMap]);
+
+  const handleCheckinDelete = useCallback(async (checkinId: string) => {
+    try {
+      await removeCheckin(checkinId);
+    } catch {
+      Alert.alert('오류', '체크인 삭제에 실패했습니다.');
+    }
+  }, [removeCheckin]);
+
   const handleCheckinLongPress = useCallback((checkin: Checkin) => {
     const buttons = [
       ...assignableTrips.map((t) => ({
@@ -207,15 +259,15 @@ export default function CheckinsScreen() {
     const [left, right] = item;
     return (
       <View style={styles.row}>
-        <CheckinGridCard checkin={left} tripMap={tripMap} onPress={handleCheckinPress} onLongPress={handleCheckinLongPress} />
+        <CheckinGridCard checkin={left} tripMap={tripMap} onPress={handleCheckinPress} onLongPress={handleCheckinLongPress} onEdit={handleCheckinEdit} onDelete={handleCheckinDelete} />
         {right ? (
-          <CheckinGridCard checkin={right} tripMap={tripMap} onPress={handleCheckinPress} onLongPress={handleCheckinLongPress} />
+          <CheckinGridCard checkin={right} tripMap={tripMap} onPress={handleCheckinPress} onLongPress={handleCheckinLongPress} onEdit={handleCheckinEdit} onDelete={handleCheckinDelete} />
         ) : (
           <View style={styles.cardPlaceholder} />
         )}
       </View>
     );
-  }, [tripMap, handleCheckinPress, handleCheckinLongPress]);
+  }, [tripMap, handleCheckinPress, handleCheckinLongPress, handleCheckinEdit, handleCheckinDelete]);
 
   return (
     <SafeAreaView testID="screen-checkins" style={styles.container} edges={['top']}>
@@ -375,9 +427,10 @@ const styles = StyleSheet.create({
     color: '#F97316',
     marginTop: 2,
   },
-  cardMeta: {
+  cardPlace: {
     fontSize: 11,
-    color: '#9CA3AF',
+    color: '#C4B49A',
+    marginTop: 2,
   },
   cardDate: {
     fontSize: 10,
@@ -390,8 +443,8 @@ const styles = StyleSheet.create({
   unassignedBadge: {
     position: 'absolute',
     top: 6,
-    right: 6,
-    zIndex: 1,
+    left: 6,
+    zIndex: 2,
     backgroundColor: '#F97316',
     borderRadius: 6,
     paddingHorizontal: 6,
@@ -401,6 +454,22 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  menuButton: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    zIndex: 2,
+    backgroundColor: 'rgba(0,0,0,0.30)',
+    borderRadius: 12,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+  },
+  menuButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    lineHeight: 15,
   },
   centerContainer: {
     flex: 1,
