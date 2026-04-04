@@ -121,15 +121,9 @@ export async function updateTrip(id: string, tripData: Partial<TripFormData>): P
   return data as Trip;
 }
 
-export async function deleteTrip(id: string): Promise<void> {
-  await getUser();
-
-  const { error } = await supabase
-    .from('trips')
-    .delete()
-    .eq('id', id);
-
-  if (error) throw error;
+export async function deleteTrip(id: string, moveCheckins?: boolean): Promise<void> {
+  const path = moveCheckins ? `/api/trips/${id}?moveCheckins=true` : `/api/trips/${id}`;
+  await apiFetch<{ success: boolean }>(path, { method: 'DELETE' });
 }
 
 export async function fetchTripTagline(tripId: string): Promise<string> {

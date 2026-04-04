@@ -15,7 +15,7 @@ interface TripsState {
   loadTrips: () => Promise<void>;
   addTrip: (data: TripFormData) => Promise<Trip>;
   updateTrip: (id: string, data: Partial<TripFormData>) => Promise<Trip>;
-  removeTrip: (id: string) => Promise<void>;
+  removeTrip: (id: string, moveCheckins?: boolean) => Promise<void>;
 }
 
 export const useTripsStore = create<TripsState>((set, get) => ({
@@ -51,8 +51,8 @@ export const useTripsStore = create<TripsState>((set, get) => ({
     return trip;
   },
 
-  removeTrip: async (id: string) => {
-    await apiDeleteTrip(id);
+  removeTrip: async (id: string, moveCheckins?: boolean) => {
+    await apiDeleteTrip(id, moveCheckins);
     set((state) => ({
       trips: state.trips.filter((t) => t.id !== id),
     }));

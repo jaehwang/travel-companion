@@ -4,11 +4,11 @@
 
 - [x] 모바일 앱에서 캘린더 연동 구현하기
 - [x] Supabase direct connection
-- [ ] 하단 탭 메뉴 정리
+- [X] 하단 탭 메뉴 정리
+- [x] 여행 삭제 시 속해있던 체크인을 default trip으로 이동
 - [ ] 모바일 앱에서 캘린더 연결하기 (Google OAuth 인증 포함)
-- [ ] 모바일 앱 체크인 페이지에 AI tagline 넣기
 - [ ] 체크인 화면에서 체크인 삭제 기능 추가
-- [ ] 여행 삭제 시 속해있던 체크인을 default trip으로 이동
+- [ ] 모바일 앱 체크인 페이지에 AI tagline 넣기
 
 ## 성능 개선
 

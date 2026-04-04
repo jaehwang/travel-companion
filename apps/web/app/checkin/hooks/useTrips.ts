@@ -52,8 +52,9 @@ export function useTrips() {
     return updatedTrip;
   };
 
-  const deleteTrip = async (id: string): Promise<void> => {
-    const response = await fetch(`/api/trips/${id}`, { method: 'DELETE' });
+  const deleteTrip = async (id: string, moveCheckins?: boolean): Promise<void> => {
+    const url = moveCheckins ? `/api/trips/${id}?moveCheckins=true` : `/api/trips/${id}`;
+    const response = await fetch(url, { method: 'DELETE' });
     if (!response.ok) {
       const result = await response.json();
       throw new Error(result.error || 'Failed to delete trip');

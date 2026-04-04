@@ -20,6 +20,7 @@ const MOCK_TRIP: Trip = {
   created_at: '2025-04-01T00:00:00.000Z',
   updated_at: '2025-04-01T00:00:00.000Z',
   place: '제주',
+  is_default: false,
 };
 
 function mockResponse(data: unknown, ok = true) {

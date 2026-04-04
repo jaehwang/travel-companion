@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAuthenticatedClient } from '@/lib/supabase/server';
+import { getOrCreateDefaultTrip } from '@/lib/defaultTrip';
 import type { TripInsert } from '@/types/database';
 
 // PATCH /api/trips/[id] - 여행 수정
@@ -72,6 +73,16 @@ export async function DELETE(
     }
 
     const { id } = await params;
+    const url = new URL(request.url);
+    const moveCheckins = url.searchParams.get('moveCheckins') === 'true';
+
+    if (moveCheckins) {
+      const defaultTrip = await getOrCreateDefaultTrip(supabase, user.id);
+      await supabase
+        .from('checkins')
+        .update({ trip_id: defaultTrip.id } as never)
+        .eq('trip_id', id);
+    }
 
     const { error } = await supabase
       .from('trips')

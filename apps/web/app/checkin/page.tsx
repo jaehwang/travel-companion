@@ -32,6 +32,7 @@ import { APP_NAME } from '@/lib/config';
 import { useTrips } from './hooks/useTrips';
 import { useCheckins } from './hooks/useCheckins';
 import { useTripTagline } from './hooks/useTripTagline';
+import TripDeleteDialog from '@/components/TripDeleteDialog';
 import SideDrawer from './components/SideDrawer';
 import TripFormModal from '@/components/TripFormModal';
 import CheckinTimeline from './components/CheckinTimeline';
@@ -66,6 +67,7 @@ function CheckinPageInner() {
   // SideDrawer, BottomBar, TripFormModal은 SSR 환경(document 없음)에서 렌더링 불가 → 마운트 후에만 표시
   const [mounted, setMounted] = useState(false);
   const [applyingPlace, setApplyingPlace] = useState(false);
+  const [deletingTripId, setDeletingTripId] = useState<string | null>(null);
 
   /**
    * LocationPicker 연결용 ref 쌍
@@ -154,11 +156,15 @@ function CheckinPageInner() {
     }
   };
 
-  const handleDeleteTrip = async (tripId: string) => {
-    if (!window.confirm('이 여행을 삭제하시겠습니까? 여행에 속한 체크인도 모두 삭제됩니다.')) return;
+  const handleDeleteTrip = (tripId: string) => {
+    setDeletingTripId(tripId);
+  };
+
+  const executeDeleteTrip = async (tripId: string, moveCheckins: boolean) => {
+    setDeletingTripId(null);
     try {
       const remaining = trips.filter((t) => t.id !== tripId);
-      await deleteTrip(tripId);
+      await deleteTrip(tripId, moveCheckins);
       setSelectedTripId(remaining.length > 0 ? remaining[0].id : '');
     } catch (err) {
       alert(err instanceof Error ? err.message : '여행 삭제에 실패했습니다.');
@@ -211,6 +217,17 @@ function CheckinPageInner() {
 
   return (
     <div className="tc-page-bg" style={{ minHeight: '100vh' }}>
+      {deletingTripId && (() => {
+        const t = trips.find((tr) => tr.id === deletingTripId);
+        return t ? (
+          <TripDeleteDialog
+            tripTitle={t.title}
+            onDeleteCheckins={() => executeDeleteTrip(deletingTripId, false)}
+            onKeepCheckins={() => executeDeleteTrip(deletingTripId, true)}
+            onCancel={() => setDeletingTripId(null)}
+          />
+        ) : null;
+      })()}
       {/* 헤더 */}
       <header className="tc-header">
         <div style={{ maxWidth: '100%', padding: '0 16px', height: 56, display: 'flex', alignItems: 'center', gap: 12 }}>

@@ -164,20 +164,34 @@ const { trips, loading, error, reload, update, remove } = useTrips();
   };
 
   const confirmDelete = (trip: Trip) => {
-    Alert.alert('여행 삭제', `"${trip.title}"을(를) 삭제하시겠습니까?`, [
-      { text: '취소', style: 'cancel' },
-      {
-        text: '삭제',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await remove(trip.id);
-          } catch {
-            Alert.alert('오류', '삭제에 실패했습니다.');
-          }
+    Alert.alert(
+      `"${trip.title}" 삭제`,
+      '체크인도 함께 삭제할까요?',
+      [
+        {
+          text: '예, 체크인도 삭제',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await remove(trip.id, false);
+            } catch {
+              Alert.alert('오류', '삭제에 실패했습니다.');
+            }
+          },
         },
-      },
-    ]);
+        {
+          text: '아니오, 미할당으로 보관',
+          onPress: async () => {
+            try {
+              await remove(trip.id, true);
+            } catch {
+              Alert.alert('오류', '삭제에 실패했습니다.');
+            }
+          },
+        },
+        { text: '취소', style: 'cancel' },
+      ],
+    );
   };
 
   const renderTrip = ({ item }: { item: Trip }) => (

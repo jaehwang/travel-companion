@@ -149,19 +149,35 @@ describe('updateTrip', () => {
 
 describe('deleteTrip', () => {
   it('에러 없이 완료된다', async () => {
-    mockFrom.mockImplementation(() =>
-      createBuilder({ data: null, error: null })
-    );
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ success: true }),
+    });
 
     await expect(deleteTrip('trip-1')).resolves.toBeUndefined();
   });
 
   it('에러 발생 시 예외를 던진다', async () => {
-    mockFrom.mockImplementation(() =>
-      createBuilder({ data: null, error: new Error('Delete error') })
-    );
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      text: () => Promise.resolve(JSON.stringify({ error: 'Delete error' })),
+    });
 
     await expect(deleteTrip('trip-1')).rejects.toThrow('Delete error');
+  });
+
+  it('moveCheckins=true 시 URL에 쿼리 파라미터가 포함된다', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ success: true }),
+    });
+
+    await deleteTrip('trip-1', true);
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining('?moveCheckins=true'),
+      expect.objectContaining({ method: 'DELETE' }),
+    );
   });
 });
 

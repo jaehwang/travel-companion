@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Map, Star } from 'lucide-react';
 import { DropdownMenu } from '@/components/DropdownMenu';
 import TripFormModal from '@/components/TripFormModal';
+import TripDeleteDialog from '@/components/TripDeleteDialog';
 import type { Trip, TripFormData } from '@/types/database';
 
 interface TripCardProps {
@@ -30,6 +31,7 @@ export default function TripCard({ trip, accent, style }: TripCardProps) {
   const [isPublic, setIsPublic] = useState(trip.is_public);
   const [toggling, setToggling] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [currentTrip, setCurrentTrip] = useState(trip);
 
   const handleTogglePublic = async () => {
@@ -88,10 +90,15 @@ export default function TripCard({ trip, accent, style }: TripCardProps) {
 
   const handleEdit = () => setShowEditModal(true);
 
-  const handleDelete = async () => {
-    if (!window.confirm(`"${currentTrip.title}"을(를) 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) return;
+  const handleDelete = () => setShowDeleteDialog(true);
+
+  const executeDelete = async (moveCheckins: boolean) => {
+    setShowDeleteDialog(false);
     try {
-      const res = await fetch(`/api/trips/${currentTrip.id}`, { method: 'DELETE' });
+      const url = moveCheckins
+        ? `/api/trips/${currentTrip.id}?moveCheckins=true`
+        : `/api/trips/${currentTrip.id}`;
+      const res = await fetch(url, { method: 'DELETE' });
       if (res.ok) router.refresh();
     } catch {
       // ignore
@@ -124,6 +131,14 @@ export default function TripCard({ trip, accent, style }: TripCardProps) {
 
   return (
     <div style={style}>
+      {showDeleteDialog && (
+        <TripDeleteDialog
+          tripTitle={currentTrip.title}
+          onDeleteCheckins={() => executeDelete(false)}
+          onKeepCheckins={() => executeDelete(true)}
+          onCancel={() => setShowDeleteDialog(false)}
+        />
+      )}
       {showEditModal && (
         <TripFormModal
           mode="edit"

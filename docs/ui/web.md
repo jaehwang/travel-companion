@@ -99,6 +99,11 @@
 - 여행 신규 생성 / 수정 / 삭제
 - ActionSheet 스타일 메뉴
 
+**TripDeleteDialog** (`components/TripDeleteDialog.tsx`)
+- 여행 삭제 시 체크인 처리 방식 선택 다이얼로그 (portal 방식)
+- "예, 체크인도 삭제" → cascade delete
+- "아니오, 미할당으로 보관" → 체크인을 default trip으로 이동 후 여행 삭제
+
 **CheckinTimeline** (`app/checkin/components/CheckinTimeline.tsx`)
 - 날짜별 그룹핑된 체크인 목록
 - 정렬 토글 (최신순 / 오래된순)
@@ -265,7 +270,7 @@ checkin/page.tsx
 | GET | `/api/trips` | 여행 목록 |
 | POST | `/api/trips` | 여행 생성 |
 | PATCH | `/api/trips/[id]` | 여행 수정 |
-| DELETE | `/api/trips/[id]` | 여행 삭제 |
+| DELETE | `/api/trips/[id]` | 여행 삭제 (`?moveCheckins=true` 시 체크인 미할당 보관) |
 | POST | `/api/trips/[id]/tagline` | AI 여행 요약 생성 (Gemini) |
 | GET | `/api/checkins` | 체크인 목록 (`?trip_id=`) |
 | POST | `/api/checkins` | 체크인 생성 |

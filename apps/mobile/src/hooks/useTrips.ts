@@ -36,8 +36,8 @@ export function useTrips() {
   );
 
   const remove = useCallback(
-    async (id: string): Promise<void> => {
-      return removeTripAction(id);
+    async (id: string, moveCheckins?: boolean): Promise<void> => {
+      return removeTripAction(id, moveCheckins);
     },
     [removeTripAction],
   );
