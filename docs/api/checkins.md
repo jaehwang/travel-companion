@@ -111,7 +111,7 @@ GET /api/checkins?trip_id=uuid
 ---
 
 ## DELETE /api/checkins/[id]
-체크인 삭제.
+체크인 삭제. `photo_url`이 있으면 Supabase Storage(`trip-photos` 버킷)의 사진 파일도 함께 삭제.
 
 **인증**: 필요
 

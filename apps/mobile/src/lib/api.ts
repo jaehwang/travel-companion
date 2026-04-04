@@ -229,12 +229,27 @@ export async function updateCheckin(id: string, checkinData: Partial<CheckinInse
 export async function deleteCheckin(id: string): Promise<void> {
   await getUser();
 
+  const { data: checkin } = await supabase
+    .from('checkins')
+    .select('photo_url')
+    .eq('id', id)
+    .single();
+
   const { error } = await supabase
     .from('checkins')
     .delete()
     .eq('id', id);
 
   if (error) throw error;
+
+  if (checkin?.photo_url) {
+    const marker = '/trip-photos/';
+    const idx = checkin.photo_url.indexOf(marker);
+    if (idx !== -1) {
+      const storagePath = checkin.photo_url.slice(idx + marker.length);
+      await supabase.storage.from('trip-photos').remove([storagePath]);
+    }
+  }
 }
 
 // ── Places (Vercel API 경유) ──────────────────────────────────────────

@@ -107,6 +107,12 @@ export async function DELETE(
 
     const { id } = await params;
 
+    // photo_url 먼저 조회
+    const { data: checkin } = await (supabase.from('checkins') as any)
+      .select('photo_url')
+      .eq('id', id)
+      .single();
+
     const { error } = await supabase
       .from('checkins')
       .delete()
@@ -118,6 +124,16 @@ export async function DELETE(
         { error: 'Failed to delete checkin' },
         { status: 500 }
       );
+    }
+
+    // Storage 사진 삭제 (실패해도 응답에는 영향 없음)
+    if (checkin?.photo_url) {
+      const marker = '/trip-photos/';
+      const idx = checkin.photo_url.indexOf(marker);
+      if (idx !== -1) {
+        const storagePath = checkin.photo_url.slice(idx + marker.length);
+        await supabase.storage.from('trip-photos').remove([storagePath]);
+      }
     }
 
     return NextResponse.json({ success: true });

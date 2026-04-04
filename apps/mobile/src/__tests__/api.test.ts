@@ -254,11 +254,27 @@ describe('updateCheckin', () => {
 
 describe('deleteCheckin', () => {
   it('에러 없이 완료된다', async () => {
-    mockFrom.mockImplementation(() =>
+    // 1) photo_url 조회
+    mockFrom.mockImplementationOnce(() =>
+      createBuilder({ data: { photo_url: null }, error: null })
+    );
+    // 2) delete
+    mockFrom.mockImplementationOnce(() =>
       createBuilder({ data: null, error: null })
     );
 
     await expect(deleteCheckin('checkin-1')).resolves.toBeUndefined();
+  });
+
+  it('에러 발생 시 예외를 던진다', async () => {
+    mockFrom.mockImplementationOnce(() =>
+      createBuilder({ data: { photo_url: null }, error: null })
+    );
+    mockFrom.mockImplementationOnce(() =>
+      createBuilder({ data: null, error: new Error('Delete error') })
+    );
+
+    await expect(deleteCheckin('checkin-1')).rejects.toThrow('Delete error');
   });
 });
 

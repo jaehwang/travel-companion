@@ -209,6 +209,9 @@ type ListItem =
   - 클라이언트 사이드 필터링 (trips 스토어 기반)
 - 카드 탭 → 해당 TripScreen으로 이동 (TripsTab 전환)
   - 미할당 체크인(tripMap 미포함) 탭 시 이동 없음
+- **카드 우측 상단 ⋮ 버튼** → 수정 / 삭제 메뉴
+  - 수정: CheckinFormScreen으로 이동 (checkin 파라미터 전달)
+  - 삭제: 확인 Alert 후 DB + Storage 사진 함께 삭제
 - **카드 롱프레스 → "여행으로 이동" Alert** — 여행 목록 중 하나를 선택하면 `trip_id` 변경 후 목록 갱신
 - 당겨 새로고침, 탭 포커스 시 자동 새로고침
 
@@ -217,8 +220,9 @@ type ListItem =
 - 헤더 아래 세그먼트 탭: `[  일반  |  자주 가는 곳  ]`
 - 2열 그리드 카드 (`CARD_WIDTH = (screenWidth - 16*2 - 8) / 2`)
   - 상단: 사진 있으면 정사각형 이미지, 없으면 카테고리 아이콘 플레이스홀더 (동일 높이)
-  - 하단 고정 높이(80px): 제목, 여행명(주황색), 카테고리 라벨, 날짜·시간
-  - **미할당 체크인**: 카드 우상단에 주황색 `미할당` 뱃지 (`testID="badge-unassigned"`)
+  - 카드 우측 상단: 반투명 배경 `⋮` 버튼 (수정/삭제 메뉴)
+  - 하단 고정 높이(80px): 제목, 여행명(주황색), 위치(장소명 또는 "지도에서 보기" — 탭 시 Google Maps 오픈), 날짜·시간
+  - **미할당 체크인**: 카드 좌측 상단에 주황색 `미할당` 뱃지 (`testID="badge-unassigned"`)
 - 섹션 헤더: "2026년 3월" 형식
 - 빈 상태: 안내 메시지
 
@@ -231,7 +235,8 @@ type ListItem =
 
 **백엔드 연계**
 - `useAllCheckins` 훅 → `fetchAllCheckins(tripId?)` → Supabase `checkins` 테이블 직접 조회
-- `updateCheckin(id, { trip_id })` → Supabase `checkins` UPDATE (여행으로 이동 시)
+- `updateCheckin(id, { trip_id })` → Supabase `checkins` UPDATE (여행으로 이동 / 수정 시)
+- `deleteCheckin(id)` → Supabase `checkins` DELETE + Storage 사진 파일 삭제
 
 ---
 
