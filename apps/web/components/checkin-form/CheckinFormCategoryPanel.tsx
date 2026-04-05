@@ -1,6 +1,6 @@
 'use client';
 
-import { CHECKIN_CATEGORY_LABELS } from '@/types/database';
+import { CHECKIN_CATEGORY_LABELS } from '@travel-companion/shared';
 import { CATEGORY_META } from '@/lib/categoryIcons';
 
 interface CheckinFormCategoryPanelProps {

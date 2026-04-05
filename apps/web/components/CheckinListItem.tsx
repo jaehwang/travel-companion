@@ -1,7 +1,7 @@
 'use client';
 
 import { MapPin } from 'lucide-react';
-import type { Checkin } from '@/types/database';
+import type { Checkin } from '@travel-companion/shared';
 import { DropdownMenu } from '@/components/DropdownMenu';
 import { CATEGORY_META } from '@/lib/categoryIcons';
 

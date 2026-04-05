@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAuthenticatedClient } from '@/lib/supabase/server';
-import type { UserProfileSettings } from '@/types/database';
+import type { UserProfileSettings } from '@travel-companion/shared';
 
 export async function GET(request: Request) {
   const { user, supabase } = await getAuthenticatedClient(request);

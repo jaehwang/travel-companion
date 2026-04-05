@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { GoogleGenAI } from '@google/genai';
-import type { UserProfile } from '@/types/database';
+import type { UserProfile } from '@travel-companion/shared';
 
 function weatherDescription(code: number): string {
   if (code === 0) return '맑음';

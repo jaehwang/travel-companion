@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { Trip } from '@/types/database';
+import type { Trip } from '@travel-companion/shared';
 
 interface TaglineCacheEntry {
   signature: string;

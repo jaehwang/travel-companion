@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAuthenticatedClient } from '@/lib/supabase/server';
 import { getOrCreateDefaultTrip } from '@/lib/defaultTrip';
-import type { TripInsert } from '@/types/database';
+import type { TripInsert } from '@travel-companion/shared';
 
 // PATCH /api/trips/[id] - 여행 수정
 export async function PATCH(

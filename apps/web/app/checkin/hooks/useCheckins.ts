@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { Checkin } from '@/types/database';
+import type { Checkin } from '@travel-companion/shared';
 
 export function useCheckins(tripId: string) {
   const [checkins, setCheckins] = useState<Checkin[]>([]);

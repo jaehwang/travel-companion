@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 import { getAuthenticatedClient } from '@/lib/supabase/server';
 import { buildTripTaglinePrompt, normalizeTripTagline } from '@/lib/ai/tripTagline';
-import type { Checkin, Trip } from '@/types/database';
+import type { Checkin, Trip } from '@travel-companion/shared';
 
 type TripTaglineTrip = Pick<Trip, 'id' | 'title' | 'description' | 'place' | 'start_date' | 'end_date'>;
 type TripTaglineCheckin = Pick<Checkin, 'checked_in_at' | 'title' | 'message' | 'place' | 'category'>;

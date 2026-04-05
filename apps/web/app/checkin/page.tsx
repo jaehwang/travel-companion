@@ -26,7 +26,7 @@ import { LocationPicker } from '@/components/LocationPicker';
 import Map, { MapPhoto } from '@/components/Map';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { createClient } from '@/lib/supabase/client';
-import type { Trip, Checkin } from '@/types/database';
+import type { Trip, Checkin } from '@travel-companion/shared';
 import type { User } from '@supabase/supabase-js';
 import { APP_NAME } from '@/lib/config';
 import { useTrips } from './hooks/useTrips';

@@ -31,7 +31,7 @@ import CheckinFormPlacePanel from './CheckinFormPlacePanel';
 import CheckinFormCategoryPanel from './CheckinFormCategoryPanel';
 import CheckinFormToolbar from './CheckinFormToolbar';
 import CheckinFormTimePanel from './CheckinFormTimePanel';
-import type { Checkin } from '@/types/database';
+import type { Checkin } from '@travel-companion/shared';
 
 // ─── 타입 ─────────────────────────────────────────────────────────────────────
 

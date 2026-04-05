@@ -1,8 +1,8 @@
 'use client';
 
 import { Camera, MapPin, X, Clock } from 'lucide-react';
-import { CHECKIN_CATEGORY_LABELS } from '@/types/database';
-import type { CheckinCategory } from '@/types/database';
+import { CHECKIN_CATEGORY_LABELS } from '@travel-companion/shared';
+import type { CheckinCategory } from '@travel-companion/shared';
 import type { PhotoMetadata } from '@/lib/exif';
 import { CATEGORY_META } from '@/lib/categoryIcons';
 

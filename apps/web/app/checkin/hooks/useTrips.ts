@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { Trip, TripFormData } from '@/types/database';
+import type { Trip, TripFormData } from '@travel-companion/shared';
 
 export type { TripFormData };
 

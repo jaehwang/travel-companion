@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { MapPin, Map as MapIcon } from 'lucide-react';
 import Map, { MapPhoto } from '@/components/Map';
-import type { Trip, Checkin } from '@/types/database';
+import type { Trip, Checkin } from '@travel-companion/shared';
 import { APP_NAME } from '@/lib/config';
 import { CATEGORY_META } from '@/lib/categoryIcons';
 

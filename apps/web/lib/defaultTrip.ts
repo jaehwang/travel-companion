@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Trip, TripInsert } from '@/types/database';
+import type { Trip, TripInsert } from '@travel-companion/shared';
 
 export function buildDefaultTripName(userId: string): string {
   return `${userId}_default`;

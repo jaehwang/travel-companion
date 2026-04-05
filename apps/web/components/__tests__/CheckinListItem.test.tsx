@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { CheckinListItem } from '../CheckinListItem';
-import type { Checkin } from '@/types/database';
+import type { Checkin } from '@travel-companion/shared';
 
 const baseCheckin: Checkin = {
   id: 'checkin-1',

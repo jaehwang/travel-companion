@@ -2,7 +2,7 @@
 
 import { createPortal } from 'react-dom';
 import { Star, MapPin } from 'lucide-react';
-import type { Trip } from '@/types/database';
+import type { Trip } from '@travel-companion/shared';
 import { DropdownMenu } from '@/components/DropdownMenu';
 import { APP_NAME } from '@/lib/config';
 

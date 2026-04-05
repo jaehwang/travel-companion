@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Trip } from '@/types/database';
+import type { Trip } from '@travel-companion/shared';
 
 export async function fetchTrips(supabase: SupabaseClient): Promise<Trip[]> {
   const [tripsResult, checkinsResult] = await Promise.all([

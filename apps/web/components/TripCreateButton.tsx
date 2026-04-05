@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import TripFormModal from '@/components/TripFormModal';
-import type { TripFormData, Trip } from '@/types/database';
+import type { TripFormData, Trip } from '@travel-companion/shared';
 
 export default function TripCreateButton() {
   const [showModal, setShowModal] = useState(false);

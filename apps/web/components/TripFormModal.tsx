@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Plane, Pencil, Calendar, Flag, MapPin, X, Star } from 'lucide-react';
-import type { Trip, TripFormData } from '@/types/database';
+import type { Trip, TripFormData } from '@travel-companion/shared';
 import { usePlaceSearch } from '@/components/checkin-form/hooks/usePlaceSearch';
 import CheckinFormPlacePanel from '@/components/checkin-form/CheckinFormPlacePanel';
 

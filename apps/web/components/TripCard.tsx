@@ -7,7 +7,7 @@ import { Map, Star } from 'lucide-react';
 import { DropdownMenu } from '@/components/DropdownMenu';
 import TripFormModal from '@/components/TripFormModal';
 import TripDeleteDialog from '@/components/TripDeleteDialog';
-import type { Trip, TripFormData } from '@/types/database';
+import type { Trip, TripFormData } from '@travel-companion/shared';
 
 interface TripCardProps {
   trip: Trip;

@@ -2,7 +2,7 @@
 
 import { Map } from 'lucide-react';
 import { CheckinListItem } from '@/components/CheckinListItem';
-import type { Checkin } from '@/types/database';
+import type { Checkin } from '@travel-companion/shared';
 
 interface CheckinTimelineProps {
   checkins: Checkin[];

@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Plane, Pencil, Calendar, Flag } from 'lucide-react';
-import type { Trip } from '@/types/database';
-import type { TripFormData } from '@/types/database';
+import type { Trip } from '@travel-companion/shared';
+import type { TripFormData } from '@travel-companion/shared';
 
 interface TripFormModalProps {
   mode: 'create' | 'edit';

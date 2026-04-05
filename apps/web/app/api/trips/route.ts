@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAuthenticatedClient } from '@/lib/supabase/server';
-import type { TripInsert } from '@/types/database';
+import type { TripInsert } from '@travel-companion/shared';
 
 // GET /api/trips - 여행 목록 조회
 export async function GET(request: Request) {

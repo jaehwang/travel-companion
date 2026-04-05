@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAuthenticatedClient } from '@/lib/supabase/server';
 import { getOrCreateDefaultTrip } from '@/lib/defaultTrip';
-import type { CheckinInsert } from '@/types/database';
+import type { CheckinInsert } from '@travel-companion/shared';
 
 // GET /api/checkins?trip_id={id} - 체크인 목록 조회
 export async function GET(request: Request) {

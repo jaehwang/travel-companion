@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import CheckinForm from '../CheckinForm';
-import type { Checkin } from '@/types/database';
+import type { Checkin } from '@travel-companion/shared';
 
 // ─── Hook Mocks ───
 

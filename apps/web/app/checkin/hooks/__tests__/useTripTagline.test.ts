@@ -3,7 +3,7 @@
  */
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { useTripTagline } from '../useTripTagline';
-import type { Trip } from '@/types/database';
+import type { Trip } from '@travel-companion/shared';
 
 const mockFetch = jest.fn();
 global.fetch = mockFetch;

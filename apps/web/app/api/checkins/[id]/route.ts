@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAuthenticatedClient } from '@/lib/supabase/server';
-import type { CheckinInsert } from '@/types/database';
+import type { CheckinInsert } from '@travel-companion/shared';
 
 // PATCH /api/checkins/[id] - 체크인 수정
 export async function PATCH(

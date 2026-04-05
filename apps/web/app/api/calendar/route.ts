@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import type { UserProfile } from '@/types/database';
+import type { UserProfile } from '@travel-companion/shared';
 
 interface Period {
   open: { day: number; time: string };
