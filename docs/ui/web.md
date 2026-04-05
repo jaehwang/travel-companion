@@ -2,14 +2,15 @@
 
 **프레임워크**: Next.js 15 (App Router) / TypeScript / Tailwind CSS
 **배포**: Vercel (main 브랜치 push → 자동 배포)
+**i18n**: `next-intl` — `app/[locale]/` 구조, 지원 언어 `en`(기본) / `ko`
 
 ---
 
 ## 1. 화면 목록
 
-### 1.1 홈 (여행 목록) — `/`
+### 1.1 홈 (여행 목록) — `/[locale]`
 
-**파일**: `apps/web/app/page.tsx`
+**파일**: `apps/web/app/[locale]/page.tsx`
 
 **기능**
 - 빠른 체크인 버튼 (상단) — 현재 위치의 가장 최근 체크인 상태 표시
@@ -37,9 +38,9 @@
 
 ---
 
-### 1.2 로그인 — `/login`
+### 1.2 로그인 — `/[locale]/login`
 
-**파일**: `apps/web/app/login/page.tsx`
+**파일**: `apps/web/app/[locale]/login/page.tsx`
 
 **기능**
 - Google OAuth 로그인 버튼
@@ -59,9 +60,9 @@
 
 ---
 
-### 1.3 체크인 관리 (메인 UI) — `/checkin`
+### 1.3 체크인 관리 (메인 UI) — `/[locale]/checkin`
 
-**파일**: `apps/web/app/checkin/page.tsx`
+**파일**: `apps/web/app/[locale]/checkin/page.tsx` (134줄)
 
 **기능**
 - 여행 선택 (SideDrawer)
@@ -91,26 +92,34 @@
 - 미들웨어 인증 확인
 - 모든 API 호출에 Supabase 인증 클라이언트 사용
 
-#### 서브 컴포넌트
+#### 컴포넌트 구조
 
-**SideDrawer** (`app/checkin/components/SideDrawer.tsx`)
-- 여행 목록 표시 및 선택
-- `is_frequent = true` 여행은 제목 앞에 ⭐ 아이콘 표시
-- 여행 신규 생성 / 수정 / 삭제
-- ActionSheet 스타일 메뉴
+```
+app/[locale]/checkin/
+  page.tsx                      # 상태 조합 + Provider (134줄)
+  components/
+    CheckinPageHeader.tsx       # 헤더 (햄버거 메뉴, 여행 제목, 아바타)
+    TripContent.tsx             # 선택된 여행 본문 (폼, 지도, 태그라인, 타임라인)
+    EmptyTripsView.tsx          # 여행 없음 안내
+    CheckinPageOverlays.tsx     # SideDrawer, BottomBar, TripFormModal, LocationPicker 등
+    BottomBar.tsx               # 체크인 추가 FAB + 오늘의 일정
+    CheckinTimeline.tsx         # 날짜별 그룹핑 타임라인, 정렬 토글
+    SideDrawer.tsx              # 여행 목록, CRUD
+    TaglineBanner.tsx           # AI 태그라인 표시
+    TodayCalendar.tsx           # 오늘의 Google Calendar 일정
+    TripFormModal.tsx           # 여행 생성/수정 모달
+    TripInfoCard.tsx            # 여행 정보 카드
+  hooks/
+    useCheckinPage.ts           # LocationPicker useRef 패턴, 선택 상태
+    useCheckins.ts              # 체크인 CRUD
+    useTrips.ts                 # 여행 CRUD
+    useTripTagline.ts           # AI 태그라인 생성
+```
 
 **TripDeleteDialog** (`components/TripDeleteDialog.tsx`)
 - 여행 삭제 시 체크인 처리 방식 선택 다이얼로그 (portal 방식)
 - "예, 체크인도 삭제" → cascade delete
 - "아니오, 미할당으로 보관" → 체크인을 default trip으로 이동 후 여행 삭제
-
-**CheckinTimeline** (`app/checkin/components/CheckinTimeline.tsx`)
-- 날짜별 그룹핑된 체크인 목록
-- 정렬 토글 (최신순 / 오래된순)
-- 각 체크인 카드에 수정/삭제 버튼
-
-**TodayCalendarSection** (`app/checkin/components/TodayCalendar.tsx`)
-- 오늘의 Google Calendar 일정 미리보기
 
 ---
 
@@ -176,9 +185,9 @@ checkin/page.tsx
 
 ---
 
-### 1.6 공개 여행 스토리 — `/story/[id]`
+### 1.6 공개 여행 스토리 — `/[locale]/story/[id]`
 
-**파일**: `apps/web/app/story/[id]/page.tsx`
+**파일**: `apps/web/app/[locale]/story/[id]/page.tsx`
 
 **기능**
 - 공개 여행의 체크인 목록 갤러리 표시
@@ -197,9 +206,9 @@ checkin/page.tsx
 
 ---
 
-### 1.7 설정 — `/settings`
+### 1.7 설정 — `/[locale]/settings`
 
-**파일**: `apps/web/app/settings/page.tsx`
+**파일**: `apps/web/app/[locale]/settings/page.tsx`
 
 **기능**
 - 프로필 정보 표시 (이름, 이메일, 아바타)
@@ -217,9 +226,9 @@ checkin/page.tsx
 
 ---
 
-### 1.8 캘린더 — `/calendar`
+### 1.8 캘린더 — `/[locale]/calendar`
 
-**파일**: `apps/web/app/calendar/page.tsx`
+**파일**: `apps/web/app/[locale]/calendar/page.tsx`
 
 **기능**
 - 연동된 Google Calendar 이벤트 조회
@@ -252,9 +261,10 @@ checkin/page.tsx
 
 | 훅 | 파일 | 역할 |
 |---|---|---|
-| `useTrips` | `app/checkin/hooks/useTrips.ts` | 여행 CRUD + 상태 관리 |
-| `useCheckins` | `app/checkin/hooks/useCheckins.ts` | 체크인 CRUD + 상태 관리 |
-| `useTripTagline` | `app/checkin/hooks/useTripTagline.ts` | Gemini AI 여행 요약 생성 |
+| `useCheckinPage` | `app/[locale]/checkin/hooks/useCheckinPage.ts` | LocationPicker useRef 패턴, 선택 상태 |
+| `useTrips` | `app/[locale]/checkin/hooks/useTrips.ts` | 여행 CRUD + 상태 관리 |
+| `useCheckins` | `app/[locale]/checkin/hooks/useCheckins.ts` | 체크인 CRUD + 상태 관리 |
+| `useTripTagline` | `app/[locale]/checkin/hooks/useTripTagline.ts` | Gemini AI 여행 요약 생성 |
 | `usePhotoUpload` | `components/checkin-form/hooks/usePhotoUpload.ts` | 사진 선택, 압축, Storage 업로드 |
 | `usePlaceSearch` | `components/checkin-form/hooks/usePlaceSearch.ts` | Google Places 자동완성 |
 | `useLocationSource` | `components/checkin-form/hooks/useLocationSource.ts` | GPS / 수동 위치 관리 |

@@ -73,8 +73,9 @@ npm install @supabase/ssr
 #### 파일 구조
 ```
 app/
-  login/
-    page.tsx              # 로그인 페이지 (Google 버튼)
+  [locale]/
+    login/
+      page.tsx            # 로그인 페이지 (Google 버튼)
   auth/
     callback/
       route.ts            # OAuth 콜백 처리
@@ -82,13 +83,17 @@ lib/
   supabase/
     client.ts             # 클라이언트 컴포넌트용
     server.ts             # 서버 컴포넌트/API 라우트용
-middleware.ts             # 세션 갱신 + 인증 보호
+i18n/
+  routing.ts              # next-intl locale 라우팅 설정
+  request.ts              # 서버 측 locale 요청 처리
+middleware.ts             # next-intl 로케일 감지 + 세션 갱신 + 인증 보호
 ```
 
 #### middleware.ts
+- `createIntlMiddleware`로 locale 감지 및 리다이렉트 처리 (`/checkin` → `/en/checkin`)
 - 모든 요청에서 세션 토큰 갱신
-- 비로그인 상태로 보호된 페이지 접근 시 `/login`으로 리다이렉트
-- `/login`, `/auth/callback` 경로는 인증 없이 접근 허용
+- 비로그인 상태로 보호된 페이지 접근 시 `/[locale]/login`으로 리다이렉트
+- `/[locale]/login`, `/auth/callback`, `/api/*` 경로는 인증 없이 접근 허용
 
 #### Supabase 클라이언트 분리
 - `lib/supabase/client.ts`: `createBrowserClient` (클라이언트 컴포넌트)

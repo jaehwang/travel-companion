@@ -216,21 +216,21 @@ Easing 원칙:
 
 ## 컴포넌트별 적용 현황
 
-### 로그인 (`app/login/page.tsx`)
+### 로그인 (`app/[locale]/login/page.tsx`)
 - 배경: `.tc-page-bg`
 - 로고 SVG: 코랄(`#FF6B47`) 배경의 경로 지도 아이콘 (96px)
 - 타이틀: `.tc-brand` + `.tc-hero`
 - 기능 소개: 3개 흰 카드 (📸 / 🗺️ / 📖)
 - Google 로그인 버튼: 흰 카드 pill, hover 시 shadow + translateY(-1px)
 
-### 홈 (`app/page.tsx`)
+### 홈 (`app/[locale]/page.tsx`)
 - 배경: `.tc-page-bg`
 - 타이틀: `.tc-brand` + `.tc-plane`
 - 여행 카드: `.tc-trip-card`, 상단 액센트 스트립, stagger 애니메이션
 - 스켈레톤: `.tc-skeleton-card` + `.tc-shimmer`
 - 새 여행 버튼: 코랄 FAB
 
-### 체크인 목록 (`app/checkin/page.tsx`)
+### 체크인 목록 (`app/[locale]/checkin/page.tsx`)
 - 배경: `.tc-page-bg`
 - 헤더: `.tc-header`
 - 여행 정보 블록: 흰 카드 + 코랄 좌측 4px 바
@@ -241,15 +241,15 @@ Easing 원칙:
 - 좌측: 카테고리 컬러 5px 스트립
 - 상단 메타: 카테고리 이모지 + 레이블 (카테고리 컬러), 우측 시간 (faint)
 
-### 체크인 타임라인 (`app/checkin/components/CheckinTimeline.tsx`)
+### 체크인 타임라인 (`app/[locale]/checkin/components/CheckinTimeline.tsx`)
 - 날짜 구분: 코랄 8px 도트 + 따뜻한 텍스트 + `--tc-dot` 라인
 - 체크인 카드: 날짜별 그룹핑 후 `.checkin-grid`로 반응형 다단 배치
 
-### 사이드 드로어 (`app/checkin/components/SideDrawer.tsx`)
+### 사이드 드로어 (`app/[locale]/checkin/components/SideDrawer.tsx`)
 - 패널: `.tc-drawer-panel` (크림 배경)
 - 선택된 여행: 코랄 4px 좌측 바 + 코랄 텍스트
 
-### 바텀바 (`app/checkin/components/BottomBar.tsx`)
+### 바텀바 (`app/[locale]/checkin/components/BottomBar.tsx`)
 - 컨테이너: `.tc-bottom-bar`
 - 체크인 FAB: 코랄 원형, glow 그림자
 
@@ -259,7 +259,7 @@ Easing 원칙:
 - 툴바 버튼: 이모지 + 한글 레이블, 활성 시 코랄 tint 배경
 - 카테고리 패널: 카테고리 컬러 테두리 + tint 배경
 
-### 여행 폼 (`app/checkin/components/TripFormModal.tsx`)
+### 여행 폼 (`app/[locale]/checkin/components/TripFormModal.tsx`)
 - 전체 배경: `var(--tc-bg)`
 - 날짜 입력: 흰 카드 (`--tc-card-bg`) 안에 컬러 레이블
 - 공개 토글: 활성 시 코랄 (`#FF6B47`) + glow 그림자
