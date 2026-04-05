@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "test": "tsc --noEmit && jest",
     "test:e2e": "playwright test",
     "test:watch": "jest --watch",
@@ -35,6 +35,7 @@
     "lightningcss-linux-x64-gnu": "1.30.2"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.5",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4.1.18",
     "@testing-library/dom": "^10.4.1",
