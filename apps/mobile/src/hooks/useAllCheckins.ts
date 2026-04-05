@@ -1,6 +1,5 @@
 import { useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import type { Checkin } from '@travel-companion/shared';
 import { useCheckinsStore } from '../store/checkinsStore';
 
 export function useAllCheckins(tripId?: string) {

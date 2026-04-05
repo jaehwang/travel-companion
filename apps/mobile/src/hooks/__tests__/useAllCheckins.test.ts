@@ -8,7 +8,8 @@ jest.mock('../../lib/api');
 jest.mock('@react-navigation/native', () => ({
   useFocusEffect: (cb: () => void | (() => void)) => {
     const React = require('react');
-    React.useEffect(cb, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    React.useEffect(() => cb(), []);
   },
 }));
 

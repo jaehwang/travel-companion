@@ -39,7 +39,7 @@ export function useTripDetail() {
 
   const trip = useTripsStore((s) => s.trips.find((t) => t.id === selectedTripId)) ?? route.params.trip;
   const { checkins, loading, error, reload, remove } = useCheckins(trip.id);
-  const { trips, reload: reloadTrips, create: createTrip, update: updateTrip } = useTrips();
+  const { trips, create: createTrip, update: updateTrip } = useTrips();
   const [refreshing, setRefreshing] = useState(false);
   const [showDrawer, setShowDrawer] = useState(false);
   const [showCreateTripModal, setShowCreateTripModal] = useState(false);

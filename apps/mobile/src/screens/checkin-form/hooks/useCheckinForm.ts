@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RouteProp } from '@react-navigation/native';
@@ -29,6 +29,10 @@ export function useCheckinForm() {
     checkin: editingCheckin,
   } = route.params;
   const isEditMode = !!editingCheckin;
+  const hasInitialLocationRef = useRef(
+    (editingCheckin?.latitude != null && editingCheckin?.longitude != null) ||
+    (initialLatitude != null && initialLongitude != null)
+  );
   const { trips } = useTrips();
   const [selectedTripId, setSelectedTripId] = useState<string | undefined>(paramTripId);
 
@@ -71,7 +75,7 @@ export function useCheckinForm() {
   }, []);
 
   useEffect(() => {
-    if (latitude != null && longitude != null) return;
+    if (hasInitialLocationRef.current) return;
     (async () => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, waitFor, fireEvent } from '@testing-library/react-native';
+import { render, waitFor } from '@testing-library/react-native';
 import ScheduleScreen from '../ScheduleScreen';
 import { fetchScheduleWithWeather } from '../../lib/api';
 
@@ -197,10 +197,9 @@ describe('ScheduleScreen', () => {
   it('당겨서 새로고침 시 fetchScheduleWithWeather를 다시 호출한다', async () => {
     mockFetch.mockResolvedValue({ items: [], advice: null });
 
-    const { getByTestId } = render(<ScheduleScreen />);
+    render(<ScheduleScreen />);
     await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(1));
 
-    const { ScrollView } = require('react-native');
     // FlatList의 refreshControl은 직접 트리거가 어려우므로 호출 횟수로 검증
     expect(mockFetch).toHaveBeenCalledTimes(1);
   });

@@ -46,7 +46,7 @@ export default function LocationPickerContent({
 
   // 초기 위치가 없으면 현재 위치로 이동
   useEffect(() => {
-    if (selectedLocation) return;
+    if (initialLatitude != null && initialLongitude != null) return;
     (async () => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
@@ -59,7 +59,7 @@ export default function LocationPickerContent({
         setSelectedLocation({ latitude: 37.5665, longitude: 126.9780 });
       }
     })();
-  }, []);
+  }, [initialLatitude, initialLongitude]);
 
   // 장소 검색 debounce
   useEffect(() => {
@@ -76,7 +76,7 @@ export default function LocationPickerContent({
       }
     }, 300);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [searchQuery]);
+  }, [searchQuery, selectedLocation]);
 
   const handleSelectPrediction = async (prediction: PlacePrediction) => {
     setLoadingPlace(true);

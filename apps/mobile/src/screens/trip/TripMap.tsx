@@ -88,7 +88,7 @@ export default function TripMap({ checkins, trip }: TripMapProps) {
     if (mapReadyRef.current && !selectedCheckinId) {
       mapRef.current?.animateToRegion(mapRegion, 500);
     }
-  }, [mapRegion]);
+  }, [mapRegion, selectedCheckinId]);
 
   useEffect(() => {
     if (!selectedCheckin) return;

@@ -1,5 +1,4 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
 
 jest.mock('../../lib/supabase', () => ({ supabase: { auth: { getSession: jest.fn(), getUser: jest.fn() } } }));
 jest.mock('../../store/tripsStore', () => ({ useTripsStore: () => jest.fn() }));
