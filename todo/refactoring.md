@@ -146,44 +146,59 @@ src/screens/trip/
 
 페이지 컴포넌트가 LocationPicker 제어, 여행 선택, 체크인 폼, 지도, 서랍을 직접 조율하고 있다.
 
-**목표 구조**:
+**구현된 구조**:
 
 ```
-app/checkin/
-  page.tsx                    # 상태 조합 + Provider (~100줄)
+app/[locale]/checkin/
+  page.tsx                      # 상태 조합 + Provider (134줄) ✅
   components/
-    CheckinPageLayout.tsx     # 전체 레이아웃
-    TripSelector.tsx          # 여행 선택 사이드바
-    CheckinDrawer.tsx         # 하단 서랍
+    CheckinPageHeader.tsx       # 헤더 (햄버거 메뉴, 여행 제목, 아바타) ✅
+    TripContent.tsx             # 선택된 여행의 본문 (폼, 지도, 태그라인, 타임라인) ✅
+    EmptyTripsView.tsx          # 여행 없음 안내 ✅
+    CheckinPageOverlays.tsx     # SideDrawer, BottomBar, TripFormModal, LocationPicker 등 ✅
+    (기존) BottomBar.tsx, CheckinTimeline.tsx, SideDrawer.tsx, TaglineBanner.tsx 등
   hooks/
-    useCheckinPage.ts         # LocationPicker 제어, 선택 상태
+    useCheckinPage.ts           # LocationPicker 제어, 선택 상태 ✅
 ```
 
-- [ ] `useCheckinPage.ts` 훅 추출 (LocationPicker useRef 패턴 포함)
-- [ ] `TripSelector.tsx` 분리
-- [ ] `CheckinDrawer.tsx` 분리
-- [ ] `CheckinPageLayout.tsx` 분리
-- [ ] `page.tsx` 슬림화 (~100줄 목표)
-- [ ] 웹 빌드 + 테스트 통과 확인
+> **계획 대비 변경**: `CheckinPageLayout`(전체 레이아웃), `TripSelector`(여행 선택 사이드바), `CheckinDrawer`(하단 서랍) 대신 실제 책임 단위에 맞게 `CheckinPageHeader`, `TripContent`, `EmptyTripsView`, `CheckinPageOverlays`로 분리됨. 기존 컴포넌트(SideDrawer, BottomBar 등)가 이미 각 역할을 담당하고 있어 추가 레이어 대신 조합 컴포넌트로 구성.
+
+- [x] `useCheckinPage.ts` 훅 추출 (LocationPicker useRef 패턴 포함)
+- [x] `CheckinPageHeader.tsx` 분리
+- [x] `TripContent.tsx` 분리
+- [x] `EmptyTripsView.tsx` 분리
+- [x] `CheckinPageOverlays.tsx` 분리
+- [x] `page.tsx` 슬림화 (284줄 → 134줄)
+- [x] 웹 빌드 + 테스트 통과 확인
 
 ### 2-4. 모바일 `CheckinFormScreen.tsx` (633줄) → 폼 섹션별 분리
 
-**목표 구조**:
+**구현된 구조**:
 
 ```
 src/screens/checkin-form/
-  CheckinFormScreen.tsx       # 폼 상태 조합 (~150줄)
+  CheckinFormScreen.tsx         # 폼 상태 조합 (96줄) ✅
+  hooks/
+    useCheckinForm.ts           # 폼 상태 관리 ✅
   sections/
-    PhotoSection.tsx          # 사진 업로드
-    LocationSection.tsx       # 위치 선택
-    CategorySection.tsx       # 카테고리 선택
-    TimeSection.tsx           # 시간 선택
-    NoteSection.tsx           # 메모 입력
+    FormHeader.tsx              # 아바타, 여행 선택 칩, 취소/제출 버튼 ✅
+    FormBody.tsx                # 제목 입력, 메모, 사진, InfoChips, 에러 표시 ✅
+    PhotoSection.tsx            # 사진 업로드 ✅
+    TimePickerSection.tsx       # 시간 선택 ✅
+    InfoChips.tsx               # 위치·카테고리 칩 표시 ✅
+    NoteSection.tsx             # 메모 입력 ✅
 ```
 
-- [ ] 각 섹션 컴포넌트 분리
-- [ ] `CheckinFormScreen.tsx` 슬림화
-- [ ] 테스트 통과 확인
+> **계획 대비 변경**: `LocationSection`, `CategorySection`은 기존 `InfoChips`(위치·카테고리 칩)와 `CategorySelector`가 이미 해당 역할을 수행하고 있어 별도 섹션 생성 생략. `TimeSection` → `TimePickerSection`으로 명명. 폼을 `FormHeader`(상단 액션바)와 `FormBody`(입력 영역) 두 섹션으로 구조화.
+
+- [x] `FormHeader.tsx` 분리 (아바타, 여행 선택, 버튼)
+- [x] `FormBody.tsx` 분리 (입력 필드 묶음)
+- [x] `PhotoSection.tsx` 분리
+- [x] `TimePickerSection.tsx` 분리
+- [x] `InfoChips.tsx` 분리
+- [x] `NoteSection.tsx` 분리
+- [x] `CheckinFormScreen.tsx` 슬림화 (355줄 → 96줄)
+- [x] 테스트 통과 확인
 
 ---
 
