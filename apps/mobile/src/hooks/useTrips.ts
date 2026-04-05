@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from 'react';
-import type { Trip, TripFormData } from '../../../../packages/shared/src/types';
+import type { Trip, TripFormData } from '@travel-companion/shared';
 import { useTripsStore } from '../store/tripsStore';
 
 export function useTrips() {

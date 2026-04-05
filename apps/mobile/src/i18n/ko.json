@@ -1,0 +1,76 @@
+{
+  "common": {
+    "loading": "불러오는 중...",
+    "cancel": "취소",
+    "save": "저장",
+    "delete": "삭제",
+    "edit": "수정",
+    "close": "닫기",
+    "confirm": "확인",
+    "back": "뒤로"
+  },
+  "category": {
+    "restaurant": "음식점",
+    "attraction": "관광지",
+    "accommodation": "숙소",
+    "cafe": "카페",
+    "shopping": "쇼핑",
+    "nature": "자연",
+    "activity": "액티비티",
+    "transportation": "교통",
+    "performance": "공연",
+    "movie": "영화",
+    "exhibition": "전시",
+    "other": "기타"
+  },
+  "tab": {
+    "home": "홈",
+    "checkins": "체크인",
+    "schedule": "일정"
+  },
+  "home": {
+    "myTrips": "내 여행",
+    "noTrips": "여행이 없습니다",
+    "noTripsDesc": "첫 여행을 만들어보세요!",
+    "createFirst": "여행 만들기",
+    "allCheckins": "전체 체크인"
+  },
+  "trip": {
+    "createTitle": "새 여행",
+    "editTitle": "여행 편집",
+    "deleteTitle": "여행 삭제",
+    "deleteBody": "삭제하면 체크인은 미할당으로 이동됩니다.",
+    "deleteWithCheckins": "여행과 체크인 모두 삭제",
+    "keepCheckins": "체크인 미할당으로 보관",
+    "titlePlaceholder": "여행 이름",
+    "descPlaceholder": "설명 (선택)",
+    "startDate": "시작일",
+    "endDate": "종료일",
+    "isPublic": "공개",
+    "copyLink": "링크 복사",
+    "linkCopied": "링크가 복사됐습니다!",
+    "noCheckins": "체크인이 없습니다",
+    "noCheckinsDesc": "첫 번째 체크인을 추가해보세요!"
+  },
+  "checkin": {
+    "title": "체크인",
+    "titlePlaceholder": "제목",
+    "messagePlaceholder": "무슨 생각을 하고 있나요?",
+    "locationPlaceholder": "장소 검색...",
+    "addPhoto": "사진",
+    "addLocation": "장소",
+    "addCategory": "분류",
+    "addTime": "시각",
+    "submit": "체크인",
+    "update": "수정",
+    "deleteTitle": "체크인 삭제",
+    "deleteBody": "이 체크인을 삭제하시겠습니까?",
+    "clearTime": "시각 지정 삭제",
+    "timePanel": "언제 방문했나요?"
+  },
+  "schedule": {
+    "title": "일정",
+    "noEvents": "오늘 일정 없음",
+    "connecting": "캘린더 연결 중..."
+  }
+}

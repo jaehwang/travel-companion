@@ -15,4 +15,9 @@ config.resolver.nodeModulesPaths = [
   path.resolve(monorepoRoot, 'node_modules'),
 ];
 
+// @travel-companion/shared 패키지 이름으로 직접 참조
+config.resolver.extraNodeModules = {
+  '@travel-companion/shared': path.resolve(monorepoRoot, 'packages/shared/src'),
+};
+
 module.exports = config;

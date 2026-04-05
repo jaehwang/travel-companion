@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import CheckinFormScreen from '../CheckinFormScreen';
+import CheckinFormScreen from '../checkin-form/CheckinFormScreen';
 
 // ── Navigation mocks ──────────────────────────────────────────────────────────
 

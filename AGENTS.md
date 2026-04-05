@@ -54,25 +54,28 @@ packages/shared/ → 공통 TypeScript 타입
 ### 웹 앱 (`apps/web`)
 
 - `app/api/` — REST API Route Handlers (Next.js App Router)
-- `app/(pages)/` — 서버/클라이언트 페이지
+- `app/[locale]/` — 다국어 페이지 (en/ko). `next-intl` 기반, `/checkin` → `/en/checkin` 자동 리다이렉트
 - `components/` — React 컴포넌트 (Tailwind CSS)
 - `hooks/` — 커스텀 훅
 - `lib/` — 유틸리티, Supabase 클라이언트
-- `types/database.ts` — DB 타입 (shared와 일부 중복)
+- `i18n/` — next-intl routing.ts, request.ts
+- `messages/` — 웹 i18n 메시지 (en.json, ko.json)
 
 경로 alias: `@/` → `apps/web/`
 
-**기술 스택**: Next.js 15 / TypeScript / Tailwind CSS / Google Maps API / exifr / browser-image-compression / Vercel 배포
+**기술 스택**: Next.js 15 / TypeScript / Tailwind CSS / Google Maps API / exifr / browser-image-compression / next-intl / Vercel 배포
 
 ### 모바일 앱 (`apps/mobile`)
 
 Expo React Native (iOS). CRUD는 Supabase JS SDK 직접 호출, Places / Calendar / AI 등 서버 비밀 키가 필요한 기능만 Next.js REST API 경유.
 
-- `src/lib/api.ts` — `apiFetch()`: Vercel API Bearer 토큰 호출 / Supabase 직접 호출 함수 모음
+- `src/lib/api/` — 도메인별 API 모듈 (`trips.ts`, `checkins.ts`, `nearby.ts`, `storage.ts`, `places.ts`, `calendar.ts`, `settings.ts`, `rest-client.ts`, `supabase-client.ts`)
+- `src/lib/api.ts` — 하위 호환 re-export (점진적 제거 예정)
 - `src/lib/supabase.ts` — Supabase 클라이언트 (iOS Keychain 세션 저장)
 - `src/store/` — Zustand 전역 상태 (trips, checkins)
 - `src/hooks/` — 데이터 훅
 - `src/screens/` — 화면 컴포넌트
+- `src/i18n/` — i18next 초기화, en.json/ko.json 메시지
 
 모바일 환경변수 파일:
 - `.env.development` — 시뮬레이터 (`EXPO_PUBLIC_API_URL=http://localhost:3000`)
@@ -92,10 +95,17 @@ Expo React Native (iOS). CRUD는 Supabase JS SDK 직접 호출, Places / Calenda
 
 모든 인증 필요 API 라우트는 이 함수를 사용한다.
 
-### 공유 타입
+### 공유 패키지
 
 `packages/shared/src/types.ts` — `Trip`, `Checkin`, `TripFormData`, `CheckinInsert` 등.
-모바일은 여기서 import, 웹은 `apps/web/types/database.ts`에도 복사본 존재.
+웹·모바일 모두 `@travel-companion/shared`로 import.
+
+`packages/shared/src/utils/` — 공통 순수 함수:
+- `trip.ts` — `buildTripMetaMap()` (cover_photo_url, first_checkin_date 계산)
+- `date.ts` — `formatTripDate()`, `formatDateDisplay()`, `parseLocalDate()`, `toISODateString()`
+- `geo.ts` — `haversineDistance()`
+
+`packages/shared/messages/` — 웹·모바일 공통 i18n 메시지 (카테고리 레이블 등).
 
 ---
 

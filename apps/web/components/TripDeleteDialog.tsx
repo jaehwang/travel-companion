@@ -1,6 +1,7 @@
 'use client';
 
 import { createPortal } from 'react-dom';
+import { useTranslations } from 'next-intl';
 
 interface TripDeleteDialogProps {
   tripTitle: string;
@@ -15,48 +16,42 @@ export default function TripDeleteDialog({
   onKeepCheckins,
   onCancel,
 }: TripDeleteDialogProps) {
+  const t = useTranslations('trip');
+  const tc = useTranslations('common');
+
   return createPortal(
     <div
-      style={{ position: 'fixed', inset: 0, zIndex: 9999, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 16px' }}
+      className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center px-4"
       onClick={onCancel}
     >
       <div
-        style={{ background: 'white', borderRadius: 16, padding: '24px 20px', width: '100%', maxWidth: 360 }}
+        className="bg-white rounded-2xl px-5 py-6 w-full max-w-[360px]"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 8, color: '#111827' }}>
-          &quot;{tripTitle}&quot; 삭제
+        <h3 className="text-base font-bold mb-2 text-gray-900">
+          &quot;{tripTitle}&quot; {tc('delete')}
         </h3>
-        <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 20, lineHeight: 1.5 }}>
-          체크인도 함께 삭제할까요?
+        <p className="text-sm text-gray-500 mb-5 leading-relaxed">
+          {t('deleteBody')}
         </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div className="flex flex-col gap-2">
           <button
             onClick={onDeleteCheckins}
-            style={{
-              padding: '11px 16px', borderRadius: 10, border: '1.5px solid #EF4444',
-              background: '#EF4444', color: 'white', fontWeight: 600, fontSize: 14, cursor: 'pointer',
-            }}
+            className="py-[11px] px-4 rounded-xl border-[1.5px] border-red-500 bg-red-500 text-white font-semibold text-sm cursor-pointer"
           >
-            예, 체크인도 삭제
+            {t('deleteWithCheckins')}
           </button>
           <button
             onClick={onKeepCheckins}
-            style={{
-              padding: '11px 16px', borderRadius: 10, border: '1.5px solid #6366F1',
-              background: 'white', color: '#6366F1', fontWeight: 600, fontSize: 14, cursor: 'pointer',
-            }}
+            className="py-[11px] px-4 rounded-xl border-[1.5px] border-indigo-500 bg-white text-indigo-500 font-semibold text-sm cursor-pointer"
           >
-            아니오, 미할당으로 보관
+            {t('keepCheckins')}
           </button>
           <button
             onClick={onCancel}
-            style={{
-              padding: '11px 16px', borderRadius: 10, border: '1.5px solid #E5E7EB',
-              background: 'white', color: '#6B7280', fontWeight: 500, fontSize: 14, cursor: 'pointer',
-            }}
+            className="py-[11px] px-4 rounded-xl border-[1.5px] border-gray-200 bg-white text-gray-500 font-medium text-sm cursor-pointer"
           >
-            취소
+            {tc('cancel')}
           </button>
         </div>
       </div>

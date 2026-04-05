@@ -34,7 +34,6 @@ export async function GET(request: NextRequest) {
     const data = await response.json();
 
     if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-      console.error('Places API error:', data);
       return NextResponse.json(
         { error: `Places API error: ${data.status}` },
         { status: 500 }
@@ -51,8 +50,7 @@ export async function GET(request: NextRequest) {
     }));
 
     return NextResponse.json({ places });
-  } catch (error) {
-    console.error('Failed to fetch nearby places:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Failed to fetch nearby places' },
       { status: 500 }

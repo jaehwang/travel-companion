@@ -77,7 +77,6 @@ export async function PATCH(
       .single();
 
     if (error) {
-      console.error('Failed to update checkin:', error);
       return NextResponse.json(
         { error: 'Failed to update checkin' },
         { status: 500 }
@@ -85,8 +84,7 @@ export async function PATCH(
     }
 
     return NextResponse.json({ checkin: data });
-  } catch (error) {
-    console.error('Unexpected error:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -119,7 +117,6 @@ export async function DELETE(
       .eq('id', id);
 
     if (error) {
-      console.error('Failed to delete checkin:', error);
       return NextResponse.json(
         { error: 'Failed to delete checkin' },
         { status: 500 }
@@ -137,8 +134,7 @@ export async function DELETE(
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Unexpected error:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

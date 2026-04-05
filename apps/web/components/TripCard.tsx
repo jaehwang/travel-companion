@@ -8,6 +8,7 @@ import { DropdownMenu } from '@/components/DropdownMenu';
 import TripFormModal from '@/components/TripFormModal';
 import TripDeleteDialog from '@/components/TripDeleteDialog';
 import type { Trip, TripFormData } from '@travel-companion/shared';
+import { formatTripDate as _formatTripDate } from '@travel-companion/shared';
 
 interface TripCardProps {
   trip: Trip;
@@ -15,16 +16,7 @@ interface TripCardProps {
   style?: React.CSSProperties;
 }
 
-const formatTripDate = (dateStr?: string | null) => {
-  if (!dateStr) return null;
-  const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(dateStr);
-  const date = isDateOnly
-    ? (() => { const [y, m, d] = dateStr.split('-').map(Number); return new Date(y, m - 1, d); })()
-    : new Date(dateStr);
-  return new Intl.DateTimeFormat('ko-KR', {
-    year: 'numeric', month: 'long', day: 'numeric',
-  }).format(date);
-};
+const formatTripDate = (dateStr?: string | null) => _formatTripDate(dateStr, { weekday: false });
 
 export default function TripCard({ trip, accent, style }: TripCardProps) {
   const router = useRouter();

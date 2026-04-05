@@ -1,0 +1,16 @@
+{
+  "category": {
+    "restaurant": "음식점",
+    "attraction": "관광지",
+    "accommodation": "숙소",
+    "cafe": "카페",
+    "shopping": "쇼핑",
+    "nature": "자연",
+    "activity": "액티비티",
+    "transportation": "교통",
+    "performance": "공연",
+    "movie": "영화",
+    "exhibition": "전시",
+    "other": "기타"
+  }
+}

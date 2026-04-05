@@ -88,7 +88,7 @@ jest.mock('../../components/TodayCalendarSection', () => () => null);
 jest.mock('../../components/SideDrawer', () => () => null);
 jest.mock('../../components/TripFormModal', () => () => null);
 
-import TripScreen from '../TripScreen';
+import TripScreen from '../trip/TripScreen';
 import { useRoute } from '@react-navigation/native';
 
 const mockUseRoute = useRoute as jest.MockedFunction<typeof useRoute>;

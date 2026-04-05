@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { APP_NAME } from "@/lib/config";
-import SessionRefresher from "@/components/SessionRefresher";
 
 export const metadata: Metadata = {
   title: `${APP_NAME} - 여행 기록 공유`,
@@ -28,9 +27,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body className="antialiased">
-        <SessionRefresher />
         {children}
         <div id="modal-root" />
       </body>

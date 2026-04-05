@@ -1,0 +1,104 @@
+{
+  "common": {
+    "loading": "불러오는 중...",
+    "cancel": "취소",
+    "save": "저장",
+    "delete": "삭제",
+    "edit": "수정",
+    "close": "닫기",
+    "confirm": "확인",
+    "back": "뒤로",
+    "appName": "Travel Companion"
+  },
+  "category": {
+    "restaurant": "음식점",
+    "attraction": "관광지",
+    "accommodation": "숙소",
+    "cafe": "카페",
+    "shopping": "쇼핑",
+    "nature": "자연",
+    "activity": "액티비티",
+    "transportation": "교통",
+    "performance": "공연",
+    "movie": "영화",
+    "exhibition": "전시",
+    "other": "기타"
+  },
+  "home": {
+    "myTrips": "내 여행",
+    "emptyTitle": "첫 여행을 기록해볼까요?",
+    "emptyDesc": "위의 + 버튼을 눌러 새로운 여행을 만드세요",
+    "quickCheckin": "빠른 체크인"
+  },
+  "trip": {
+    "createTitle": "새 여행",
+    "editTitle": "여행 편집",
+    "deleteTitle": "\"{title}\" 삭제",
+    "deleteBody": "체크인도 함께 삭제할까요?",
+    "deleteWithCheckins": "예, 체크인도 삭제",
+    "keepCheckins": "아니오, 미할당으로 보관",
+    "noTrips": "여행이 없습니다",
+    "noTripsDesc": "첫 여행을 만들어보세요!",
+    "createFirst": "+ 첫 여행 만들기",
+    "titlePlaceholder": "여행 이름",
+    "descPlaceholder": "설명 (선택)",
+    "startDate": "시작일",
+    "endDate": "종료일",
+    "isPublic": "공개",
+    "applyPlaceAll": "전체 적용",
+    "applyingPlace": "적용 중..."
+  },
+  "checkin": {
+    "title": "체크인",
+    "titlePlaceholder": "제목",
+    "messagePlaceholder": "무슨 생각을 하고 있나요?",
+    "locationPlaceholder": "장소 검색...",
+    "addPhoto": "사진",
+    "addLocation": "장소",
+    "addCategory": "분류",
+    "addTime": "시각",
+    "submit": "체크인",
+    "update": "수정",
+    "deleteTitle": "체크인 삭제",
+    "deleteBody": "이 체크인을 삭제하시겠습니까?",
+    "noCheckins": "체크인이 없습니다",
+    "noCheckinsDesc": "아래 버튼을 눌러 첫 번째 체크인을 추가하세요",
+    "mapEmpty": "체크인을 추가하면 지도에 위치가 표시됩니다",
+    "timePanel": "언제 방문했나요?",
+    "clearTime": "시각 지정 삭제",
+    "sortDesc": "최신순",
+    "sortAsc": "오래된순"
+  },
+  "location": {
+    "searchPlaceholder": "장소 검색...",
+    "currentLocation": "현재 위치 사용",
+    "confirm": "확인",
+    "cancel": "취소"
+  },
+  "settings": {
+    "title": "설정",
+    "account": "계정",
+    "logout": "로그아웃",
+    "calendar": "Google 캘린더",
+    "calendarConnect": "연결",
+    "calendarDisconnect": "연결 해제",
+    "calendarConnected": "연결됨",
+    "calendarDesc": "여행 일정을 Google 캘린더와 동기화하세요"
+  },
+  "auth": {
+    "loginTitle": "Travel Companion에 로그인",
+    "loginDesc": "여행의 추억을 기록하세요",
+    "googleLogin": "Google로 로그인",
+    "loggingIn": "로그인 중..."
+  },
+  "story": {
+    "notFound": "여행을 찾을 수 없습니다",
+    "private": "비공개 여행입니다",
+    "noCheckins": "체크인이 없습니다"
+  },
+  "calendar": {
+    "title": "일정",
+    "noEvents": "일정 없음",
+    "today": "오늘"
+  }
+}

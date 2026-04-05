@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAuthenticatedClient } from '@/lib/supabase/server';
 import type { TripInsert } from '@travel-companion/shared';
+import { buildTripMetaMap } from '@travel-companion/shared';
 
 // GET /api/trips - 여행 목록 조회
 export async function GET(request: Request) {
@@ -17,7 +18,6 @@ export async function GET(request: Request) {
       .order('created_at', { ascending: false }) as any;
 
     if (error) {
-      console.error('Failed to fetch trips:', error);
       return NextResponse.json(
         { error: 'Failed to fetch trips' },
         { status: 500 }
@@ -26,8 +26,7 @@ export async function GET(request: Request) {
 
     // 각 여행의 첫 번째 체크인 날짜 및 사진 조회
     const tripIds = (data as any[]).map((t: any) => t.id);
-    const firstCheckinMap: Record<string, string> = {};
-    const photoMap: Record<string, string[]> = {};
+    let metaMap: Record<string, { first_checkin_date: string | null; cover_photo_url: string | null }> = {};
 
     if (tripIds.length > 0) {
       const { data: checkins } = await supabase
@@ -37,33 +36,17 @@ export async function GET(request: Request) {
         .order('checked_in_at', { ascending: true }) as any;
 
       if (checkins) {
-        for (const c of checkins as any[]) {
-          if (!firstCheckinMap[c.trip_id]) {
-            firstCheckinMap[c.trip_id] = c.checked_in_at;
-          }
-          if (c.photo_url) {
-            if (!photoMap[c.trip_id]) photoMap[c.trip_id] = [];
-            photoMap[c.trip_id].push(c.photo_url);
-          }
-        }
+        metaMap = buildTripMetaMap(checkins as any[]);
       }
     }
 
-    const trips = (data as any[]).map((t: any) => {
-      const photos = photoMap[t.id] ?? [];
-      const cover_photo_url = photos.length > 0
-        ? photos[Math.floor(Math.random() * photos.length)]
-        : null;
-      return {
-        ...t,
-        first_checkin_date: firstCheckinMap[t.id] ?? null,
-        cover_photo_url,
-      };
-    });
+    const trips = (data as any[]).map((t: any) => ({
+      ...t,
+      ...(metaMap[t.id] ?? { first_checkin_date: null, cover_photo_url: null }),
+    }));
 
     return NextResponse.json({ trips });
-  } catch (error) {
-    console.error('Unexpected error:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -110,7 +93,6 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
-      console.error('Failed to create trip:', error);
       return NextResponse.json(
         { error: 'Failed to create trip' },
         { status: 500 }
@@ -118,8 +100,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ trip: data }, { status: 201 });
-  } catch (error) {
-    console.error('Unexpected error:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

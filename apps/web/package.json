@@ -13,10 +13,10 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
-    "@travel-companion/shared": "*",
     "@google/genai": "^1.44.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.95.3",
+    "@travel-companion/shared": "*",
     "@vis.gl/react-google-maps": "^1.7.1",
     "autoprefixer": "^10.4.24",
     "browser-image-compression": "^2.0.2",
@@ -24,6 +24,7 @@
     "lucide-react": "^0.577.0",
     "mapbox-gl": "^3.18.1",
     "next": "^15.5.14",
+    "next-intl": "^4.9.0",
     "postcss": "^8.5.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

@@ -7,7 +7,7 @@
 - 사진 업로드 및 EXIF GPS 정보 자동 추출
 - 이미지 자동 압축 (최대 1MB/1920px)
 - 현재 위치 또는 지도에서 위치 선택하여 체크인
-- 장소 이름, 카테고리(9가지), 메모 입력
+- 장소 이름, 카테고리(12가지), 메모 입력
 - Google Maps 위에 체크인 마커 및 여행 경로 시각화
 - 다크 모드 지원 (시스템 설정 자동 감지)
 
@@ -27,13 +27,18 @@ travel-companion/
 │   │   │   │   ├── calendar/      # Google Calendar 연동
 │   │   │   │   ├── story/         # 공개 여행 스토리
 │   │   │   │   └── settings/      # 사용자 설정
-│   │   │   ├── checkin/           # 체크인 페이지
-│   │   │   ├── calendar/          # 캘린더 페이지
-│   │   │   ├── settings/          # 설정 페이지
-│   │   │   └── story/             # 공개 스토리 페이지
+│   │   │   └── [locale]/          # 다국어 페이지 (en/ko)
+│   │   │       ├── page.tsx       # 홈 (여행 목록)
+│   │   │       ├── checkin/       # 체크인 관리 페이지
+│   │   │       ├── calendar/      # 캘린더 페이지
+│   │   │       ├── settings/      # 설정 페이지
+│   │   │       ├── story/         # 공개 스토리 페이지
+│   │   │       └── login/         # 로그인 페이지
 │   │   ├── components/            # React 컴포넌트
 │   │   ├── hooks/                 # 커스텀 훅
 │   │   ├── lib/                   # 유틸리티
+│   │   ├── i18n/                  # next-intl 설정 (routing.ts, request.ts)
+│   │   ├── messages/              # 웹 i18n 메시지 (en.json, ko.json)
 │   │   └── tests/e2e/             # Playwright E2E 테스트
 │   └── mobile/                    # Expo iOS 앱
 │       ├── src/
@@ -41,7 +46,10 @@ travel-companion/
 │       │   ├── components/        # 공통 컴포넌트
 │       │   ├── navigation/        # 네비게이션 설정
 │       │   ├── hooks/             # 커스텀 훅
-│       │   └── lib/               # 유틸리티 (Supabase 등)
+│       │   ├── store/             # Zustand 전역 상태
+│       │   ├── i18n/              # i18next 설정 및 메시지
+│       │   └── lib/               # Supabase, API 모듈
+│       │       └── api/           # 도메인별 API 모듈
 │       ├── e2e/                   # Detox E2E 테스트
 │       │   ├── home.test.ts       # 홈 화면 테스트
 │       │   ├── navigation.test.ts # 네비게이션 테스트
@@ -49,10 +57,15 @@ travel-companion/
 │       ├── .detoxrc.js            # Detox 설정
 │       └── App.tsx
 ├── packages/
-│   └── shared/                    # 공통 TypeScript 타입
-└── docs/
-    ├── api/                       # REST API 문서 (Markdown)
-    └── ui/                        # UI/화면 설계 문서 (Markdown)
+│   └── shared/                    # 공통 타입·유틸·메시지
+│       ├── src/
+│       │   ├── types.ts           # Trip, Checkin 등 공유 타입
+│       │   └── utils/             # trip, date, geo 유틸 함수
+│       └── messages/              # 공통 i18n 메시지 (en.json, ko.json)
+├── docs/
+│   ├── api/                       # REST API 문서 (Markdown)
+│   └── ui/                        # UI/화면 설계 문서 (Markdown)
+└── todo/                          # 리팩토링·기능 계획 문서
 ```
 
 ## 기술 스택
@@ -63,6 +76,7 @@ travel-companion/
 - **스타일링**: Tailwind CSS
 - **지도**: Google Maps JavaScript API
 - **이미지 처리**: exifr (EXIF 추출), browser-image-compression
+- **i18n**: next-intl (`en` 기본, `ko` 지원)
 - **백엔드**: Supabase (PostgreSQL + Storage + Auth)
 - **배포**: Vercel (main 브랜치 push 시 자동 배포)
 
@@ -70,6 +84,7 @@ travel-companion/
 - **프레임워크**: Expo (React Native)
 - **언어**: TypeScript
 - **인증**: Supabase Auth (Keychain 기반 세션 저장)
+- **i18n**: i18next + expo-localization (디바이스 언어 자동 감지)
 
 ## 시작하기
 

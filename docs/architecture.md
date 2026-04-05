@@ -130,7 +130,13 @@
 **인증 방식**
 - 웹: 쿠키 기반 세션 (`createServerClient` + middleware)
 - 모바일: Bearer 토큰 (`Authorization` 헤더 파싱, `getAuthenticatedClient()`)
-- 미들웨어가 미인증 요청을 `/login`으로 자동 리다이렉트 (공개 경로 예외 처리)
+- 미들웨어가 미인증 요청을 `/[locale]/login`으로 자동 리다이렉트 (공개 경로 예외 처리)
+
+**i18n**
+- `next-intl` 사용. `app/[locale]/` 구조로 모든 페이지가 locale prefix를 가짐
+- `middleware.ts`에서 `createIntlMiddleware`가 `/checkin` → `/en/checkin` 리다이렉트 처리
+- 지원 locale: `en`(기본값), `ko`
+- 모바일: `i18next` + `expo-localization` — 디바이스 언어 기반 자동 선택
 
 ---
 
@@ -240,7 +246,22 @@ https://<worker-name>.<account>.workers.dev/storage/v1/object/public/trip-photos
 ## 공유 패키지 (`packages/shared`)
 
 **역할**
-- 웹 앱과 모바일 앱이 공통으로 사용하는 TypeScript 타입 정의
+- 웹 앱과 모바일 앱이 공통으로 사용하는 TypeScript 타입, 유틸 함수, i18n 메시지
+
+**구조**
+```
+packages/shared/src/
+  types.ts          # Trip, Checkin, TripFormData, CheckinInsert 등 공유 타입
+  utils/
+    trip.ts         # buildTripMetaMap() — checkins → cover_photo_url, first_checkin_date
+    date.ts         # formatTripDate(), formatDateDisplay(), parseLocalDate(), toISODateString()
+    geo.ts          # haversineDistance(lat1, lng1, lat2, lng2)
+    index.ts        # re-export
+  index.ts          # 전체 re-export
+messages/
+  en.json           # 영어 공통 메시지 (카테고리 레이블 등)
+  ko.json           # 한국어 공통 메시지
+```
 
 **내보내는 타입**
 - `Trip`, `TripInsert`, `TripFormData`
@@ -248,6 +269,14 @@ https://<worker-name>.<account>.workers.dev/storage/v1/object/public/trip-photos
 - `UserProfile`, `UserProfileSettings`
 - `CHECKIN_CATEGORIES`, `CHECKIN_CATEGORY_LABELS` (카테고리 12가지)
 - `Database` (Supabase 생성 스키마 타입)
+
+**내보내는 유틸**
+- `buildTripMetaMap(checkins)` — trip_id별 메타 계산. `cover_photo_url`은 photo_url이 있는 첫 번째 체크인(index 0)으로 고정 (결정론적 동작)
+- `formatTripDate(dateStr, options?)` — 여행 날짜 표시, `locale` 파라미터 지원
+- `formatDateDisplay(date, options?)` — 날짜 선택 버튼 표시, `locale` 파라미터 지원
+- `parseLocalDate(dateStr)` — YYYY-MM-DD 타임존 안전 파싱
+- `toISODateString(date)` — Date → "YYYY-MM-DD"
+- `haversineDistance(lat1, lng1, lat2, lng2)` — 두 좌표 간 km 거리 계산
 
 ---
 

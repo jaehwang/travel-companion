@@ -39,24 +39,20 @@ function ToolbarBtn({
   const bg = active ? 'rgba(255,107,71,0.1)' : 'transparent';
 
   const inner = (
-    <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+    <span className="flex flex-col items-center gap-[3px]">
       <Icon size={26} color={color} />
-      <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.02em', color }}>{label}</span>
+      <span className="text-[10px] font-semibold tracking-[0.02em]" style={{ color }}>{label}</span>
     </span>
   );
+
+  const baseClass = 'flex items-center justify-center w-[60px] h-[60px] rounded-[14px] shrink-0 transition-[background] duration-150';
 
   if (htmlFor) {
     return (
       <label
         htmlFor={htmlFor}
-        style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          width: 60, height: 60, borderRadius: 14,
-          background: bg,
-          cursor: 'pointer',
-          transition: 'background 0.15s',
-          flexShrink: 0,
-        }}
+        className={`${baseClass} cursor-pointer`}
+        style={{ background: bg }}
       >
         {inner}
       </label>
@@ -67,15 +63,8 @@ function ToolbarBtn({
     <button
       onClick={onClick}
       disabled={disabled}
-      style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        width: 60, height: 60, borderRadius: 14,
-        background: bg,
-        border: 'none', cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.4 : 1,
-        transition: 'background 0.15s',
-        flexShrink: 0,
-      }}
+      className={`${baseClass} border-none ${disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+      style={{ background: bg }}
     >
       {inner}
     </button>
@@ -96,26 +85,15 @@ export default function CheckinFormToolbar({
 }: CheckinFormToolbarProps) {
   return (
     <div
-      style={{
-        position: 'fixed',
-        bottom: toolbarBottom,
-        left: 0, right: 0,
-        zIndex: 10000,
-        background: 'var(--tc-card-bg)',
-        borderTop: '1.5px solid var(--tc-dot)',
-        padding: '8px 12px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 4,
-        minHeight: 80,
-      }}
+      className="fixed left-0 right-0 z-[10000] bg-[var(--tc-card-bg)] border-t-[1.5px] border-[var(--tc-dot)] px-3 py-2 flex items-center gap-1 min-h-[80px]"
+      style={{ bottom: toolbarBottom }}
     >
       <input
         ref={fileInputRef}
         type="file"
         accept="image/*"
         onChange={onFileChange}
-        style={{ display: 'none' }}
+        className="hidden"
         id="checkin-photo-input"
       />
 

@@ -26,7 +26,6 @@ export async function GET(request: Request) {
     const { data, error } = await query;
 
     if (error) {
-      console.error('Failed to fetch checkins:', error);
       return NextResponse.json(
         { error: 'Failed to fetch checkins' },
         { status: 500 }
@@ -34,8 +33,7 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json({ checkins: data });
-  } catch (error) {
-    console.error('Unexpected error:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -112,7 +110,6 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
-      console.error('Failed to create checkin:', error);
       return NextResponse.json(
         { error: 'Failed to create checkin' },
         { status: 500 }
@@ -120,8 +117,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ checkin: data }, { status: 201 });
-  } catch (error) {
-    console.error('Unexpected error:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

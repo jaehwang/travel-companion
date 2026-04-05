@@ -1,6 +1,7 @@
 'use client';
 
 import { Clock } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface CheckinFormTimePanelProps {
   checkedInAt: string;
@@ -13,61 +14,40 @@ export default function CheckinFormTimePanel({
   onCheckedInAtChange,
   onClose,
 }: CheckinFormTimePanelProps) {
+  const t = useTranslations('checkin');
+  const tc = useTranslations('common');
+
   return (
-    <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--tc-bg)' }}>
+    <div className="flex-1 overflow-hidden flex flex-col bg-[var(--tc-bg)]">
       {/* 패널 헤더 */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '14px 20px',
-        borderBottom: '1.5px solid var(--tc-dot)',
-      }}>
-        <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--tc-warm-dark)', letterSpacing: '-0.01em' }}>
-          언제 방문했나요?
+      <div className="flex items-center justify-between px-5 py-[14px] border-b-[1.5px] border-[var(--tc-dot)]">
+        <span className="text-base font-extrabold text-[var(--tc-warm-dark)] tracking-[-0.01em]">
+          {t('timePanel')}
         </span>
         <button
           onClick={onClose}
-          style={{
-            fontSize: 13, fontWeight: 600,
-            color: 'var(--tc-warm-mid)',
-            background: 'var(--tc-card-empty)',
-            border: 'none', borderRadius: 9999,
-            padding: '5px 14px', cursor: 'pointer',
-          }}
+          className="text-[13px] font-semibold text-[var(--tc-warm-mid)] bg-[var(--tc-card-empty)] border-0 rounded-full py-[5px] px-[14px] cursor-pointer"
         >
-          닫기
+          {tc('close')}
         </button>
       </div>
 
       {/* 시간 선택 */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 28, gap: 20 }}>
+      <div className="flex-1 flex flex-col items-center justify-center p-7 gap-5">
         <Clock size={48} color="#C4B49A" />
         <input
           type="datetime-local"
           value={checkedInAt}
           onChange={(e) => onCheckedInAtChange(e.target.value)}
           autoFocus
-          style={{
-            fontSize: 17,
-            padding: '13px 18px',
-            borderRadius: 14,
-            border: '2px solid var(--tc-dot)',
-            width: '100%', maxWidth: 340,
-            color: 'var(--tc-warm-dark)',
-            background: 'var(--tc-card-bg)',
-            outline: 'none',
-            fontWeight: 600,
-          }}
+          className="text-[17px] py-[13px] px-[18px] rounded-[14px] border-2 border-[var(--tc-dot)] w-full max-w-[340px] text-[var(--tc-warm-dark)] bg-[var(--tc-card-bg)] outline-none font-semibold"
         />
         {checkedInAt && (
           <button
             onClick={() => { onCheckedInAtChange(''); onClose(); }}
-            style={{
-              fontSize: 13, fontWeight: 600,
-              color: 'var(--tc-warm-faint)',
-              background: 'none', border: 'none', cursor: 'pointer',
-            }}
+            className="text-[13px] font-semibold text-[var(--tc-warm-faint)] bg-transparent border-0 cursor-pointer"
           >
-            시각 지정 삭제
+            {t('clearTime')}
           </button>
         )}
       </div>

@@ -32,7 +32,6 @@ export async function GET(request: NextRequest) {
     const data = await response.json();
 
     if (data.status !== 'OK') {
-      console.error('Place Details API error:', data);
       const httpStatus = data.status === 'NOT_FOUND' ? 404 : 500;
       return NextResponse.json(
         { error: `Places API error: ${data.status}` },
@@ -51,8 +50,7 @@ export async function GET(request: NextRequest) {
         types: place.types,
       },
     });
-  } catch (error) {
-    console.error('Failed to fetch place details:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Failed to fetch place details' },
       { status: 500 }

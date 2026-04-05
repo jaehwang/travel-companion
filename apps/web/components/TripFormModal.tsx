@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslations } from 'next-intl';
 import { Plane, Pencil, Calendar, Flag, MapPin, X, Star } from 'lucide-react';
 import type { Trip, TripFormData } from '@travel-companion/shared';
 import { usePlaceSearch } from '@/components/checkin-form/hooks/usePlaceSearch';
@@ -37,6 +38,9 @@ export default function TripFormModal({
   const [showPlaceSearch, setShowPlaceSearch] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const t = useTranslations('trip');
+  const tc = useTranslations('common');
 
   const placeSearch = usePlaceSearch({
     isActive: showPlaceSearch,
@@ -76,7 +80,7 @@ export default function TripFormModal({
           : await onUpdate(initialTrip!.id, data);
       onSuccess(trip);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '저장에 실패했습니다.');
+      setError(err instanceof Error ? err.message : `${tc('save')} 실패`);
     } finally {
       setSubmitting(false);
     }
@@ -127,7 +131,7 @@ export default function TripFormModal({
                 color: 'var(--tc-warm-dark)',
                 letterSpacing: '-0.01em',
               }}>
-                {mode === 'create' ? '새 여행 만들기' : '여행 수정'}
+                {mode === 'create' ? t('createTitle') : t('editTitle')}
               </span>
             </div>
 
@@ -142,7 +146,7 @@ export default function TripFormModal({
                 whiteSpace: 'nowrap', flexShrink: 0,
               }}
             >
-              취소
+              {tc('cancel')}
             </button>
 
             <button
@@ -159,7 +163,7 @@ export default function TripFormModal({
                 transition: 'all 0.2s ease',
               }}
             >
-              {submitting ? '저장 중...' : mode === 'create' ? '만들기' : '저장'}
+              {submitting ? `${tc('save')}...` : mode === 'create' ? t('createTitle') : tc('save')}
             </button>
           </div>
 
@@ -170,7 +174,7 @@ export default function TripFormModal({
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="여행 이름을 지어주세요"
+              placeholder={t('titlePlaceholder')}
               autoFocus
               style={{
                 width: '100%',
@@ -188,7 +192,7 @@ export default function TripFormModal({
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="어떤 여행인지 적어보세요..."
+              placeholder={t('descPlaceholder')}
               rows={3}
               style={{
                 width: '100%',
@@ -210,7 +214,7 @@ export default function TripFormModal({
                 boxShadow: '0 2px 8px rgba(45,36,22,0.06)',
               }}>
                 <p style={{ fontSize: 11, fontWeight: 700, color: '#FF6B47', letterSpacing: '0.06em', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <Calendar size={11} />시작일
+                  <Calendar size={11} />{t('startDate')}
                 </p>
                 <input
                   type="date"
@@ -233,7 +237,7 @@ export default function TripFormModal({
                 boxShadow: '0 2px 8px rgba(45,36,22,0.06)',
               }}>
                 <p style={{ fontSize: 11, fontWeight: 700, color: '#F59E0B', letterSpacing: '0.06em', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <Flag size={11} />종료일
+                  <Flag size={11} />{t('endDate')}
                 </p>
                 <input
                   type="date"
@@ -313,7 +317,7 @@ export default function TripFormModal({
               marginBottom: 10,
             }}>
               <div>
-                <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--tc-warm-dark)', marginBottom: 2 }}>공개 여행</p>
+                <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--tc-warm-dark)', marginBottom: 2 }}>{t('isPublic')}</p>
                 <p style={{ fontSize: 12, color: 'var(--tc-warm-faint)' }}>링크로 공유할 수 있어요</p>
               </div>
               <label style={{ position: 'relative', display: 'inline-block', width: 51, height: 31, cursor: 'pointer', flexShrink: 0 }}>

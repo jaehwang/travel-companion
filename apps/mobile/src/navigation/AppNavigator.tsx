@@ -7,15 +7,15 @@ import type { NavigatorScreenParams } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import type { BottomTabBarButtonProps } from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screens/HomeScreen';
-import TripScreen from '../screens/TripScreen';
-import CheckinFormScreen from '../screens/CheckinFormScreen';
+import TripScreen from '../screens/trip/TripScreen';
+import CheckinFormScreen from '../screens/checkin-form/CheckinFormScreen';
 import LocationPickerScreen from '../screens/LocationPickerScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import CheckinsScreen from '../screens/CheckinsScreen';
 import ScheduleScreen from '../screens/ScheduleScreen';
 import TripFormModal from '../components/TripFormModal';
 import { useTripsStore } from '../store/tripsStore';
-import type { Trip, TripFormData } from '../../../../packages/shared/src/types';
+import type { Trip, TripFormData } from '@travel-companion/shared';
 
 export type LocationPickerResult = {
   latitude: number;
@@ -49,7 +49,7 @@ export type RootStackParamList = {
     initialLongitude?: number;
     initialPlace?: string;
     initialPlaceId?: string;
-    checkin?: import('../../../../packages/shared/src/types').Checkin;
+    checkin?: import('@travel-companion/shared').Checkin;
   };
   LocationPicker: {
     tripId?: string;

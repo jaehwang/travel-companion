@@ -56,7 +56,6 @@ export async function GET(request: Request) {
     .eq('id', session.user.id);
 
   if (dbError) {
-    console.error('user_profiles update error:', dbError);
     return NextResponse.redirect(`${origin}/settings?error=db_update_failed`);
   }
 
