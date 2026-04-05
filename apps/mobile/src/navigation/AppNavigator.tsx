@@ -7,7 +7,7 @@ import type { NavigatorScreenParams } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import type { BottomTabBarButtonProps } from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screens/HomeScreen';
-import TripScreen from '../screens/TripScreen';
+import TripScreen from '../screens/trip/TripScreen';
 import CheckinFormScreen from '../screens/CheckinFormScreen';
 import LocationPickerScreen from '../screens/LocationPickerScreen';
 import SettingsScreen from '../screens/SettingsScreen';

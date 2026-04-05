@@ -5,7 +5,7 @@ jest.mock('../../lib/supabase', () => ({ supabase: { auth: { getSession: jest.fn
 jest.mock('../../store/tripsStore', () => ({ useTripsStore: () => jest.fn() }));
 jest.mock('../../store/checkinsStore', () => ({ useCheckinsStore: () => jest.fn() }));
 jest.mock('../../screens/HomeScreen', () => () => null);
-jest.mock('../../screens/TripScreen', () => () => null);
+jest.mock('../../screens/trip/TripScreen', () => () => null);
 jest.mock('../../screens/CheckinFormScreen', () => () => null);
 jest.mock('../../screens/LocationPickerScreen', () => () => null);
 jest.mock('../../screens/SettingsScreen', () => () => null);
