@@ -109,9 +109,12 @@ export default function CheckinFormScreen() {
         height: result.height,
         gps: !!(result.latitude && result.longitude),
       });
-      if (result.latitude && result.longitude && latitude == null) {
+      if (result.latitude && result.longitude) {
         setLatitude(result.latitude);
         setLongitude(result.longitude);
+      }
+      if (result.takenAt) {
+        setCheckedInAt(result.takenAt);
       }
     },
     onProcessing: setIsProcessingPhoto,

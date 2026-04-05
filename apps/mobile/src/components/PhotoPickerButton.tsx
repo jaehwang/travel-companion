@@ -13,6 +13,7 @@ interface PhotoPickerResult {
   publicUrl: string;
   latitude?: number;
   longitude?: number;
+  takenAt?: Date;
   width?: number;
   height?: number;
   fileSize?: number;
@@ -35,15 +36,22 @@ export function usePhotoPicker({ onPhotoPicked, onProcessing, onError }: UsePhot
     onProcessing?.(true);
 
     try {
-      // Extract EXIF GPS
+      // Extract EXIF GPS and date
       let latitude: number | undefined;
       let longitude: number | undefined;
+      let takenAt: Date | undefined;
       if (asset.exif) {
         const gpsLat = asset.exif.GPSLatitude;
         const gpsLng = asset.exif.GPSLongitude;
         if (typeof gpsLat === 'number' && typeof gpsLng === 'number') {
           latitude = gpsLat;
           longitude = gpsLng;
+        }
+        // EXIF date format: "YYYY:MM:DD HH:MM:SS"
+        const dateStr = asset.exif.DateTimeOriginal ?? asset.exif.DateTime;
+        if (typeof dateStr === 'string') {
+          const parsed = new Date(dateStr.replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3'));
+          if (!isNaN(parsed.getTime())) takenAt = parsed;
         }
       }
 
@@ -74,6 +82,7 @@ export function usePhotoPicker({ onPhotoPicked, onProcessing, onError }: UsePhot
         publicUrl,
         latitude,
         longitude,
+        takenAt,
         width: manipulated.width,
         height: manipulated.height,
       });
