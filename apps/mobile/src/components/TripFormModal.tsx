@@ -14,7 +14,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import type { Trip, TripFormData } from '../../../../packages/shared/src/types';
+import type { Trip, TripFormData } from '@travel-companion/shared';
+import { toISODateString, formatDateDisplay } from '@travel-companion/shared';
 import LocationPickerContent from './LocationPickerContent';
 
 interface TripFormModalProps {
@@ -27,17 +28,7 @@ interface TripFormModalProps {
 
 const formatDate = (date: Date | null): string => {
   if (!date) return '';
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-};
-
-const formatDateDisplay = (date: Date | null): string => {
-  if (!date || isNaN(date.getTime())) return '날짜 선택';
-  return new Intl.DateTimeFormat('ko-KR', {
-    year: 'numeric', month: 'long', day: 'numeric',
-  }).format(date);
+  return toISODateString(date);
 };
 
 const parseDate = (dateStr?: string | null): Date | null => {

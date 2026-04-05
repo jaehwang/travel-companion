@@ -50,7 +50,6 @@ export async function POST(
     const checkinsError = checkinsResult.error;
 
     if (checkinsError) {
-      console.error('Failed to fetch checkins for tagline:', checkinsError);
       return NextResponse.json({ error: 'Failed to load trip context' }, { status: 500 });
     }
 
@@ -84,8 +83,7 @@ export async function POST(
     }
 
     return NextResponse.json({ tagline });
-  } catch (error) {
-    console.error('Unexpected error while generating tagline:', error);
+  } catch {
     return NextResponse.json({ error: 'Failed to generate tagline' }, { status: 500 });
   }
 }

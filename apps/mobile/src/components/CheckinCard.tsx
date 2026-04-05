@@ -8,7 +8,7 @@ import {
   Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { Checkin } from '../../../../packages/shared/src/types';
+import type { Checkin } from '@travel-companion/shared';
 import { CATEGORY_META } from '../utils/categoryIcons';
 
 interface CheckinCardProps {

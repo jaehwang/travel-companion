@@ -44,8 +44,7 @@ export async function GET(
     }
 
     return NextResponse.json({ trip, checkins: checkins || [] });
-  } catch (error) {
-    console.error('Unexpected error:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

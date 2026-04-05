@@ -1,6 +1,6 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { useShallow } from 'zustand/shallow';
-import type { Checkin, CheckinInsert } from '../../../../packages/shared/src/types';
+import type { Checkin, CheckinInsert } from '@travel-companion/shared';
 import { useCheckinsStore } from '../store/checkinsStore';
 
 const EMPTY_CHECKINS: Checkin[] = [];

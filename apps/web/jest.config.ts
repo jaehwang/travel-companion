@@ -12,6 +12,7 @@ const config: Config = {
   },
   testMatch: ['**/__tests__/**/*.{ts,tsx}', '**/*.{spec,test}.{ts,tsx}'],
   testPathIgnorePatterns: ['/node_modules/', '/tests/e2e/'],
+  roots: ['<rootDir>', '<rootDir>/../../packages/shared/src'],
 };
 
 export default createJestConfig(config);

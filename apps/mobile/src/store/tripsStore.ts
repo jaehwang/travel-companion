@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Trip, TripFormData } from '../../../../packages/shared/src/types';
+import type { Trip, TripFormData } from '@travel-companion/shared';
 import {
   fetchTrips as apiFetchTrips,
   createTrip as apiCreateTrip,

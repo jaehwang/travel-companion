@@ -39,13 +39,11 @@ export async function POST(
       .eq('trip_id', id);
 
     if (error) {
-      console.error('Failed to bulk update checkins:', error);
       return NextResponse.json({ error: 'Failed to update checkins' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Unexpected error:', error);
+  } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

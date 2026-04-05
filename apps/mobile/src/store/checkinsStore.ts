@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Checkin, CheckinInsert } from '../../../../packages/shared/src/types';
+import type { Checkin, CheckinInsert } from '@travel-companion/shared';
 import {
   fetchCheckins as apiFetchCheckins,
   fetchAllCheckins as apiFetchAllCheckins,

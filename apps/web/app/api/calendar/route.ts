@@ -41,49 +41,27 @@ function isOpenAt(periods: Period[], utcDate: Date, utcOffsetMinutes: number): b
 
 async function fetchPlaceDetails(location: string): Promise<PlaceDetails | null> {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-  if (!apiKey) {
-    console.warn('[Places] API key not found');
-    return null;
-  }
+  if (!apiKey) return null;
   try {
     const searchRes = await fetch(
       `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(location)}&key=${apiKey}`
     );
-    if (!searchRes.ok) {
-      console.warn('[Places] Text Search HTTP error', searchRes.status);
-      return null;
-    }
+    if (!searchRes.ok) return null;
     const searchData = await searchRes.json();
-    if (searchData.status !== 'OK') {
-      console.warn('[Places] Text Search status:', searchData.status, 'location:', location);
-      return null;
-    }
+    if (searchData.status !== 'OK') return null;
     const placeId = searchData.results?.[0]?.place_id;
-    if (!placeId) {
-      console.warn('[Places] No place found for:', location);
-      return null;
-    }
+    if (!placeId) return null;
 
     const detailsRes = await fetch(
       `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=opening_hours,utc_offset,website,rating&language=ko&key=${apiKey}`
     );
-    if (!detailsRes.ok) {
-      console.warn('[Places] Place Details HTTP error', detailsRes.status);
-      return null;
-    }
+    if (!detailsRes.ok) return null;
     const detailsData = await detailsRes.json();
-    if (detailsData.status !== 'OK') {
-      console.warn('[Places] Place Details status:', detailsData.status);
-      return null;
-    }
+    if (detailsData.status !== 'OK') return null;
     const result = detailsData.result;
     const openingHours = result?.opening_hours;
-    if (!openingHours) {
-      console.log('[Places] No opening_hours for:', location);
-      return null;
-    }
+    if (!openingHours) return null;
 
-    console.log('[Places] OK (periods:', !!openingHours.periods, 'utc_offset:', result.utc_offset, '):', location);
     return {
       periods: openingHours.periods ?? null,
       open_now: openingHours.open_now ?? null,
@@ -92,8 +70,7 @@ async function fetchPlaceDetails(location: string): Promise<PlaceDetails | null>
       website: result.website,
       rating: result.rating,
     };
-  } catch (e) {
-    console.error('[Places] Error:', e);
+  } catch {
     return null;
   }
 }

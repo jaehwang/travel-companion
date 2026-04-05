@@ -13,11 +13,12 @@ import { useTrips } from '../../../hooks/useTrips';
 import { useTripsStore } from '../../../store/tripsStore';
 import { setTripCheckinContext } from '../../../navigation/AppNavigator';
 import type { TripsStackParamList, RootStackParamList } from '../../../navigation/AppNavigator';
-import type { Trip, TripFormData } from '../../../../../../../packages/shared/src/types';
+import type { Trip, TripFormData } from '@travel-companion/shared';
+import { formatTripDate } from '@travel-companion/shared';
 
 export type ListItem =
   | { type: 'date'; date: string; label: string }
-  | { type: 'checkin'; checkin: import('../../../../../../../packages/shared/src/types').Checkin };
+  | { type: 'checkin'; checkin: import('@travel-companion/shared').Checkin };
 
 type NavigationProp = CompositeNavigationProp<
   StackNavigationProp<TripsStackParamList, 'Trip'>,
@@ -25,16 +26,7 @@ type NavigationProp = CompositeNavigationProp<
 >;
 type TripRouteProp = RouteProp<TripsStackParamList, 'Trip'>;
 
-export function formatTripDate(dateStr: string | null | undefined): string | null {
-  if (!dateStr) return null;
-  const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(dateStr);
-  const date = isDateOnly
-    ? (() => { const [y, m, d] = dateStr.split('-').map(Number); return new Date(y, m - 1, d); })()
-    : new Date(dateStr);
-  return new Intl.DateTimeFormat('ko-KR', {
-    year: 'numeric', month: 'long', day: 'numeric', weekday: 'short',
-  }).format(date);
-}
+export { formatTripDate };
 
 export function useTripDetail() {
   const navigation = useNavigation<NavigationProp>();

@@ -26,7 +26,7 @@ import TripCard from '../components/TripCard';
 import TripFormModal from '../components/TripFormModal';
 import QuickCheckinSheet from '../components/QuickCheckinSheet';
 import type { TripsStackParamList, RootStackParamList } from '../navigation/AppNavigator';
-import type { Trip, TripFormData } from '../../../../packages/shared/src/types';
+import type { Trip, TripFormData } from '@travel-companion/shared';
 import type { NearbyCheckin } from '../lib/api';
 
 function formatRelativeTime(dateStr: string): string {

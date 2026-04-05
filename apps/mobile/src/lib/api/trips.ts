@@ -1,7 +1,8 @@
 import { supabase } from '../supabase';
 import { getUser } from './supabase-client';
 import { apiFetch } from './rest-client';
-import type { Trip, TripFormData } from '../../../../../packages/shared/src/types';
+import type { Trip, TripFormData } from '@travel-companion/shared';
+import { buildTripMetaMap } from '@travel-companion/shared';
 
 export async function fetchTrips(): Promise<Trip[]> {
   await getUser();
@@ -16,9 +17,7 @@ export async function fetchTrips(): Promise<Trip[]> {
 
   const trips = data as any[];
   const tripIds = trips.map((t) => t.id);
-
-  const firstCheckinMap: Record<string, string> = {};
-  const photoMap: Record<string, string[]> = {};
+  let metaMap: Record<string, { first_checkin_date: string | null; cover_photo_url: string | null }> = {};
 
   if (tripIds.length > 0) {
     const { data: checkins } = await supabase
@@ -28,29 +27,14 @@ export async function fetchTrips(): Promise<Trip[]> {
       .order('checked_in_at', { ascending: true });
 
     if (checkins) {
-      for (const c of checkins as any[]) {
-        if (!firstCheckinMap[c.trip_id]) {
-          firstCheckinMap[c.trip_id] = c.checked_in_at;
-        }
-        if (c.photo_url) {
-          if (!photoMap[c.trip_id]) photoMap[c.trip_id] = [];
-          photoMap[c.trip_id].push(c.photo_url);
-        }
-      }
+      metaMap = buildTripMetaMap(checkins as any[]);
     }
   }
 
-  return trips.map((t) => {
-    const photos = photoMap[t.id] ?? [];
-    const cover_photo_url = photos.length > 0
-      ? photos[Math.floor(Math.random() * photos.length)]
-      : null;
-    return {
-      ...t,
-      first_checkin_date: firstCheckinMap[t.id] ?? null,
-      cover_photo_url,
-    };
-  });
+  return trips.map((t) => ({
+    ...t,
+    ...(metaMap[t.id] ?? { first_checkin_date: null, cover_photo_url: null }),
+  }));
 }
 
 export async function createTrip(tripData: TripFormData): Promise<Trip> {

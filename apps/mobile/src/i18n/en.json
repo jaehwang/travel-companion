@@ -1,0 +1,76 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "confirm": "Confirm",
+    "back": "Back"
+  },
+  "category": {
+    "restaurant": "Restaurant",
+    "attraction": "Attraction",
+    "accommodation": "Accommodation",
+    "cafe": "Cafe",
+    "shopping": "Shopping",
+    "nature": "Nature",
+    "activity": "Activity",
+    "transportation": "Transportation",
+    "performance": "Performance",
+    "movie": "Movie",
+    "exhibition": "Exhibition",
+    "other": "Other"
+  },
+  "tab": {
+    "home": "Home",
+    "checkins": "Check-ins",
+    "schedule": "Schedule"
+  },
+  "home": {
+    "myTrips": "My Trips",
+    "noTrips": "No trips yet",
+    "noTripsDesc": "Create your first trip!",
+    "createFirst": "Create Trip",
+    "allCheckins": "All Check-ins"
+  },
+  "trip": {
+    "createTitle": "New Trip",
+    "editTitle": "Edit Trip",
+    "deleteTitle": "Delete Trip",
+    "deleteBody": "Are you sure? Check-ins will be moved to unassigned.",
+    "deleteWithCheckins": "Delete trip and check-ins",
+    "keepCheckins": "Keep check-ins as unassigned",
+    "titlePlaceholder": "Trip name",
+    "descPlaceholder": "Description (optional)",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "isPublic": "Public",
+    "copyLink": "Copy link",
+    "linkCopied": "Link copied!",
+    "noCheckins": "No check-ins yet",
+    "noCheckinsDesc": "Add your first check-in!"
+  },
+  "checkin": {
+    "title": "Check-in",
+    "titlePlaceholder": "Title",
+    "messagePlaceholder": "What's on your mind?",
+    "locationPlaceholder": "Search location...",
+    "addPhoto": "Photo",
+    "addLocation": "Location",
+    "addCategory": "Category",
+    "addTime": "Time",
+    "submit": "Check-in",
+    "update": "Update",
+    "deleteTitle": "Delete Check-in",
+    "deleteBody": "Are you sure you want to delete this check-in?",
+    "clearTime": "Remove time",
+    "timePanel": "When did you visit?"
+  },
+  "schedule": {
+    "title": "Schedule",
+    "noEvents": "No events today",
+    "connecting": "Connecting calendar..."
+  }
+}

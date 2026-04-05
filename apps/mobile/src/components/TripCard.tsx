@@ -8,7 +8,8 @@ import {
   Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { Trip } from '../../../../packages/shared/src/types';
+import type { Trip } from '@travel-companion/shared';
+import { formatTripDate as _formatTripDate } from '@travel-companion/shared';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_MARGIN = 16;
@@ -20,16 +21,7 @@ interface TripCardProps {
   onMenuPress?: () => void;
 }
 
-const formatTripDate = (dateStr?: string | null) => {
-  if (!dateStr) return null;
-  const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(dateStr);
-  const date = isDateOnly
-    ? (() => { const [y, m, d] = dateStr.split('-').map(Number); return new Date(y, m - 1, d); })()
-    : new Date(dateStr);
-  return new Intl.DateTimeFormat('ko-KR', {
-    year: 'numeric', month: 'long', day: 'numeric',
-  }).format(date);
-};
+const formatTripDate = (dateStr?: string | null) => _formatTripDate(dateStr, { weekday: false });
 
 export default function TripCard({ trip, onPress, onMenuPress }: TripCardProps) {
   return (

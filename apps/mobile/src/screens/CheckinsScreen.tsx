@@ -23,7 +23,7 @@ import { useTrips } from '../hooks/useTrips';
 import { useCheckinsStore } from '../store/checkinsStore';
 import { CATEGORY_META } from '../utils/categoryIcons';
 import type { CheckinsStackParamList, MainTabParamList, RootStackParamList } from '../navigation/AppNavigator';
-import type { Checkin, Trip } from '../../../../packages/shared/src/types';
+import type { Checkin, Trip } from '@travel-companion/shared';
 
 type NavigationProp = CompositeNavigationProp<
   StackNavigationProp<CheckinsStackParamList, 'Checkins'>,

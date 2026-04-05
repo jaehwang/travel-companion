@@ -7,7 +7,7 @@ import {
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { CHECKIN_CATEGORY_LABELS } from '../../../../packages/shared/src/types';
+import { CHECKIN_CATEGORY_LABELS } from '@travel-companion/shared';
 import { CATEGORY_META, CATEGORY_ICONS } from '../utils/categoryIcons';
 
 interface CategorySelectorProps {

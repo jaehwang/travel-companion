@@ -10,7 +10,7 @@ import {
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
-import type { Trip, Checkin } from '../../../../../packages/shared/src/types';
+import type { Trip, Checkin } from '@travel-companion/shared';
 
 const MARKER_COLOR = '#3B82F6';
 const MAP_SIZE = Dimensions.get('window').width - 32;

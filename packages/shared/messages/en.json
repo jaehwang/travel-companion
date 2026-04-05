@@ -1,0 +1,16 @@
+{
+  "category": {
+    "restaurant": "Restaurant",
+    "attraction": "Attraction",
+    "accommodation": "Accommodation",
+    "cafe": "Cafe",
+    "shopping": "Shopping",
+    "nature": "Nature",
+    "activity": "Activity",
+    "transportation": "Transportation",
+    "performance": "Performance",
+    "movie": "Movie",
+    "exhibition": "Exhibition",
+    "other": "Other"
+  }
+}

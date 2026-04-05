@@ -1,6 +1,6 @@
 import { supabase } from '../supabase';
 import { getUser } from './supabase-client';
-import type { Checkin, CheckinInsert, Trip } from '../../../../../packages/shared/src/types';
+import type { Checkin, CheckinInsert, Trip } from '@travel-companion/shared';
 
 async function getOrCreateDefaultTrip(userId: string): Promise<Trip> {
   const { data, error } = await supabase

@@ -1,6 +1,7 @@
 'use client';
 
 import { Plane } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface CheckinFormHeaderProps {
   userAvatarUrl?: string;
@@ -21,6 +22,9 @@ export default function CheckinFormHeader({
   onCancel,
   onSubmit,
 }: CheckinFormHeaderProps) {
+  const t = useTranslations('checkin');
+  const tc = useTranslations('common');
+
   return (
     <div style={{
       display: 'flex',
@@ -59,7 +63,7 @@ export default function CheckinFormHeader({
           whiteSpace: 'nowrap',
           letterSpacing: '-0.01em',
         }}>
-          {tripName || '여행'}
+          {tripName || t('title')}
         </span>
       </div>
 
@@ -79,7 +83,7 @@ export default function CheckinFormHeader({
           flexShrink: 0,
         }}
       >
-        취소
+        {tc('cancel')}
       </button>
 
       {/* 저장 */}
@@ -101,7 +105,7 @@ export default function CheckinFormHeader({
           transition: 'all 0.2s ease',
         }}
       >
-        {isSubmitting ? '저장 중...' : isEditMode ? '수정 완료' : '체크인'}
+        {isSubmitting ? `${tc('save')}...` : isEditMode ? t('update') : t('submit')}
       </button>
     </div>
   );
