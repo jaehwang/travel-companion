@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Linking,
 } from 'react-native';
+import PhotoViewerModal from './PhotoViewerModal';
 import { Ionicons } from '@expo/vector-icons';
 import type { Checkin } from '@travel-companion/shared';
 import { CATEGORY_META } from '../utils/categoryIcons';
@@ -26,6 +27,7 @@ const formatTime = (dateString: string) => {
 };
 
 export default function CheckinCard({ checkin, onEdit, onDelete }: CheckinCardProps) {
+  const [photoViewerVisible, setPhotoViewerVisible] = useState(false);
   const meta = CATEGORY_META[checkin.category ?? 'other'] ?? CATEGORY_META.other;
 
   const handleMapPress = () => {
@@ -86,11 +88,20 @@ export default function CheckinCard({ checkin, onEdit, onDelete }: CheckinCardPr
 
           {/* Photo */}
           {checkin.photo_url && (
-            <Image
-              source={{ uri: checkin.photo_url }}
-              style={styles.photo}
-              resizeMode="cover"
-            />
+            <>
+              <TouchableOpacity onPress={() => setPhotoViewerVisible(true)} activeOpacity={0.9}>
+                <Image
+                  source={{ uri: checkin.photo_url }}
+                  style={styles.photo}
+                  resizeMode="cover"
+                />
+              </TouchableOpacity>
+              <PhotoViewerModal
+                visible={photoViewerVisible}
+                uri={checkin.photo_url}
+                onClose={() => setPhotoViewerVisible(false)}
+              />
+            </>
           )}
 
           {/* Message */}
