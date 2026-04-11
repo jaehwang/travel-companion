@@ -119,7 +119,10 @@ Expo React Native (iOS). CRUD는 Supabase JS SDK 직접 호출, Places / Calenda
 - **dev 서버 실행 중 `npm run build` 금지** (`.next` 충돌 발생)
 - AI 에이전트가 작성한 커밋에는 아래 co-author 라인을 추가한다:
   ```
-  Co-authored-by: opencode[claude-sonnet-4.6] <opencode@noreply>
+    Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+    Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+    Co-Authored-By: Copilot <223556219+Copilot@users.noreply.github.com>
+    Co-Authored-By: opencode[claude-sonnet-4.6] <opencode@noreply>
   ```
 
 ### 코드 스타일
