@@ -65,6 +65,9 @@ export default function SideDrawer({
                   <Text style={[styles.tripItemText, isActive && styles.tripItemTextActive]} numberOfLines={1}>
                     {item.title}
                   </Text>
+                  {item.is_frequent && (
+                    <Text style={styles.frequentBadge} numberOfLines={1}>자주 가는 곳</Text>
+                  )}
                   {isActive && <View style={styles.activeIndicator} />}
                 </TouchableOpacity>
               );
@@ -165,5 +168,12 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: '#F97316',
     marginLeft: 8,
+  },
+  frequentBadge: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#F97316',
+    marginLeft: 6,
+    flexShrink: 1,
   },
 });

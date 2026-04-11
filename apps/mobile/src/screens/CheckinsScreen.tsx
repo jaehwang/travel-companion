@@ -298,7 +298,10 @@ export default function CheckinsScreen() {
                   style={styles.modalItem}
                   onPress={() => handleMoveToTrip(t.id)}
                 >
-                  <Text style={styles.modalItemText}>{t.title}</Text>
+                  <Text style={styles.modalItemText} numberOfLines={1}>{t.title}</Text>
+                  {t.is_frequent && (
+                    <Text style={styles.modalItemFrequentBadge} numberOfLines={1}>자주 가는 곳</Text>
+                  )}
                   <Ionicons name="chevron-forward" size={16} color="#C4B49A" />
                 </TouchableOpacity>
               ))}
@@ -592,6 +595,13 @@ const styles = StyleSheet.create({
     color: '#1F2937',
     flex: 1,
     marginRight: 8,
+  },
+  modalItemFrequentBadge: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#F97316',
+    marginRight: 6,
+    flexShrink: 1,
   },
   modalEmptyText: {
     padding: 24,
