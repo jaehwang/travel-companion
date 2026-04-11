@@ -117,6 +117,10 @@ Expo React Native (iOS). CRUD는 Supabase JS SDK 직접 호출, Places / Calenda
 - main 브랜치 push → Vercel 자동 배포
 - **커밋 전 반드시**: `npm run build` → `npm test` (모두 통과 후 커밋)
 - **dev 서버 실행 중 `npm run build` 금지** (`.next` 충돌 발생)
+- AI 에이전트가 작성한 커밋에는 아래 co-author 라인을 추가한다:
+  ```
+  Co-authored-by: opencode[claude-sonnet-4.6] <opencode@noreply>
+  ```
 
 ### 코드 스타일
 - TypeScript strict mode
