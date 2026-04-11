@@ -117,12 +117,22 @@ Expo React Native (iOS). CRUD는 Supabase JS SDK 직접 호출, Places / Calenda
 - main 브랜치 push → Vercel 자동 배포
 - **커밋 전 반드시**: `npm run build` → `npm test` (모두 통과 후 커밋)
 - **dev 서버 실행 중 `npm run build` 금지** (`.next` 충돌 발생)
-- AI 에이전트가 작성한 커밋에는 아래 co-author 라인을 추가한다:
+- AI 에이전트가 작성한 커밋에는 사용한 도구의 co-author 라인을 추가한다.
+
+  **일반 형식**:
   ```
-    Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
-    Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
-    Co-Authored-By: Copilot <223556219+Copilot@users.noreply.github.com>
-    Co-Authored-By: opencode[claude-sonnet-4.6] <opencode@noreply>
+  Co-Authored-By: <ToolName> <model-or-version> <noreply-email>
+  ```
+  - `<ToolName>` — AI 도구 이름 (필수)
+  - `<model-or-version>` — 모델/버전 식별자 (도구 관행에 따라 공백·대괄호 등 자유 형식, 생략 가능)
+  - `<noreply-email>` — 해당 서비스의 noreply 이메일
+
+  **도구별 예시**:
+  ```
+  Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+  Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+  Co-Authored-By: Copilot <223556219+Copilot@users.noreply.github.com>
+  Co-Authored-By: opencode[claude-sonnet-4.6] <opencode@noreply>
   ```
 
 ### 코드 스타일
