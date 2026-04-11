@@ -1,5 +1,4 @@
 import React from 'react';
-import { Alert } from 'react-native';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import CheckinsScreen from '../CheckinsScreen';
 import { useAllCheckins } from '../../hooks/useAllCheckins';
@@ -23,7 +22,7 @@ jest.mock('@expo/vector-icons', () => ({
   Ionicons: 'Ionicons',
 }));
 jest.mock('react-native-safe-area-context', () => ({
-  SafeAreaView: ({ children }: { children: React.ReactNode }) => children,
+  SafeAreaView: ({ children }) => children,
 }));
 
 const mockUseAllCheckins = useAllCheckins as jest.MockedFunction<typeof useAllCheckins>;
@@ -204,36 +203,23 @@ describe('CheckinsScreen', () => {
   describe('여행으로 이동', () => {
     const defaultCheckin = makeCheckin('c-default', 't-default', '미할당 체크인');
 
-    it('카드 롱프레스 시 여행으로 이동 Alert가 표시된다', () => {
-      // default trip은 trips에 없으므로 normalTrip만 전달
+    it('카드 롱프레스 시 여행 선택 모달이 표시된다', () => {
       setupMocks([defaultCheckin, normalCheckin], [normalTrip]);
-      const alertSpy = jest.spyOn(Alert, 'alert');
 
-      const { getByTestId } = render(<CheckinsScreen />);
+      const { getByTestId, getByText } = render(<CheckinsScreen />);
       fireEvent(getByTestId('checkin-card-unassigned'), 'longPress');
 
-      expect(alertSpy).toHaveBeenCalledWith(
-        expect.any(String),
-        undefined,
-        expect.arrayContaining([
-          expect.objectContaining({ text: expect.stringContaining('제주도 여행') }),
-        ])
-      );
+      expect(getByText('여행으로 이동')).toBeTruthy();
+      expect(getByTestId('move-modal-trip-t1')).toBeTruthy();
     });
 
-    it('Alert에서 여행 선택 시 updateCheckin 호출 후 reload된다', async () => {
+    it('모달에서 여행 선택 시 updateCheckin 호출 후 reload된다', async () => {
       setupMocks([defaultCheckin, normalCheckin], [normalTrip]);
       mockUpdateCheckin.mockResolvedValue({});
-      let capturedButtons: { text: string; onPress?: () => void }[] = [];
-      jest.spyOn(Alert, 'alert').mockImplementation((_title, _msg, buttons) => {
-        capturedButtons = buttons as typeof capturedButtons;
-      });
 
       const { getByTestId } = render(<CheckinsScreen />);
       fireEvent(getByTestId('checkin-card-unassigned'), 'longPress');
-
-      const tripButton = capturedButtons.find(b => b.text.includes('제주도 여행'));
-      tripButton?.onPress?.();
+      fireEvent.press(getByTestId('move-modal-trip-t1'));
 
       await waitFor(() => {
         expect(mockUpdateCheckin).toHaveBeenCalledWith(
@@ -242,6 +228,17 @@ describe('CheckinsScreen', () => {
         );
         expect(defaultReload).toHaveBeenCalled();
       });
+    });
+
+    it('X 버튼으로 모달을 닫을 수 있다', () => {
+      setupMocks([defaultCheckin, normalCheckin], [normalTrip]);
+
+      const { getByTestId, queryByTestId } = render(<CheckinsScreen />);
+      fireEvent(getByTestId('checkin-card-unassigned'), 'longPress');
+      expect(getByTestId('move-modal-close')).toBeTruthy();
+
+      fireEvent.press(getByTestId('move-modal-close'));
+      expect(queryByTestId('move-modal-close')).toBeNull();
     });
   });
 });

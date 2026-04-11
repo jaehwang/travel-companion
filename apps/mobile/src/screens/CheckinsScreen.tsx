@@ -11,6 +11,9 @@ import {
   Dimensions,
   Alert,
   Linking,
+  Modal,
+  ScrollView,
+  Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -155,6 +158,7 @@ export default function CheckinsScreen() {
   const navigation = useNavigation<NavigationProp>();
   const [filter, setFilter] = useState<Filter>('normal');
   const [refreshing, setRefreshing] = useState(false);
+  const [moveModalCheckin, setMoveModalCheckin] = useState<Checkin | null>(null);
 
   const { checkins, loading, error, reload } = useAllCheckins();
   const { trips } = useTrips();
@@ -236,18 +240,15 @@ export default function CheckinsScreen() {
   }, [removeCheckin]);
 
   const handleCheckinLongPress = useCallback((checkin: Checkin) => {
-    const buttons = [
-      ...assignableTrips.map((t) => ({
-        text: t.title,
-        onPress: async () => {
-          await updateCheckin(checkin.id, { trip_id: t.id });
-          reload();
-        },
-      })),
-      { text: '취소', style: 'cancel' as const },
-    ];
-    Alert.alert('여행으로 이동', undefined, buttons);
-  }, [assignableTrips, updateCheckin, reload]);
+    setMoveModalCheckin(checkin);
+  }, []);
+
+  const handleMoveToTrip = useCallback(async (tripId: string) => {
+    if (!moveModalCheckin) return;
+    setMoveModalCheckin(null);
+    await updateCheckin(moveModalCheckin.id, { trip_id: tripId });
+    reload();
+  }, [moveModalCheckin, updateCheckin, reload]);
 
   const renderSectionHeader = useCallback(({ section }: { section: Section }) => (
     <View style={styles.sectionHeader}>
@@ -271,6 +272,43 @@ export default function CheckinsScreen() {
 
   return (
     <SafeAreaView testID="screen-checkins" style={styles.container} edges={['top']}>
+      <Modal
+        visible={moveModalCheckin !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMoveModalCheckin(null)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setMoveModalCheckin(null)}>
+          <Pressable style={styles.modalSheet} onPress={() => {}}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>여행으로 이동</Text>
+              <TouchableOpacity
+                testID="move-modal-close"
+                onPress={() => setMoveModalCheckin(null)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons name="close" size={22} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.modalList} bounces={false}>
+              {assignableTrips.map((t) => (
+                <TouchableOpacity
+                  key={t.id}
+                  testID={`move-modal-trip-${t.id}`}
+                  style={styles.modalItem}
+                  onPress={() => handleMoveToTrip(t.id)}
+                >
+                  <Text style={styles.modalItemText}>{t.title}</Text>
+                  <Ionicons name="chevron-forward" size={16} color="#C4B49A" />
+                </TouchableOpacity>
+              ))}
+              {assignableTrips.length === 0 && (
+                <Text style={styles.modalEmptyText}>이동할 수 있는 여행이 없습니다</Text>
+              )}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>체크인</Text>
       </View>
@@ -508,6 +546,57 @@ const styles = StyleSheet.create({
   },
   emptySubtext: {
     fontSize: 13,
+    color: '#9CA3AF',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalSheet: {
+    width: SCREEN_WIDTH - 48,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    overflow: 'hidden',
+    maxHeight: 400,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#E5E7EB',
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  modalList: {
+    flexGrow: 0,
+  },
+  modalItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#F3F4F6',
+  },
+  modalItemText: {
+    fontSize: 15,
+    color: '#1F2937',
+    flex: 1,
+    marginRight: 8,
+  },
+  modalEmptyText: {
+    padding: 24,
+    textAlign: 'center',
+    fontSize: 14,
     color: '#9CA3AF',
   },
 });
