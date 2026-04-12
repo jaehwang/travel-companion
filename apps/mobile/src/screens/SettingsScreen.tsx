@@ -13,9 +13,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
 import { supabase } from '../lib/supabase';
 import { signOut } from '../lib/auth';
-import { fetchSettings, disconnectCalendar } from '../lib/api';
+import { fetchSettings, connectCalendar, completeCalendarConnect, disconnectCalendar } from '../lib/api';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'Settings'>;
@@ -27,6 +28,7 @@ export default function SettingsScreen() {
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
   const [calendarConnected, setCalendarConnected] = useState(false);
   const [calendarLoading, setCalendarLoading] = useState(true);
+  const [calendarConnecting, setCalendarConnecting] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
@@ -63,6 +65,35 @@ export default function SettingsScreen() {
         },
       },
     ]);
+  };
+
+  const handleConnectCalendar = async () => {
+    setCalendarConnecting(true);
+    try {
+      const url = await connectCalendar();
+      const result = await WebBrowser.openAuthSessionAsync(
+        url,
+        'travel-companion://calendar-callback'
+      );
+
+      if (result.type !== 'success') return;
+
+      const callbackUrl = new URL(result.url);
+      const code = callbackUrl.searchParams.get('code');
+      const error = callbackUrl.searchParams.get('error');
+
+      if (error || !code) {
+        Alert.alert('오류', '캘린더 연동에 실패했습니다.');
+        return;
+      }
+
+      await completeCalendarConnect(code);
+      setCalendarConnected(true);
+    } catch {
+      Alert.alert('오류', '캘린더 연동에 실패했습니다.');
+    } finally {
+      setCalendarConnecting(false);
+    }
   };
 
   const handleDisconnectCalendar = async () => {
@@ -130,6 +161,19 @@ export default function SettingsScreen() {
               {!calendarLoading && calendarConnected && (
                 <TouchableOpacity onPress={handleDisconnectCalendar} style={styles.disconnectButton}>
                   <Text style={styles.disconnectText}>연동 해제</Text>
+                </TouchableOpacity>
+              )}
+              {!calendarLoading && !calendarConnected && (
+                <TouchableOpacity
+                  onPress={handleConnectCalendar}
+                  style={styles.connectButton}
+                  disabled={calendarConnecting}
+                >
+                  {calendarConnecting ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.connectText}>연동하기</Text>
+                  )}
                 </TouchableOpacity>
               )}
             </View>
@@ -289,6 +333,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#6B7280',
+  },
+  connectButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: '#4285F4',
+    minWidth: 72,
+    alignItems: 'center',
+  },
+  connectText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   calendarDesc: {
     fontSize: 12,

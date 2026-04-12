@@ -123,6 +123,44 @@ Google Calendar 연동 해제. refresh token을 revoke하고 DB에서 삭제.
 
 ---
 
+## GET /api/calendar/mobile/connect
+모바일 앱 전용. Google Calendar OAuth 인증 URL을 반환합니다.
+
+**인증**: 필요 (Bearer 토큰)
+
+**응답 200**
+```json
+{ "url": "https://accounts.google.com/o/oauth2/v2/auth?..." }
+```
+
+모바일 앱은 이 URL을 `expo-web-browser.openAuthSessionAsync`로 열고, 콜백 결과를 `/api/calendar/mobile/complete`로 전달합니다.
+
+---
+
+## GET /api/calendar/mobile/callback
+모바일 OAuth 콜백. Google에서 리다이렉트 후 자동 처리됩니다.
+
+직접 호출하지 않습니다. Google OAuth 콜백을 받아 `travel-companion://calendar-callback?code=...` deep link로 리다이렉트합니다.
+
+---
+
+## POST /api/calendar/mobile/complete
+모바일 앱 전용. OAuth code를 서버에 전달해 refresh_token을 획득·저장합니다.
+
+**인증**: 필요 (Bearer 토큰)
+
+**요청 Body**
+```json
+{ "code": "4/0AX..." }
+```
+
+**응답 200**
+```json
+{ "success": true }
+```
+
+---
+
 ## POST /api/calendar/advice
 캘린더 이벤트 목록을 받아 Gemini AI로 한 줄 여행 조언 생성.
 

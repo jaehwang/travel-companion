@@ -418,17 +418,29 @@ await signInWithGoogle();
 **기능**
 - 로그인 사용자 프로필 표시 (이름, 이메일, 아바타)
 - Google Calendar 연동 상태 표시
+- Google Calendar 연동하기 (OAuth)
 - Google Calendar 연동 해제
 - 로그아웃
 
 **디자인**
 - 프로필 섹션 (아바타 + 이름 + 이메일)
 - 설정 항목 리스트 (섹션 구분)
+- 미연동 상태: 파란색 "연동하기" 버튼
+- 연동 상태: "연동됨" 텍스트 + "연동 해제" 버튼
 - 로그아웃 버튼 (빨간색)
+
+**Google Calendar OAuth 플로우 (모바일)**
+1. "연동하기" 버튼 클릭 → `GET /api/calendar/mobile/connect` (Bearer) → Google OAuth URL 획득
+2. `expo-web-browser.openAuthSessionAsync(url, 'travel-companion://calendar-callback')` 로 인앱 브라우저 열기
+3. 사용자 Google 계정 동의
+4. `travel-companion://calendar-callback?code=xxx` deep link로 앱 복귀
+5. `POST /api/calendar/mobile/complete` (Bearer, `{code}`) → 서버에서 refresh_token 저장
+6. 연동 상태 갱신
 
 **백엔드 연계**
 - `fetchSettings` → Supabase `user_profiles` 직접 조회
-- `updateSettings` → Supabase `user_profiles` UPDATE
+- `connectCalendar` → `GET /api/calendar/mobile/connect` (Vercel API 경유)
+- `completeCalendarConnect` → `POST /api/calendar/mobile/complete` (Vercel API 경유)
 - `disconnectCalendar` → `POST /api/calendar/disconnect` (Vercel API 경유)
 - Supabase `signOut()` → 로그아웃
 

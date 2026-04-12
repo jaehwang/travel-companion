@@ -50,6 +50,19 @@ export async function fetchCalendarAdvice(
   return data.advice ?? null;
 }
 
+export async function connectCalendar(): Promise<string> {
+  const data = await apiFetch<{ url: string; error?: string }>('/api/calendar/mobile/connect');
+  if (data.error) throw new Error(data.error);
+  return data.url;
+}
+
+export async function completeCalendarConnect(code: string): Promise<void> {
+  await apiFetch('/api/calendar/mobile/complete', {
+    method: 'POST',
+    body: JSON.stringify({ code }),
+  });
+}
+
 export async function disconnectCalendar(): Promise<void> {
   await apiFetch('/api/calendar/disconnect', { method: 'POST' });
 }

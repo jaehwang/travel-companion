@@ -8,5 +8,5 @@ export { searchPlaces, getPlaceDetails } from './places';
 export type { PlacePrediction, PlaceDetails } from './places';
 export { fetchSettings, updateSettings } from './settings';
 export type { UserSettings } from './settings';
-export { fetchCalendarEvents, fetchCalendarAdvice, disconnectCalendar, fetchScheduleWithWeather } from './calendar';
+export { fetchCalendarEvents, fetchCalendarAdvice, connectCalendar, completeCalendarConnect, disconnectCalendar, fetchScheduleWithWeather } from './calendar';
 export type { PlaceInfo, CalendarEvent, WeatherInfo, CalendarEventWithWeather } from './calendar';
