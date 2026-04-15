@@ -1,15 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import type { PlacePrediction } from '@travel-companion/shared';
 
-export interface PlacePrediction {
-  place_id: string;
-  description: string;
-  structured_formatting: {
-    main_text: string;
-    secondary_text: string;
-  };
-}
+export type { PlacePrediction };
 
 interface UsePlaceSearchOptions {
   isActive: boolean;

@@ -163,6 +163,38 @@ export async function GET(request: Request) {
 - 파일 최상단에 `/** @jest-environment node */` pragma 필수
 - `@/lib/supabase/server` mock 후 `getAuthenticatedClient` 주입 패턴
 - `docs/api/` 문서에 명시된 응답 필드가 실제 응답에 포함되는지 assertion으로 검증
+- **클라이언트 필수 필드 검증**: 클라이언트(웹·모바일)가 분기 로직·URL 생성·표시에 사용하는 필드는
+  별도 케이스로 타입과 존재를 명시적으로 assert한다. 케이스 이름은 `'클라이언트 필수 필드가 응답에 포함된다'`.
+
+  ```typescript
+  it('클라이언트 필수 필드가 응답에 포함된다', async () => {
+    // ...mock 설정...
+    const place = body.place;
+    // place_id: 지도 링크 생성 분기 로직에 사용 (없으면 좌표 링크로 폴백)
+    expect(typeof place.place_id).toBe('string');
+    expect(place.place_id.length).toBeGreaterThan(0);
+    // latitude, longitude: 지도 이동 및 좌표 링크 생성에 사용
+    expect(typeof place.latitude).toBe('number');
+    expect(typeof place.longitude).toBe('number');
+  });
+  ```
+
+### API 응답 타입 관리
+
+- **응답 타입은 `packages/shared/src/types.ts`에 정의**하고, 웹·모바일이 함께 참조한다.
+- API Route Handler는 응답 객체에 `satisfies <SharedType>`을 붙여 컴파일 타임에 필드 누락을 검출한다.
+
+  ```typescript
+  import type { PlaceDetails } from '@travel-companion/shared';
+  return NextResponse.json({ place: { name, place_id, latitude, longitude } satisfies PlaceDetails });
+  ```
+
+- 외부 API(Google 등)를 경유하는 엔드포인트에서는 요청 시 이미 알고 있는 ID를 응답 폴백으로 보존한다.
+
+  ```typescript
+  // 외부 API 응답에 place_id가 빠져도 요청 ID로 보존
+  setSelectedPlace({ name: details.name || fallbackName, place_id: details.place_id || requestedPlaceId });
+  ```
 
 ### 문서 업데이트 규칙
 
@@ -171,6 +203,8 @@ export async function GET(request: Request) {
 | `apps/web/app/api/**` Route Handler 추가/수정 | `docs/api/<endpoint>.md` + 해당 `__tests__/route.test.ts` |
 | 웹 컴포넌트/화면/훅 추가·변경 | `docs/ui/web.md` |
 | 모바일 컴포넌트/화면/훅 추가·변경 | `docs/ui/mobile.md` |
+| API 응답 필드 추가/제거 | 해당 엔드포인트를 호출하는 `apps/mobile/src/lib/api/` 모듈의 인터페이스 확인 |
+| 모바일 API 인터페이스 필드 추가 | 대응하는 서버 라우트 응답 + `__tests__/route.test.ts` |
 
 ---
 

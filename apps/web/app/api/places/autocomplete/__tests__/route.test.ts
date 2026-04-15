@@ -70,7 +70,7 @@ describe('GET /api/places/autocomplete', () => {
     expect(body.predictions).toEqual(mockPredictions);
   });
 
-  it('응답 형상이 문서와 일치한다', async () => {
+  it('클라이언트 필수 필드가 응답에 포함된다', async () => {
     jest.spyOn(global, 'fetch').mockResolvedValue({
       ok: true,
       json: jest.fn().mockResolvedValue({ status: 'OK', predictions: mockPredictions }),
@@ -82,11 +82,12 @@ describe('GET /api/places/autocomplete', () => {
     expect(body).toHaveProperty('predictions');
     expect(Array.isArray(body.predictions)).toBe(true);
     const prediction = body.predictions[0];
-    expect(prediction).toHaveProperty('place_id');
-    expect(prediction).toHaveProperty('description');
-    expect(prediction).toHaveProperty('structured_formatting');
+    // place_id: 장소 상세 조회 및 지도 링크 생성에 사용
     expect(typeof prediction.place_id).toBe('string');
-    expect(typeof prediction.description).toBe('string');
+    expect(prediction.place_id.length).toBeGreaterThan(0);
+    // structured_formatting: 장소명 표시 및 장소 선택 시 name 폴백으로 사용
+    expect(typeof prediction.structured_formatting.main_text).toBe('string');
+    expect(typeof prediction.structured_formatting.secondary_text).toBe('string');
   });
 
   it('ZERO_RESULTS 상태는 빈 predictions를 반환한다', async () => {

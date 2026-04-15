@@ -70,6 +70,26 @@ describe('GET /api/places/details', () => {
     });
   });
 
+  it('클라이언트 필수 필드가 응답에 포함된다', async () => {
+    jest.spyOn(global, 'fetch').mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue({ status: 'OK', result: mockGooglePlace }),
+    } as any);
+
+    const res = await GET(makeRequest({ place_id: 'place-1' }));
+    const body = await res.json();
+    const place = body.place;
+
+    // place_id: 지도 링크 생성 분기 로직에 사용 (없으면 좌표 링크로 폴백)
+    expect(typeof place.place_id).toBe('string');
+    expect(place.place_id.length).toBeGreaterThan(0);
+    // name: 장소명 표시 및 폴백 체인에 사용
+    expect(typeof place.name).toBe('string');
+    // latitude, longitude: 지도 이동 및 좌표 링크 생성에 사용
+    expect(typeof place.latitude).toBe('number');
+    expect(typeof place.longitude).toBe('number');
+  });
+
   it('geometry.location.lat/lng을 latitude/longitude로 변환한다', async () => {
     jest.spyOn(global, 'fetch').mockResolvedValue({
       ok: true,

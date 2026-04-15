@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { PlaceDetails } from '@travel-companion/shared';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest) {
         longitude: place.geometry.location.lng,
         rating: place.rating,
         types: place.types,
-      },
+      } satisfies PlaceDetails,
     });
   } catch {
     return NextResponse.json(

@@ -1,20 +1,7 @@
 import { apiFetch } from './rest-client';
+import type { PlacePrediction, PlaceDetails } from '@travel-companion/shared';
 
-export interface PlacePrediction {
-  place_id: string;
-  description: string;
-  structured_formatting: {
-    main_text: string;
-    secondary_text: string;
-  };
-}
-
-export interface PlaceDetails {
-  name: string;
-  place_id: string;
-  latitude: number;
-  longitude: number;
-}
+export type { PlacePrediction, PlaceDetails };
 
 export async function searchPlaces(input: string, lat?: number, lng?: number): Promise<PlacePrediction[]> {
   let path = `/api/places/autocomplete?input=${encodeURIComponent(input)}`;

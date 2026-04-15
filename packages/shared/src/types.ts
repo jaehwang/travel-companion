@@ -121,6 +121,25 @@ export interface CheckinInsert {
   checked_in_at?: string;
 }
 
+export interface PlacePrediction {
+  place_id: string;
+  description: string;
+  structured_formatting: {
+    main_text: string;
+    secondary_text: string;
+  };
+}
+
+export interface PlaceDetails {
+  name: string;
+  place_id: string;
+  latitude: number;
+  longitude: number;
+  address?: string;
+  rating?: number;
+  types?: string[];
+}
+
 export interface Database {
   public: {
     Tables: {
