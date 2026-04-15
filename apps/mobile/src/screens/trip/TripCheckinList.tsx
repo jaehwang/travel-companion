@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -25,6 +25,7 @@ interface TripCheckinListProps {
   onEditCheckin: (checkin: Checkin) => void;
   onDeleteCheckin: (id: string) => void;
   ListHeaderComponent: React.ReactElement | null;
+  scrollToCheckinId?: string;
 }
 
 export default function TripCheckinList({
@@ -39,7 +40,31 @@ export default function TripCheckinList({
   onEditCheckin,
   onDeleteCheckin,
   ListHeaderComponent,
+  scrollToCheckinId,
 }: TripCheckinListProps) {
+  const flatListRef = useRef<FlatList>(null);
+
+  // 검색에서 선택된 체크인으로 스크롤
+  useEffect(() => {
+    if (!scrollToCheckinId || groupedData.length === 0 || loading) return;
+
+    const idx = groupedData.findIndex(
+      item => item.type === 'checkin' && item.checkin.id === scrollToCheckinId
+    );
+    if (idx < 0) return;
+
+    // 리스트 렌더 완료 후 스크롤 (헤더 포함 레이아웃 안정화 대기)
+    const timer = setTimeout(() => {
+      flatListRef.current?.scrollToIndex({
+        index: idx,
+        animated: true,
+        viewPosition: 0.3,
+      });
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [scrollToCheckinId, groupedData, loading]);
+
   const renderItem = useCallback(({ item }: { item: ListItem }) => {
     if (item.type === 'date') {
       return (
@@ -95,6 +120,7 @@ export default function TripCheckinList({
 
   return (
     <FlatList
+      ref={flatListRef}
       testID="list-checkins"
       data={groupedData}
       keyExtractor={(item: ListItem) =>
@@ -102,6 +128,13 @@ export default function TripCheckinList({
       }
       renderItem={renderItem}
       ListHeaderComponent={headerWithSort}
+      onScrollToIndexFailed={(info) => {
+        // 아이템 높이 정보가 없는 경우 추정 오프셋으로 폴백
+        flatListRef.current?.scrollToOffset({
+          offset: info.averageItemLength * info.index,
+          animated: true,
+        });
+      }}
       ListEmptyComponent={
         <View style={styles.emptyContainer}>
           <Ionicons name="location-outline" size={48} color="#C4B49A" />

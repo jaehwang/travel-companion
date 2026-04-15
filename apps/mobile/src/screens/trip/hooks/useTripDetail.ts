@@ -32,6 +32,7 @@ export function useTripDetail() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<TripRouteProp>();
   const [selectedTripId, setSelectedTripId] = useState<string>(route.params.trip.id);
+  const scrollToCheckinId = route.params.scrollToCheckinId;
 
   useEffect(() => {
     setSelectedTripId(route.params.trip.id);
@@ -205,5 +206,6 @@ export function useTripDetail() {
     handleTripOptions,
     createTrip,
     updateTrip,
+    scrollToCheckinId,
   };
 }

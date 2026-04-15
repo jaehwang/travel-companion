@@ -41,6 +41,7 @@ export default function TripScreen() {
     handleEditTrip,
     handleCheckinDelete,
     handleTripOptions,
+    scrollToCheckinId,
   } = useTripDetail();
 
   const renderListHeader = useCallback(() => {
@@ -110,6 +111,7 @@ export default function TripScreen() {
         })}
         onDeleteCheckin={handleCheckinDelete}
         ListHeaderComponent={renderListHeader()}
+        scrollToCheckinId={scrollToCheckinId}
       />
 
       <SideDrawer

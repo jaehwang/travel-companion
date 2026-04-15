@@ -13,6 +13,7 @@ import LocationPickerScreen from '../screens/LocationPickerScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import CheckinsScreen from '../screens/CheckinsScreen';
 import ScheduleScreen from '../screens/ScheduleScreen';
+import SearchScreen from '../screens/SearchScreen';
 import TripFormModal from '../components/TripFormModal';
 import { useTripsStore } from '../store/tripsStore';
 import type { Trip, TripFormData } from '@travel-companion/shared';
@@ -26,7 +27,7 @@ export type LocationPickerResult = {
 
 export type TripsStackParamList = {
   Home: undefined;
-  Trip: { trip: Trip };
+  Trip: { trip: Trip; scrollToCheckinId?: string };
 };
 
 export type CheckinsStackParamList = {
@@ -37,6 +38,7 @@ export type MainTabParamList = {
   TripsTab: NavigatorScreenParams<TripsStackParamList>;
   CheckinsTab: NavigatorScreenParams<CheckinsStackParamList>;
   ScheduleTab: undefined;
+  SearchTab: undefined;
   MakeTab: undefined;
 };
 
@@ -197,7 +199,7 @@ const sheetStyles = StyleSheet.create({
 });
 
 const TAB_ITEM_WIDTH = 64;
-const TAB_COUNT = 4;
+const TAB_COUNT = 5;
 const TAB_BAR_SIDE_INSET = Math.max(
   0,
   (Dimensions.get('window').width - TAB_COUNT * TAB_ITEM_WIDTH) / 2
@@ -295,6 +297,16 @@ function MainTabs() {
             tabBarLabel: '일정',
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="calendar-outline" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="SearchTab"
+          component={SearchScreen}
+          options={{
+            tabBarLabel: '검색',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="search-outline" size={size} color={color} />
             ),
           }}
         />
