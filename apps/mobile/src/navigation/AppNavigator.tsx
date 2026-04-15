@@ -301,6 +301,14 @@ function MainTabs() {
           }}
         />
         <Tab.Screen
+          name="MakeTab"
+          component={TripsStackNavigator}
+          options={{
+            tabBarLabel: '',
+            tabBarButton: (props) => <MakeTabButton {...props} />,
+          }}
+        />
+        <Tab.Screen
           name="SearchTab"
           component={SearchScreen}
           options={{
@@ -308,14 +316,6 @@ function MainTabs() {
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="search-outline" size={size} color={color} />
             ),
-          }}
-        />
-        <Tab.Screen
-          name="MakeTab"
-          component={TripsStackNavigator}
-          options={{
-            tabBarLabel: '',
-            tabBarButton: (props) => <MakeTabButton {...props} />,
           }}
         />
       </Tab.Navigator>
