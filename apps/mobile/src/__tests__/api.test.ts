@@ -2,6 +2,7 @@ import {
   fetchTrips, createTrip, updateTrip, deleteTrip, fetchSettings,
   fetchCheckins, createCheckin, updateCheckin, deleteCheckin,
   searchPlaces, getPlaceDetails, fetchScheduleWithWeather,
+  searchTrips, searchCheckins,
 } from '../lib/api';
 
 // ── Supabase query builder helper ──────────────────────────────────────
@@ -15,6 +16,8 @@ function createBuilder(resolvedValue: { data: any; error: any }) {
     delete: jest.fn().mockReturnThis(),
     eq: jest.fn().mockReturnThis(),
     in: jest.fn().mockReturnThis(),
+    or: jest.fn().mockReturnThis(),
+    limit: jest.fn().mockReturnThis(),
     single: jest.fn().mockResolvedValue(resolvedValue),
   };
   b.then = (resolve: any, reject: any) =>
@@ -391,5 +394,85 @@ describe('fetchScheduleWithWeather', () => {
     });
 
     await expect(fetchScheduleWithWeather()).rejects.toThrow('TOKEN_EXPIRED');
+  });
+});
+
+// ── searchTrips (Supabase 직접 호출) ────────────────────────────────────
+
+describe('searchTrips', () => {
+  const mockTrips = [
+    { id: 'trip-1', title: '제주도 여행', updated_at: '2024-03-01T00:00:00Z' },
+    { id: 'trip-2', title: '제주 올레길', updated_at: '2024-02-01T00:00:00Z' },
+  ];
+
+  beforeEach(() => jest.clearAllMocks());
+
+  it('title·description ilike 조건으로 쿼리하고 결과를 반환한다', async () => {
+    const builder = createBuilder({ data: mockTrips, error: null });
+    mockFrom.mockReturnValue(builder);
+
+    const result = await searchTrips('제주');
+
+    expect(mockFrom).toHaveBeenCalledWith('trips');
+    expect(builder.or).toHaveBeenCalledWith('title.ilike.%제주%,description.ilike.%제주%');
+    expect(builder.order).toHaveBeenCalledWith('updated_at', { ascending: false });
+    expect(builder.limit).toHaveBeenCalledWith(10);
+    expect(result).toEqual(mockTrips);
+  });
+
+  it('쿼리 앞뒤 공백을 제거한다', async () => {
+    const builder = createBuilder({ data: [], error: null });
+    mockFrom.mockReturnValue(builder);
+
+    await searchTrips('  제주  ');
+
+    expect(builder.or).toHaveBeenCalledWith('title.ilike.%제주%,description.ilike.%제주%');
+  });
+
+  it('Supabase 오류 시 예외를 던진다', async () => {
+    const builder = createBuilder({ data: null, error: { message: 'DB error' } });
+    mockFrom.mockReturnValue(builder);
+
+    await expect(searchTrips('제주')).rejects.toMatchObject({ message: 'DB error' });
+  });
+});
+
+// ── searchCheckins (Supabase 직접 호출) ─────────────────────────────────
+
+describe('searchCheckins', () => {
+  const mockCheckins = [
+    { id: 'c-1', trip_id: 'trip-1', title: '성산일출봉', checked_in_at: '2024-03-01T09:00:00Z' },
+    { id: 'c-2', trip_id: 'trip-1', title: '협재 해수욕장', checked_in_at: '2024-03-01T14:00:00Z' },
+  ];
+
+  beforeEach(() => jest.clearAllMocks());
+
+  it('title·place·message ilike 조건으로 쿼리하고 결과를 반환한다', async () => {
+    const builder = createBuilder({ data: mockCheckins, error: null });
+    mockFrom.mockReturnValue(builder);
+
+    const result = await searchCheckins('성산');
+
+    expect(mockFrom).toHaveBeenCalledWith('checkins');
+    expect(builder.or).toHaveBeenCalledWith('title.ilike.%성산%,place.ilike.%성산%,message.ilike.%성산%');
+    expect(builder.order).toHaveBeenCalledWith('checked_in_at', { ascending: false });
+    expect(builder.limit).toHaveBeenCalledWith(20);
+    expect(result).toEqual(mockCheckins);
+  });
+
+  it('쿼리 앞뒤 공백을 제거한다', async () => {
+    const builder = createBuilder({ data: [], error: null });
+    mockFrom.mockReturnValue(builder);
+
+    await searchCheckins('  성산  ');
+
+    expect(builder.or).toHaveBeenCalledWith('title.ilike.%성산%,place.ilike.%성산%,message.ilike.%성산%');
+  });
+
+  it('Supabase 오류 시 예외를 던진다', async () => {
+    const builder = createBuilder({ data: null, error: { message: 'DB error' } });
+    mockFrom.mockReturnValue(builder);
+
+    await expect(searchCheckins('성산')).rejects.toMatchObject({ message: 'DB error' });
   });
 });

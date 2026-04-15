@@ -10,3 +10,4 @@ export { fetchSettings, updateSettings } from './settings';
 export type { UserSettings } from './settings';
 export { fetchCalendarEvents, fetchCalendarAdvice, connectCalendar, completeCalendarConnect, disconnectCalendar, fetchScheduleWithWeather } from './calendar';
 export type { PlaceInfo, CalendarEvent, WeatherInfo, CalendarEventWithWeather } from './calendar';
+export { searchTrips, searchCheckins } from './search';
