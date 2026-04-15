@@ -45,11 +45,8 @@ export async function GET(request: NextRequest) {
       place: {
         name: place.name,
         place_id: placeId,
-        address: place.formatted_address,
         latitude: place.geometry.location.lat,
         longitude: place.geometry.location.lng,
-        rating: place.rating,
-        types: place.types,
       } satisfies PlaceDetails,
     });
   } catch {

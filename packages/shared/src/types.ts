@@ -135,9 +135,6 @@ export interface PlaceDetails {
   place_id: string;
   latitude: number;
   longitude: number;
-  address?: string;
-  rating?: number;
-  types?: string[];
 }
 
 export interface Database {

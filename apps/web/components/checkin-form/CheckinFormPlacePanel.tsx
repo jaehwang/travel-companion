@@ -1,7 +1,7 @@
 'use client';
 
 import { Search, MapPin, X } from 'lucide-react';
-import type { PlacePrediction } from './hooks/usePlaceSearch';
+import type { PlacePrediction } from '@travel-companion/shared';
 
 // 이 패널은 체크인의 `place` 필드(공식 장소명)를 채우기 위한 검색 화면이다.
 // `place`와 `title`(체크인 제목)의 차이:

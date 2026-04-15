@@ -3,8 +3,6 @@
 import { useState, useEffect } from 'react';
 import type { PlacePrediction } from '@travel-companion/shared';
 
-export type { PlacePrediction };
-
 interface UsePlaceSearchOptions {
   isActive: boolean;
   location?: { lat: number; lng: number };
