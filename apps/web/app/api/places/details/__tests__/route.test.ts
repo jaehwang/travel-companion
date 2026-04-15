@@ -61,6 +61,7 @@ describe('GET /api/places/details', () => {
     expect(res.status).toBe(200);
     expect(body.place).toEqual({
       name: '경복궁',
+      place_id: 'place-1',
       address: '서울특별시 종로구 사직로 161',
       latitude: 37.5796,
       longitude: 126.977,

@@ -84,7 +84,7 @@ export default function LocationPickerContent({
       const details = await getPlaceDetails(prediction.place_id);
       const coords = { latitude: details.latitude, longitude: details.longitude };
       setSelectedLocation(coords);
-      setSelectedPlace({ name: details.name, place_id: details.place_id });
+      setSelectedPlace({ name: details.name || prediction.structured_formatting.main_text, place_id: details.place_id || prediction.place_id });
       setSearchQuery('');
       setPredictions([]);
       mapRef.current?.animateToRegion({ ...coords, latitudeDelta: 0.005, longitudeDelta: 0.005 }, 500);

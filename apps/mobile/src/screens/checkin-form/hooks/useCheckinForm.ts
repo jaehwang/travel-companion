@@ -60,8 +60,8 @@ export function useCheckinForm() {
       if (result) {
         setLatitude(result.latitude);
         setLongitude(result.longitude);
-        if (result.placeName) setPlace(result.placeName);
-        if (result.placeId) setPlaceId(result.placeId);
+        setPlace(result.placeName ?? '');
+        setPlaceId(result.placeId ?? '');
       }
     }, [])
   );
