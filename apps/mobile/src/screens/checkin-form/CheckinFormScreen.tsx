@@ -56,6 +56,7 @@ export default function CheckinFormScreen() {
           onClearTime={() => form.setCheckedInAt(null)}
           tags={form.tags}
           tagSuggestions={form.tagSuggestions}
+          aiTagSuggestions={form.aiTagSuggestions}
           onAddTag={form.handleAddTag}
           onRemoveTag={form.handleRemoveTag}
           error={form.error}

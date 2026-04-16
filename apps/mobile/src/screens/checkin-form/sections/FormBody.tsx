@@ -25,6 +25,7 @@ interface FormBodyProps {
   onClearTime: () => void;
   tags: string[];
   tagSuggestions: string[];
+  aiTagSuggestions: string[];
   onAddTag: (tag: string) => void;
   onRemoveTag: (tag: string) => void;
   error: string | null;
@@ -50,6 +51,7 @@ export default function FormBody({
   onClearTime,
   tags,
   tagSuggestions,
+  aiTagSuggestions,
   onAddTag,
   onRemoveTag,
   error,
@@ -77,6 +79,7 @@ export default function FormBody({
       <TagInput
         tags={tags}
         suggestions={tagSuggestions}
+        aiSuggestions={aiTagSuggestions}
         onAddTag={onAddTag}
         onRemoveTag={onRemoveTag}
       />

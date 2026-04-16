@@ -12,15 +12,17 @@ import { Ionicons } from '@expo/vector-icons';
 interface TagInputProps {
   tags: string[];
   suggestions: string[];
+  aiSuggestions?: string[];
   onAddTag: (tag: string) => void;
   onRemoveTag: (tag: string) => void;
 }
 
-export default function TagInput({ tags, suggestions, onAddTag, onRemoveTag }: TagInputProps) {
+export default function TagInput({ tags, suggestions, aiSuggestions = [], onAddTag, onRemoveTag }: TagInputProps) {
   const [input, setInput] = useState('');
 
+  const visibleAiSuggestions = aiSuggestions.filter(s => !tags.includes(s));
   const visibleSuggestions = suggestions
-    .filter(s => !tags.includes(s))
+    .filter(s => !tags.includes(s) && !aiSuggestions.includes(s))
     .slice(0, 10);
 
   const commitInput = () => {
@@ -78,6 +80,32 @@ export default function TagInput({ tags, suggestions, onAddTag, onRemoveTag }: T
           </TouchableOpacity>
         )}
       </View>
+
+      {/* AI 추천 태그 */}
+      {visibleAiSuggestions.length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.suggestionsScroll}
+          contentContainerStyle={styles.suggestionsContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.aiLabel}>
+            <Ionicons name="sparkles" size={11} color="#F97316" />
+          </View>
+          {visibleAiSuggestions.map(tag => (
+            <TouchableOpacity
+              key={tag}
+              style={styles.aiChip}
+              onPress={() => onAddTag(tag)}
+              activeOpacity={0.7}
+              testID={`tag-ai-${tag}`}
+            >
+              <Text style={styles.aiChipText}>#{tag}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
 
       {/* 이전 태그 제안 */}
       {visibleSuggestions.length > 0 && (
@@ -167,6 +195,23 @@ const styles = StyleSheet.create({
   suggestionChipText: {
     fontSize: 12,
     color: '#8B7355',
+    fontWeight: '600',
+  },
+  aiLabel: {
+    justifyContent: 'center',
+    marginRight: 2,
+  },
+  aiChip: {
+    backgroundColor: '#FFF3E8',
+    borderWidth: 1,
+    borderColor: '#FDBA74',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  aiChipText: {
+    fontSize: 12,
+    color: '#F97316',
     fontWeight: '600',
   },
 });

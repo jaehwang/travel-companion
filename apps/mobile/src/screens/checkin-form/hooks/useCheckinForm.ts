@@ -9,6 +9,7 @@ import { usePhotoPicker } from '../../../components/PhotoPickerButton';
 import { consumeLocationPickerResult } from '../../../lib/locationPickerStore';
 import { useTrips } from '../../../hooks/useTrips';
 import { CATEGORY_ICONS, CATEGORY_COLORS } from '../../../utils/categoryIcons';
+import { suggestTags } from '../../../lib/api';
 import type { RootStackParamList } from '../../../navigation/AppNavigator';
 
 async function loadTagSuggestions(): Promise<string[]> {
@@ -50,6 +51,8 @@ export function useCheckinForm() {
   const [category, setCategory] = useState(editingCheckin?.category ?? '');
   const [tags, setTags] = useState<string[]>(editingCheckin?.tags ?? []);
   const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
+  const [aiTagSuggestions, setAiTagSuggestions] = useState<string[]>([]);
+  const aiDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [latitude, setLatitude] = useState<number | undefined>(editingCheckin?.latitude ?? initialLatitude);
   const [longitude, setLongitude] = useState<number | undefined>(editingCheckin?.longitude ?? initialLongitude);
   const [place, setPlace] = useState(editingCheckin?.place ?? initialPlace ?? '');
@@ -88,6 +91,23 @@ export function useCheckinForm() {
   useEffect(() => {
     loadTagSuggestions().then(setTagSuggestions).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current);
+
+    const hasInput = title.trim().length >= 2 || place.trim().length >= 2 || message.trim().length >= 2;
+    if (!hasInput) return;
+
+    aiDebounceRef.current = setTimeout(() => {
+      suggestTags({ title: title.trim(), place: place.trim(), category, message: message.trim() })
+        .then(setAiTagSuggestions)
+        .catch(() => {});
+    }, 500);
+
+    return () => {
+      if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current);
+    };
+  }, [title, place, category, message]);
 
   useEffect(() => {
     if (hasInitialLocationRef.current) return;
@@ -216,6 +236,7 @@ export function useCheckinForm() {
     setCategory,
     tags,
     tagSuggestions,
+    aiTagSuggestions,
     handleAddTag,
     handleRemoveTag,
     latitude,

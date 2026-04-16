@@ -1,5 +1,6 @@
 import { supabase } from '../supabase';
 import { getUser } from './supabase-client';
+import { apiFetch } from './rest-client';
 import type { Trip, Checkin } from '@travel-companion/shared';
 
 export async function searchTrips(query: string): Promise<Trip[]> {
@@ -35,4 +36,17 @@ export async function searchCheckins(query: string): Promise<Checkin[]> {
 
   if (error) throw error;
   return data as Checkin[];
+}
+
+export async function suggestTags(params: {
+  title?: string;
+  place?: string;
+  category?: string;
+  message?: string;
+}): Promise<string[]> {
+  const { tags } = await apiFetch<{ tags: string[] }>('/api/checkins/suggest-tags', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });
+  return tags ?? [];
 }
