@@ -213,7 +213,7 @@ export default function CheckinsScreen() {
     if (!trip) return;
     navigation.navigate('TripsTab', {
       screen: 'Trip',
-      params: { trip },
+      params: { trip, scrollToCheckinId: checkin.id },
     });
   }, [navigation]);
 
