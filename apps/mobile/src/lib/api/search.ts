@@ -21,10 +21,15 @@ export async function searchCheckins(query: string): Promise<Checkin[]> {
   await getUser();
 
   const q = query.trim();
-  const { data, error } = await supabase
-    .from('checkins')
-    .select('*')
-    .or(`title.ilike.%${q}%,place.ilike.%${q}%,message.ilike.%${q}%`)
+  let builder = supabase.from('checkins').select('*');
+
+  if (q.startsWith('#')) {
+    builder = builder.contains('tags', [q.slice(1)]);
+  } else {
+    builder = builder.or(`title.ilike.%${q}%,place.ilike.%${q}%,message.ilike.%${q}%`);
+  }
+
+  const { data, error } = await builder
     .order('checked_in_at', { ascending: false })
     .limit(20);
 

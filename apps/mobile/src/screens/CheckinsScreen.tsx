@@ -149,6 +149,18 @@ function CheckinGridCard({ checkin, tripMap, onPress, onLongPress, onEdit, onDel
           </Text>
         </TouchableOpacity>
         <Text style={styles.cardDate} numberOfLines={1}>{formatDateTime(checkin.checked_in_at)}</Text>
+        {checkin.tags?.length > 0 && (
+          <View style={styles.cardTagsRow}>
+            {checkin.tags.slice(0, 2).map(tag => (
+              <View key={tag} style={styles.cardTagChip}>
+                <Text style={styles.cardTagChipText}>#{tag}</Text>
+              </View>
+            ))}
+            {checkin.tags.length > 2 && (
+              <Text style={styles.cardTagMore}>+{checkin.tags.length - 2}</Text>
+            )}
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -157,6 +169,7 @@ function CheckinGridCard({ checkin, tripMap, onPress, onLongPress, onEdit, onDel
 export default function CheckinsScreen() {
   const navigation = useNavigation<NavigationProp>();
   const [filter, setFilter] = useState<Filter>('normal');
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [moveModalCheckin, setMoveModalCheckin] = useState<Checkin | null>(null);
 
@@ -171,19 +184,32 @@ export default function CheckinsScreen() {
     return map;
   }, [trips]);
 
+  const popularTags = useMemo(() => {
+    const counts = new Map<string, number>();
+    checkins.forEach(c => {
+      c.tags?.forEach(tag => counts.set(tag, (counts.get(tag) ?? 0) + 1));
+    });
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([tag]) => tag);
+  }, [checkins]);
+
   const filteredCheckins = useMemo(() => {
     if (filter === 'frequent') {
       const frequentTripIds = new Set(trips.filter(t => t.is_frequent).map(t => t.id));
       return checkins
         .filter(c => frequentTripIds.has(c.trip_id))
+        .filter(c => !selectedTag || c.tags?.includes(selectedTag))
         .sort((a, b) => new Date(b.checked_in_at).getTime() - new Date(a.checked_in_at).getTime());
     }
     // 일반: non-frequent 여행 + tripMap에 없는 미할당 체크인
     const normalTripIds = new Set(trips.filter(t => !t.is_frequent).map(t => t.id));
     return checkins
       .filter(c => normalTripIds.has(c.trip_id) || !tripMap.has(c.trip_id))
+      .filter(c => !selectedTag || c.tags?.includes(selectedTag))
       .sort((a, b) => new Date(b.checked_in_at).getTime() - new Date(a.checked_in_at).getTime());
-  }, [checkins, trips, tripMap, filter]);
+  }, [checkins, trips, tripMap, filter, selectedTag]);
 
   const sections = useMemo((): Section[] => {
     const monthMap = new Map<string, Checkin[]>();
@@ -331,6 +357,35 @@ export default function CheckinsScreen() {
         </TouchableOpacity>
       </View>
 
+      {popularTags.length > 0 && (
+        <View style={styles.tagFilterWrapper}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.tagFilterContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            <TouchableOpacity
+              style={[styles.tagFilterChip, !selectedTag && styles.tagFilterChipActive]}
+              onPress={() => setSelectedTag(null)}
+              testID="tag-filter-all"
+            >
+              <Text style={[styles.tagFilterChipText, !selectedTag && styles.tagFilterChipTextActive]}>전체</Text>
+            </TouchableOpacity>
+            {popularTags.map(tag => (
+              <TouchableOpacity
+                key={tag}
+                style={[styles.tagFilterChip, selectedTag === tag && styles.tagFilterChipActive]}
+                onPress={() => setSelectedTag(prev => prev === tag ? null : tag)}
+                testID={`tag-filter-${tag}`}
+              >
+                <Text style={[styles.tagFilterChipText, selectedTag === tag && styles.tagFilterChipTextActive]}>#{tag}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
       {loading && !refreshing ? (
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color="#F97316" />
@@ -380,6 +435,32 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#1F2937',
     letterSpacing: -0.3,
+  },
+  tagFilterWrapper: {
+    height: 34,
+    marginBottom: 8,
+  },
+  tagFilterContent: {
+    paddingHorizontal: 16,
+    gap: 6,
+  },
+  tagFilterChip: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: '#F3F0EB',
+  },
+  tagFilterChipActive: {
+    backgroundColor: '#F97316',
+  },
+  tagFilterChipText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#8B7355',
+  },
+  tagFilterChipTextActive: {
+    color: '#FFFFFF',
   },
   segmentContainer: {
     flexDirection: 'row',
@@ -477,6 +558,28 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#C4B49A',
     marginTop: 2,
+  },
+  cardTagsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+    marginTop: 5,
+  },
+  cardTagChip: {
+    backgroundColor: '#F3F0EB',
+    borderRadius: 999,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  cardTagChipText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#8B7355',
+  },
+  cardTagMore: {
+    fontSize: 10,
+    color: '#C4B49A',
+    alignSelf: 'center',
   },
   listContent: {
     paddingBottom: 24,

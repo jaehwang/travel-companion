@@ -3,6 +3,7 @@ import { View, Text, TextInput, ScrollView, StyleSheet } from 'react-native';
 import PhotoSection from './PhotoSection';
 import InfoChips from './InfoChips';
 import NoteSection from './NoteSection';
+import TagInput from './TagInput';
 
 interface FormBodyProps {
   title: string;
@@ -22,6 +23,10 @@ interface FormBodyProps {
   onClearLocation: () => void;
   onClearCategory: () => void;
   onClearTime: () => void;
+  tags: string[];
+  tagSuggestions: string[];
+  onAddTag: (tag: string) => void;
+  onRemoveTag: (tag: string) => void;
   error: string | null;
 }
 
@@ -43,6 +48,10 @@ export default function FormBody({
   onClearLocation,
   onClearCategory,
   onClearTime,
+  tags,
+  tagSuggestions,
+  onAddTag,
+  onRemoveTag,
   error,
 }: FormBodyProps) {
   return (
@@ -64,6 +73,13 @@ export default function FormBody({
       <View style={styles.divider} />
 
       <NoteSection value={message} onChangeText={onChangeMessage} />
+
+      <TagInput
+        tags={tags}
+        suggestions={tagSuggestions}
+        onAddTag={onAddTag}
+        onRemoveTag={onRemoveTag}
+      />
 
       <PhotoSection
         photoPreview={photoPreview}

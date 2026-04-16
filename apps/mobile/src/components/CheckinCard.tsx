@@ -109,6 +109,20 @@ export default function CheckinCard({ checkin, onEdit, onDelete }: CheckinCardPr
             <Text style={styles.message}>{checkin.message}</Text>
           ) : null}
 
+          {/* Tags */}
+          {checkin.tags?.length > 0 && (
+            <View style={styles.tagsRow}>
+              {checkin.tags.slice(0, 3).map(tag => (
+                <View key={tag} style={styles.tagChip}>
+                  <Text style={styles.tagChipText}>#{tag}</Text>
+                </View>
+              ))}
+              {checkin.tags.length > 3 && (
+                <Text style={styles.tagMore}>+{checkin.tags.length - 3}</Text>
+              )}
+            </View>
+          )}
+
           {/* Place Link */}
           <TouchableOpacity onPress={handleMapPress} style={styles.placeLink}>
             <View style={styles.placeLinkInner}>
@@ -197,6 +211,28 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     lineHeight: 23,
     marginBottom: 12,
+  },
+  tagsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 5,
+    marginBottom: 8,
+  },
+  tagChip: {
+    backgroundColor: '#F3F0EB',
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  tagChipText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#8B7355',
+  },
+  tagMore: {
+    fontSize: 11,
+    color: '#C4B49A',
+    alignSelf: 'center',
   },
   placeLink: {
     marginTop: 2,

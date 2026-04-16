@@ -17,6 +17,7 @@ function createBuilder(resolvedValue: { data: any; error: any }) {
     eq: jest.fn().mockReturnThis(),
     in: jest.fn().mockReturnThis(),
     or: jest.fn().mockReturnThis(),
+    contains: jest.fn().mockReturnThis(),
     limit: jest.fn().mockReturnThis(),
     single: jest.fn().mockResolvedValue(resolvedValue),
   };
@@ -474,5 +475,25 @@ describe('searchCheckins', () => {
     mockFrom.mockReturnValue(builder);
 
     await expect(searchCheckins('성산')).rejects.toMatchObject({ message: 'DB error' });
+  });
+
+  it('#으로 시작하면 tags contains 쿼리를 사용한다', async () => {
+    const builder = createBuilder({ data: mockCheckins, error: null });
+    mockFrom.mockReturnValue(builder);
+
+    await searchCheckins('#맛집');
+
+    expect(builder.contains).toHaveBeenCalledWith('tags', ['맛집']);
+    expect(builder.or).not.toHaveBeenCalled();
+  });
+
+  it('#으로 시작하지 않으면 ilike 쿼리를 사용한다', async () => {
+    const builder = createBuilder({ data: mockCheckins, error: null });
+    mockFrom.mockReturnValue(builder);
+
+    await searchCheckins('성산');
+
+    expect(builder.or).toHaveBeenCalledWith('title.ilike.%성산%,place.ilike.%성산%,message.ilike.%성산%');
+    expect(builder.contains).not.toHaveBeenCalled();
   });
 });

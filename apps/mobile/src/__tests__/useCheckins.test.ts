@@ -19,6 +19,7 @@ const makeCheckin = (id: string, title: string) => ({
   id,
   trip_id: 'trip-1',
   title,
+  tags: [],
   latitude: 37.5665,
   longitude: 126.9780,
   checked_in_at: '2024-03-01T10:00:00Z',

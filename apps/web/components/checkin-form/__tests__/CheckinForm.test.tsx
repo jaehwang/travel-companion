@@ -129,6 +129,7 @@ const mockCheckin: Checkin = {
   place: '경복궁',
   place_id: 'place-1',
   category: 'attraction',
+  tags: [],
   message: '아름다웠다',
   latitude: 37.5796,
   longitude: 126.977,

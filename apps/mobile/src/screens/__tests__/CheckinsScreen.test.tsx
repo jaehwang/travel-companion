@@ -22,7 +22,7 @@ jest.mock('@expo/vector-icons', () => ({
   Ionicons: 'Ionicons',
 }));
 jest.mock('react-native-safe-area-context', () => ({
-  SafeAreaView: ({ children }) => children,
+  SafeAreaView: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 const mockUseAllCheckins = useAllCheckins as jest.MockedFunction<typeof useAllCheckins>;
@@ -45,6 +45,7 @@ const makeCheckin = (id: string, tripId: string, title: string) => ({
   id,
   trip_id: tripId,
   title,
+  tags: [],
   latitude: 37.5,
   longitude: 127.0,
   checked_in_at: '2026-03-15T10:00:00Z',

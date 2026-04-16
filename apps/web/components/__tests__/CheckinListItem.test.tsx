@@ -6,6 +6,7 @@ const baseCheckin: Checkin = {
   id: 'checkin-1',
   trip_id: 'trip-1',
   title: '경복궁',
+  tags: [],
   latitude: 37.5796,
   longitude: 126.9770,
   checked_in_at: '2026-02-01T10:00:00Z',

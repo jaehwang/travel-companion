@@ -11,6 +11,15 @@ import { useTrips } from '../../../hooks/useTrips';
 import { CATEGORY_ICONS, CATEGORY_COLORS } from '../../../utils/categoryIcons';
 import type { RootStackParamList } from '../../../navigation/AppNavigator';
 
+async function loadTagSuggestions(): Promise<string[]> {
+  const { data } = await supabase
+    .from('checkins')
+    .select('tags')
+    .not('tags', 'eq', '{}');
+  if (!data) return [];
+  return [...new Set(data.flatMap((c: { tags: string[] }) => c.tags ?? []))];
+}
+
 type NavigationProp = StackNavigationProp<RootStackParamList, 'CheckinForm'>;
 type FormRouteProp = RouteProp<RootStackParamList, 'CheckinForm'>;
 
@@ -39,6 +48,8 @@ export function useCheckinForm() {
   const [title, setTitle] = useState(editingCheckin?.title ?? '');
   const [message, setMessage] = useState(editingCheckin?.message ?? '');
   const [category, setCategory] = useState(editingCheckin?.category ?? '');
+  const [tags, setTags] = useState<string[]>(editingCheckin?.tags ?? []);
+  const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
   const [latitude, setLatitude] = useState<number | undefined>(editingCheckin?.latitude ?? initialLatitude);
   const [longitude, setLongitude] = useState<number | undefined>(editingCheckin?.longitude ?? initialLongitude);
   const [place, setPlace] = useState(editingCheckin?.place ?? initialPlace ?? '');
@@ -72,6 +83,10 @@ export function useCheckinForm() {
         setAvatarUrl(user.user_metadata.avatar_url);
       }
     });
+  }, []);
+
+  useEffect(() => {
+    loadTagSuggestions().then(setTagSuggestions).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -131,6 +146,7 @@ export function useCheckinForm() {
         title: title.trim(),
         message: message.trim() || undefined,
         category: category || undefined,
+        tags,
         latitude,
         longitude,
         place: place.trim() || undefined,
@@ -173,6 +189,14 @@ export function useCheckinForm() {
     setPhotoMetadata(null);
   };
 
+  const handleAddTag = useCallback((tag: string) => {
+    setTags(prev => prev.includes(tag) ? prev : [...prev, tag]);
+  }, []);
+
+  const handleRemoveTag = useCallback((tag: string) => {
+    setTags(prev => prev.filter(t => t !== tag));
+  }, []);
+
   const catColor = CATEGORY_COLORS[category] ?? '#C4A882';
   const catIconName = CATEGORY_ICONS[category] ?? 'pricetag-outline';
 
@@ -190,6 +214,10 @@ export function useCheckinForm() {
     setMessage,
     category,
     setCategory,
+    tags,
+    tagSuggestions,
+    handleAddTag,
+    handleRemoveTag,
     latitude,
     setLatitude,
     longitude,

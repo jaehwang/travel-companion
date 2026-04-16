@@ -60,7 +60,8 @@ export interface Checkin {
   place_id?: string;
   latitude: number;
   longitude: number;
-  category?: string;
+  category?: string | null;
+  tags: string[];
   photo_url?: string;
   photo_metadata?: {
     exif?: Record<string, unknown>;
@@ -110,7 +111,8 @@ export interface CheckinInsert {
   place_id?: string;
   latitude: number;
   longitude: number;
-  category?: string;
+  category?: string | null;
+  tags?: string[];
   photo_url?: string;
   photo_metadata?: {
     exif?: Record<string, unknown>;

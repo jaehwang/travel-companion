@@ -54,6 +54,10 @@ export default function CheckinFormScreen() {
           }}
           onClearCategory={() => form.setCategory('')}
           onClearTime={() => form.setCheckedInAt(null)}
+          tags={form.tags}
+          tagSuggestions={form.tagSuggestions}
+          onAddTag={form.handleAddTag}
+          onRemoveTag={form.handleRemoveTag}
           error={form.error}
         />
 

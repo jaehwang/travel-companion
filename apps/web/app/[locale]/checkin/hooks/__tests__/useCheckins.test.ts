@@ -15,6 +15,7 @@ const MOCK_CHECKIN = {
   place_id: undefined,
   message: '멋진 뷰!',
   category: 'attraction',
+  tags: [],
   latitude: 33.458,
   longitude: 126.942,
   photo_url: undefined,
