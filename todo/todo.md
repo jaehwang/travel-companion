@@ -2,6 +2,7 @@
 
 ## 모바일 앱
 
+- [ ] 로컬 저장 기능 (오프라인 우선) — 상세 계획: `todo/offline-local-save.md`
 - [x] 모바일 앱에서 캘린더 연동 구현하기
 - [x] Supabase direct connection
 - [X] 하단 탭 메뉴 정리
