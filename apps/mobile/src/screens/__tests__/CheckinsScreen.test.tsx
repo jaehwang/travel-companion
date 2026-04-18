@@ -5,6 +5,13 @@ import { useAllCheckins } from '../../hooks/useAllCheckins';
 import { useTrips } from '../../hooks/useTrips';
 import { useCheckinsStore } from '../../store/checkinsStore';
 
+jest.mock('expo-image', () => ({
+  Image: ({ testID, source, style }: { testID?: string; source?: unknown; style?: unknown }) => {
+    const { View } = require('react-native');
+    return <View testID={testID} source={source} style={style} />;
+  },
+}));
+
 jest.mock('../../lib/supabase', () => ({ supabase: {} }));
 jest.mock('../../hooks/useAllCheckins');
 jest.mock('../../hooks/useTrips');

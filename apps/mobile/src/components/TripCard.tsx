@@ -2,11 +2,11 @@ import React from 'react';
 import {
   View,
   Text,
-  Image,
   TouchableOpacity,
   StyleSheet,
   Dimensions,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import type { Trip } from '@travel-companion/shared';
 import { formatTripDate as _formatTripDate } from '@travel-companion/shared';
@@ -37,7 +37,7 @@ export default function TripCard({ trip, onPress, onMenuPress }: TripCardProps) 
           <Image
             source={{ uri: trip.cover_photo_url }}
             style={styles.coverImage}
-            resizeMode="cover"
+            contentFit="cover"
           />
         ) : (
           <View style={styles.coverPlaceholder}>

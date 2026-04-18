@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  Image,
   TouchableOpacity,
   StyleSheet,
   Linking,
 } from 'react-native';
+import { Image } from 'expo-image';
 import PhotoViewerModal from './PhotoViewerModal';
 import { Ionicons } from '@expo/vector-icons';
 import type { Checkin } from '@travel-companion/shared';
@@ -93,7 +93,7 @@ export default function CheckinCard({ checkin, onEdit, onDelete }: CheckinCardPr
                 <Image
                   source={{ uri: checkin.photo_url }}
                   style={styles.photo}
-                  resizeMode="cover"
+                  contentFit="cover"
                 />
               </TouchableOpacity>
               <PhotoViewerModal

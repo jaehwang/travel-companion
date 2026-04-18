@@ -3,12 +3,12 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Image,
   StyleSheet,
   Alert,
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';

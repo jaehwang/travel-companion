@@ -6,12 +6,12 @@ import {
   TouchableOpacity,
   StyleSheet,
   RefreshControl,
-  Image,
   ActivityIndicator,
   ActionSheetIOS,
   Alert,
   Platform,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { CompositeNavigationProp } from '@react-navigation/native';

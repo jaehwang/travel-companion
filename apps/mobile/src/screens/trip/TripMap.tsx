@@ -4,9 +4,9 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Image,
   Dimensions,
 } from 'react-native';
+import { Image } from 'expo-image';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
@@ -158,7 +158,7 @@ export default function TripMap({ checkins, trip }: TripMapProps) {
                 <Image
                   source={{ uri: selectedCheckin.photo_url }}
                   style={styles.markerInfoPhoto}
-                  resizeMode="cover"
+                  contentFit="cover"
                 />
               )}
               {selectedCheckin.title && (

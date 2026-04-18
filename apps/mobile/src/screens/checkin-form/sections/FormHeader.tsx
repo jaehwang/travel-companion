@@ -2,12 +2,12 @@ import React from 'react';
 import {
   View,
   Text,
-  Image,
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import type { Trip } from '@travel-companion/shared';
 

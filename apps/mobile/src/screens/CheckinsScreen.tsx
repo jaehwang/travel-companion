@@ -5,7 +5,6 @@ import {
   SectionList,
   TouchableOpacity,
   StyleSheet,
-  Image,
   ActivityIndicator,
   RefreshControl,
   Dimensions,
@@ -15,6 +14,7 @@ import {
   ScrollView,
   Pressable,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { CompositeNavigationProp } from '@react-navigation/native';
@@ -120,7 +120,7 @@ function CheckinGridCard({ checkin, tripMap, onPress, onLongPress, onEdit, onDel
         <Text style={styles.menuButtonText}>⋮</Text>
       </TouchableOpacity>
       {checkin.photo_url ? (
-        <Image source={{ uri: checkin.photo_url }} style={styles.cardPhoto} resizeMode="cover" />
+        <Image source={{ uri: checkin.photo_url }} style={styles.cardPhoto} contentFit="cover" />
       ) : (
         <View style={[styles.cardPhotoPlaceholder, { backgroundColor: `${meta.color}15` }]}>
           <Ionicons name={meta.icon} size={28} color={meta.color} />

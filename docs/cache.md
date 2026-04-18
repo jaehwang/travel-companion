@@ -1,6 +1,6 @@
 # 이미지 캐싱 전략
 
-모바일 앱의 지도 마커 이미지 로딩 속도를 개선하기 위한 캐싱 구현.
+모바일 앱 전체에서 `expo-image`를 사용해 이미지를 디스크 캐시한다.
 
 ## 사용 라이브러리
 
@@ -12,12 +12,22 @@ npx expo install expo-image
 
 ## 적용 범위
 
-지도 화면(`MapBrowseScreen`)의 마커 컴포넌트에만 적용.
+앱 내 모든 CDN 이미지를 표시하는 컴포넌트에 적용. `resizeMode` → `contentFit`으로 prop명이 다름에 주의.
 
-| 컴포넌트 | 파일 | 용도 |
-|----------|------|------|
-| `CheckinMapMarker` | `src/components/map/CheckinMapMarker.tsx` | 단일 체크인 마커 (52px) |
-| `ClusterMarker` | `src/components/map/ClusterMarker.tsx` | 클러스터 마커 (64px) |
+| 파일 | 용도 |
+|------|------|
+| `src/components/map/CheckinMapMarker.tsx` | 지도 마커 체크인 사진 (52px) |
+| `src/components/map/ClusterMarker.tsx` | 지도 클러스터 대표 사진 (64px) |
+| `src/components/map/CheckinMapBottomSheet.tsx` | 지도 바텀시트 체크인 사진 |
+| `src/components/CheckinCard.tsx` | 체크인 카드 사진 |
+| `src/components/TripCard.tsx` | 여행 커버 사진 |
+| `src/screens/CheckinsScreen.tsx` | 체크인 목록 카드 사진 |
+| `src/screens/CheckinDetailScreen.tsx` | 체크인 상세 사진 |
+| `src/screens/HomeScreen.tsx` | 홈 화면 아바타 |
+| `src/screens/SettingsScreen.tsx` | 설정 화면 프로필 아바타 |
+| `src/screens/trip/TripHeader.tsx` | 여행 헤더 아바타 |
+| `src/screens/trip/TripMap.tsx` | 선택된 체크인 사진 (InfoWindow) |
+| `src/screens/checkin-form/sections/FormHeader.tsx` | 체크인 작성 폼 헤더 아바타 |
 
 ```tsx
 import { Image } from 'expo-image';

@@ -3,6 +3,13 @@ import { render, screen, fireEvent } from '@testing-library/react-native';
 import CheckinDetailScreen from '../CheckinDetailScreen';
 import type { Checkin } from '@travel-companion/shared';
 
+jest.mock('expo-image', () => ({
+  Image: ({ testID, source, style }: { testID?: string; source?: unknown; style?: unknown }) => {
+    const { View } = require('react-native');
+    return <View testID={testID} source={source} style={style} />;
+  },
+}));
+
 jest.mock('@expo/vector-icons', () => ({
   Ionicons: ({ name, testID }: { name: string; testID?: string }) => {
     const { Text } = require('react-native');

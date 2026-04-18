@@ -140,6 +140,7 @@ Expo React Native (iOS). CRUD는 Supabase JS SDK 직접 호출, Places / Calenda
 - ESLint + Prettier
 - 함수형 컴포넌트 + Hooks
 - 컴포넌트 기반 아키텍처
+- 모바일 앱에서 이미지를 표시할 때는 `react-native`의 `Image` 대신 **`expo-image`의 `Image`를 사용**한다. 메모리+디스크 캐시를 제공하며 `resizeMode` → `contentFit`으로 prop명이 다르다. 캐싱 전략 상세: `docs/cache.md`
 
 ---
 
