@@ -20,6 +20,9 @@
 - [x] 모바일 → Supabase 직접 호출로 전환 (Vercel API hop 제거)
 - [x] 홈 화면 trips/checkins 병렬 조회 (Promise.all)
 - [ ] React Query 캐싱 + 낙관적 업데이트 적용
+- [ ] 지도 마커 이미지 로딩 속도 향상 — 상세 계획: `todo/speedup.md`
+  - [ ] A. `expo-image` 도입 (디스크 캐시)
+  - [ ] B. 업로드 시 썸네일 생성 (최초 로딩 속도)
 
 ## 보안
 
