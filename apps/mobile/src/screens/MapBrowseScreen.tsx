@@ -112,9 +112,9 @@ export default function MapBrowseScreen() {
     const east = region.longitude + region.longitudeDelta / 2;
     const south = region.latitude - region.latitudeDelta / 2;
     const north = region.latitude + region.latitudeDelta / 2;
-    return checkins.filter(
-      (c) => c.longitude >= west && c.longitude <= east && c.latitude >= south && c.latitude <= north,
-    );
+    return checkins
+      .filter((c) => c.longitude >= west && c.longitude <= east && c.latitude >= south && c.latitude <= north)
+      .sort((a, b) => new Date(b.checked_in_at).getTime() - new Date(a.checked_in_at).getTime());
   }, [checkins, region]);
 
   // 초기 지도 범위 설정 (현재 위치 우선, 실패 시 체크인 bounds)
