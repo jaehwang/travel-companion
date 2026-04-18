@@ -29,6 +29,11 @@ jest.mock('react-native-safe-area-context', () => ({
   SafeAreaView: ({ children }: { children: React.ReactNode }) => children,
 }));
 
+jest.mock('../../store/tripsStore', () => ({
+  useTripsStore: (selector: (s: { trips: { id: string; title: string }[] }) => unknown) =>
+    selector({ trips: [{ id: 'trip-1', title: '서울 여행' }] }),
+}));
+
 jest.mock('../../utils/categoryIcons', () => ({
   CATEGORY_META: {
     other: { icon: 'location', color: '#9CA3AF', label: '기타' },
@@ -90,6 +95,11 @@ describe('CheckinDetailScreen', () => {
     render(<CheckinDetailScreen />);
     fireEvent.press(screen.getByTestId('btn-back'));
     expect(mockGoBack).toHaveBeenCalledTimes(1);
+  });
+
+  it('연결된 여행 이름을 렌더링한다', () => {
+    render(<CheckinDetailScreen />);
+    expect(screen.getByText('서울 여행')).toBeTruthy();
   });
 
   it('photo_url이 없어도 크래시 없이 렌더링된다', () => {

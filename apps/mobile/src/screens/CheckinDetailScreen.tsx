@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { Checkin } from '@travel-companion/shared';
 import { CATEGORY_META } from '../utils/categoryIcons';
+import { useTripsStore } from '../store/tripsStore';
 
 type CheckinDetailRouteProp = RouteProp<{ CheckinDetail: { checkin: Checkin } }, 'CheckinDetail'>;
 
@@ -33,6 +34,8 @@ export default function CheckinDetailScreen() {
   const route = useRoute<CheckinDetailRouteProp>();
   const { top, bottom } = useSafeAreaInsets();
   const { checkin } = route.params;
+  const trips = useTripsStore((s) => s.trips);
+  const trip = trips.find((t) => t.id === checkin.trip_id);
 
   const meta = CATEGORY_META[checkin.category ?? 'other'] ?? CATEGORY_META.other;
 
@@ -93,18 +96,6 @@ export default function CheckinDetailScreen() {
             <Text style={styles.title}>{checkin.title}</Text>
           ) : null}
 
-          {/* 장소명 / 위치 링크 */}
-          <TouchableOpacity style={styles.placeRow} onPress={handleMapPress}>
-            <Ionicons name="location-outline" size={15} color="#6B7280" />
-            <Text style={styles.placeText}>
-              {checkin.place ?? '지도에서 보기'}
-            </Text>
-            <Ionicons name="open-outline" size={13} color="#9CA3AF" />
-          </TouchableOpacity>
-
-          {/* 날짜·시간 */}
-          <Text style={styles.datetime}>{formatDateTime(checkin.checked_in_at)}</Text>
-
           {/* 메시지 */}
           {checkin.message ? (
             <Text style={styles.message}>{checkin.message}</Text>
@@ -119,6 +110,28 @@ export default function CheckinDetailScreen() {
                 </View>
               ))}
             </View>
+          ) : null}
+
+          {/* 장소명 / 위치 링크 */}
+          <TouchableOpacity style={styles.placeRow} onPress={handleMapPress}>
+            <Ionicons name="location-outline" size={15} color="#6B7280" />
+            <Text style={styles.placeText}>
+              {checkin.place ?? '지도에서 보기'}
+            </Text>
+          </TouchableOpacity>
+
+          {/* 날짜·시간 */}
+          <Text style={styles.datetime}>{formatDateTime(checkin.checked_in_at)}</Text>
+
+          {/* 여행 */}
+          {trip ? (
+            <TouchableOpacity
+              style={styles.tripRow}
+              onPress={() => navigation.navigate('MainTabs' as any, { screen: 'TripsTab', params: { screen: 'Trip', params: { trip } } })}
+            >
+              <Ionicons name="briefcase-outline" size={15} color="#6B7280" />
+              <Text style={styles.tripText}>{trip.title}</Text>
+            </TouchableOpacity>
           ) : null}
         </View>
       </ScrollView>
@@ -186,6 +199,15 @@ const styles = StyleSheet.create({
   },
   placeText: {
     flex: 1,
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  tripRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  tripText: {
     fontSize: 14,
     color: '#6B7280',
   },
