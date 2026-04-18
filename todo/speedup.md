@@ -10,7 +10,7 @@
 
 ## 개선 방안
 
-### A. `expo-image` 도입 — 디스크 캐시
+### A. `expo-image` 도입 — 디스크 캐시 ✅ 완료
 
 **효과**: 앱 재시작 후 재접속 시 이미지 즉시 표시  
 **변경 범위**: `CheckinMapMarker`, `ClusterMarker` 컴포넌트만

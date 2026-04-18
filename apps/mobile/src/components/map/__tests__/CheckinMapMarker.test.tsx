@@ -3,6 +3,13 @@ import { render, screen } from '@testing-library/react-native';
 import CheckinMapMarker from '../CheckinMapMarker';
 import type { Checkin } from '@travel-companion/shared';
 
+jest.mock('expo-image', () => ({
+  Image: ({ testID, source, onLoad }: { testID?: string; source?: unknown; onLoad?: () => void }) => {
+    const { View } = require('react-native');
+    return <View testID={testID} source={source} />;
+  },
+}));
+
 jest.mock('@expo/vector-icons', () => ({
   Ionicons: ({ name, testID }: { name: string; testID?: string }) => {
     const { Text } = require('react-native');

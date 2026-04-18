@@ -5,8 +5,9 @@ import {
   StyleSheet,
   ActivityIndicator,
   Dimensions,
-  Image,
 } from 'react-native';
+import { Image } from 'expo-image';
+import * as SecureStore from 'expo-secure-store';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,6 +20,21 @@ import { useCheckinClusters, type ClusterFeature, type CheckinFeature } from '..
 import CheckinMapMarker from '../components/map/CheckinMapMarker';
 import ClusterMarker from '../components/map/ClusterMarker';
 import CheckinMapBottomSheet from '../components/map/CheckinMapBottomSheet';
+
+const CACHE_CLEAR_KEY = 'mapImageCacheLastCleared';
+const CACHE_CLEAR_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000; // 7일
+
+async function clearImageCacheIfNeeded() {
+  try {
+    const last = await SecureStore.getItemAsync(CACHE_CLEAR_KEY);
+    if (!last || Date.now() - Number(last) > CACHE_CLEAR_INTERVAL_MS) {
+      await Image.clearDiskCache();
+      await SecureStore.setItemAsync(CACHE_CLEAR_KEY, String(Date.now()));
+    }
+  } catch {
+    // 캐시 정리 실패는 무시
+  }
+}
 
 const SEOUL: Region = {
   latitude: 37.5665,
@@ -66,6 +82,8 @@ export default function MapBrowseScreen() {
   const handleMarkerImageLoad = useCallback((key: string) => {
     setLoadedMarkerKeys((prev) => new Set(prev).add(key));
   }, []);
+
+  useEffect(() => { clearImageCacheIfNeeded(); }, []);
 
   // 체크인 로드 완료 직후 region을 체크인 bounds로 동기화 (onRegionChangeComplete 전에 클러스터 계산이 가능하도록)
   const regionInitialized = useRef(false);

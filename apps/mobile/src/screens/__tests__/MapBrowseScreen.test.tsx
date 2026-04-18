@@ -36,6 +36,18 @@ jest.mock('expo-location', () => ({
   getCurrentPositionAsync: jest.fn(),
 }));
 
+jest.mock('expo-image', () => ({
+  Image: ({ testID, onLoad }: { testID?: string; onLoad?: () => void }) => {
+    const { View } = require('react-native');
+    return <View testID={testID} />;
+  },
+}));
+
+jest.mock('expo-secure-store', () => ({
+  getItemAsync: jest.fn().mockResolvedValue(null),
+  setItemAsync: jest.fn().mockResolvedValue(undefined),
+}));
+
 jest.mock('@expo/vector-icons', () => ({
   Ionicons: 'Ionicons',
 }));
