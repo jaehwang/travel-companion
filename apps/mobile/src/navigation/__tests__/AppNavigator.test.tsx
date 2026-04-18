@@ -10,6 +10,9 @@ jest.mock('../../screens/LocationPickerScreen', () => () => null);
 jest.mock('../../screens/SettingsScreen', () => () => null);
 jest.mock('../../screens/CheckinsScreen', () => () => null);
 jest.mock('../../screens/ScheduleScreen', () => () => null);
+jest.mock('../../screens/SearchScreen', () => () => null);
+jest.mock('../../screens/MapBrowseScreen', () => () => null);
+jest.mock('../../screens/CheckinDetailScreen', () => () => null);
 jest.mock('../../components/TripFormModal', () => () => null);
 jest.mock('@expo/vector-icons', () => ({ Ionicons: 'Ionicons' }));
 jest.mock('react-native-safe-area-context', () => ({

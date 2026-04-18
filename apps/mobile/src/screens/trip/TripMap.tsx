@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import type { Trip, Checkin } from '@travel-companion/shared';
 
 const MARKER_COLOR = '#3B82F6';
+
 const MAP_SIZE = Dimensions.get('window').width - 32;
 
 function formatCheckinTime(dateStr: string): string {
@@ -215,22 +216,6 @@ const styles = StyleSheet.create({
   map: {
     flex: 1,
   },
-  myLocationButton: {
-    position: 'absolute',
-    bottom: 10,
-    right: 10,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-  },
   markerContainer: {
     width: 28,
     height: 28,
@@ -249,6 +234,22 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '800',
+  },
+  myLocationButton: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
   markerInfoCard: {
     position: 'absolute',

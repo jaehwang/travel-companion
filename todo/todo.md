@@ -2,7 +2,7 @@
 
 ## 모바일 앱
 
-- [ ] 지도 기반 체크인 브라우징 — 상세 계획: `todo/map-browse.md`
+- [x] 지도 기반 체크인 브라우징 — 구현 문서: `docs/map-browse.md`
 - [ ] 로컬 저장 기능 (오프라인 우선) — 상세 계획: `todo/offline-local-save.md`
 - [x] 모바일 앱에서 캘린더 연동 구현하기
 - [x] Supabase direct connection

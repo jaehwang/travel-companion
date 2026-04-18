@@ -14,6 +14,8 @@ import SettingsScreen from '../screens/SettingsScreen';
 import CheckinsScreen from '../screens/CheckinsScreen';
 import ScheduleScreen from '../screens/ScheduleScreen';
 import SearchScreen from '../screens/SearchScreen';
+import MapBrowseScreen from '../screens/MapBrowseScreen';
+import CheckinDetailScreen from '../screens/CheckinDetailScreen';
 import TripFormModal from '../components/TripFormModal';
 import { useTripsStore } from '../store/tripsStore';
 import type { Trip, TripFormData } from '@travel-companion/shared';
@@ -34,12 +36,17 @@ export type CheckinsStackParamList = {
   Checkins: undefined;
 };
 
+export type MapStackParamList = {
+  MapBrowse: undefined;
+};
+
 export type MainTabParamList = {
   TripsTab: NavigatorScreenParams<TripsStackParamList>;
   CheckinsTab: NavigatorScreenParams<CheckinsStackParamList>;
   ScheduleTab: undefined;
-  SearchTab: undefined;
   MakeTab: undefined;
+  MapTab: NavigatorScreenParams<MapStackParamList>;
+  SearchTab: undefined;
 };
 
 export type RootStackParamList = {
@@ -58,6 +65,9 @@ export type RootStackParamList = {
     tripTitle?: string;
     initialLatitude?: number;
     initialLongitude?: number;
+  };
+  CheckinDetail: {
+    checkin: import('@travel-companion/shared').Checkin;
   };
   Settings: undefined;
 };
@@ -199,7 +209,7 @@ const sheetStyles = StyleSheet.create({
 });
 
 const TAB_ITEM_WIDTH = 64;
-const TAB_COUNT = 5;
+const TAB_COUNT = 6;
 const TAB_BAR_SIDE_INSET = Math.max(
   0,
   (Dimensions.get('window').width - TAB_COUNT * TAB_ITEM_WIDTH) / 2
@@ -207,6 +217,7 @@ const TAB_BAR_SIDE_INSET = Math.max(
 
 const TripsStack = createStackNavigator<TripsStackParamList>();
 const CheckinsStack = createStackNavigator<CheckinsStackParamList>();
+const MapStack = createStackNavigator<MapStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 const RootStack = createStackNavigator<RootStackParamList>();
 
@@ -224,6 +235,14 @@ function CheckinsStackNavigator() {
     <CheckinsStack.Navigator screenOptions={{ headerShown: false, cardStyle: { backgroundColor: '#FFF8F0' } }}>
       <CheckinsStack.Screen name="Checkins" component={CheckinsScreen} />
     </CheckinsStack.Navigator>
+  );
+}
+
+function MapStackNavigator() {
+  return (
+    <MapStack.Navigator screenOptions={{ headerShown: false, cardStyle: { backgroundColor: '#FFF8F0' } }}>
+      <MapStack.Screen name="MapBrowse" component={MapBrowseScreen} />
+    </MapStack.Navigator>
   );
 }
 
@@ -309,6 +328,16 @@ function MainTabs() {
           }}
         />
         <Tab.Screen
+          name="MapTab"
+          component={MapStackNavigator}
+          options={{
+            tabBarLabel: '지도',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="map-outline" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tab.Screen
           name="SearchTab"
           component={SearchScreen}
           options={{
@@ -345,6 +374,11 @@ export default function AppNavigator() {
       <RootStack.Screen
         name="LocationPicker"
         component={LocationPickerScreen}
+        options={{ presentation: 'modal' }}
+      />
+      <RootStack.Screen
+        name="CheckinDetail"
+        component={CheckinDetailScreen}
         options={{ presentation: 'modal' }}
       />
       <RootStack.Screen name="Settings" component={SettingsScreen} />

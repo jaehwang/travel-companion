@@ -26,7 +26,8 @@
   "tab": {
     "home": "홈",
     "checkins": "체크인",
-    "schedule": "일정"
+    "schedule": "일정",
+    "map": "지도"
   },
   "home": {
     "myTrips": "내 여행",

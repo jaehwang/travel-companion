@@ -26,7 +26,8 @@
   "tab": {
     "home": "Home",
     "checkins": "Check-ins",
-    "schedule": "Schedule"
+    "schedule": "Schedule",
+    "map": "Map"
   },
   "home": {
     "myTrips": "My Trips",
