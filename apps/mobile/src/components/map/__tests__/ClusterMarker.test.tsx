@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react-native';
 import ClusterMarker from '../ClusterMarker';
 
 jest.mock('expo-image', () => ({
-  Image: ({ testID, source, onLoad }: { testID?: string; source?: unknown; onLoad?: () => void }) => {
+  Image: ({ testID, source }: { testID?: string; source?: unknown; onLoad?: () => void }) => {
     const { View } = require('react-native');
     return <View testID={testID} source={source} />;
   },

@@ -1,11 +1,10 @@
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-  FlatList,
 } from 'react-native';
 import { Image } from 'expo-image';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
@@ -80,15 +79,6 @@ export default function CheckinMapBottomSheet({
   const displayedCheckins = selectedCheckins ?? allCheckins;
   const showHeader = selectedCheckins !== null && headerTitle !== null;
   const isEmpty = displayedCheckins.length === 0;
-
-  const renderItem = useCallback(
-    ({ item }: { item: Checkin }) => (
-      <CheckinGridCard checkin={item} onPress={() => onCheckinPress(item)} />
-    ),
-    [onCheckinPress],
-  );
-
-  const keyExtractor = useCallback((item: Checkin) => item.id, []);
 
   return (
     <BottomSheet

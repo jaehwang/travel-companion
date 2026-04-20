@@ -37,7 +37,7 @@ jest.mock('expo-location', () => ({
 }));
 
 jest.mock('expo-image', () => ({
-  Image: ({ testID, onLoad }: { testID?: string; onLoad?: () => void }) => {
+  Image: ({ testID }: { testID?: string; onLoad?: () => void }) => {
     const { View } = require('react-native');
     return <View testID={testID} />;
   },
