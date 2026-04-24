@@ -22,6 +22,7 @@ export default function TimePickerSection({ checkedInAt, onClose, onClear, onCha
         value={checkedInAt || new Date()}
         mode="datetime"
         display="spinner"
+        textColor="#1F2937"
         onChange={(_, date) => {
           if (date) onChangeDate(date);
         }}
