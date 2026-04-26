@@ -11,8 +11,8 @@ import {
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
   withTiming,
+  Easing,
   runOnJS,
 } from 'react-native-reanimated';
 import {
@@ -50,9 +50,10 @@ export default function PhotoViewerModal({ visible, uri, onClose }: PhotoViewerM
 
   const resetTransform = useCallback(() => {
     'worklet';
-    scale.value = withSpring(1, { damping: 20, stiffness: 200 });
-    translateX.value = withSpring(0, { damping: 20, stiffness: 200 });
-    translateY.value = withSpring(0, { damping: 20, stiffness: 200 });
+    const snap = { duration: 200, easing: Easing.out(Easing.quad) };
+    scale.value = withTiming(1, snap);
+    translateX.value = withTiming(0, snap);
+    translateY.value = withTiming(0, snap);
     savedScale.value = 1;
     savedTranslateX.value = 0;
     savedTranslateY.value = 0;
@@ -69,7 +70,8 @@ export default function PhotoViewerModal({ visible, uri, onClose }: PhotoViewerM
     })
     .onEnd(() => {
       if (scale.value < MIN_SCALE) {
-        scale.value = withSpring(MIN_SCALE);
+        const snap = { duration: 200, easing: Easing.out(Easing.quad) };
+        scale.value = withTiming(MIN_SCALE, snap);
         savedScale.value = MIN_SCALE;
       } else {
         savedScale.value = scale.value;
@@ -98,8 +100,9 @@ export default function PhotoViewerModal({ visible, uri, onClose }: PhotoViewerM
       const clampedX = Math.min(Math.max(translateX.value, -maxTranslateX), maxTranslateX);
       const clampedY = Math.min(Math.max(translateY.value, -maxTranslateY), maxTranslateY);
 
-      translateX.value = withSpring(clampedX, { damping: 20, stiffness: 200 });
-      translateY.value = withSpring(clampedY, { damping: 20, stiffness: 200 });
+      const snap = { duration: 200, easing: Easing.out(Easing.quad) };
+      translateX.value = withTiming(clampedX, snap);
+      translateY.value = withTiming(clampedY, snap);
       savedTranslateX.value = clampedX;
       savedTranslateY.value = clampedY;
     });
@@ -118,9 +121,10 @@ export default function PhotoViewerModal({ visible, uri, onClose }: PhotoViewerM
         const offsetX = -tapX * (targetScale - 1);
         const offsetY = -tapY * (targetScale - 1);
 
-        scale.value = withSpring(targetScale, { damping: 20, stiffness: 200 });
-        translateX.value = withSpring(offsetX, { damping: 20, stiffness: 200 });
-        translateY.value = withSpring(offsetY, { damping: 20, stiffness: 200 });
+        const snap = { duration: 200, easing: Easing.out(Easing.quad) };
+        scale.value = withTiming(targetScale, snap);
+        translateX.value = withTiming(offsetX, snap);
+        translateY.value = withTiming(offsetY, snap);
         savedScale.value = targetScale;
         savedTranslateX.value = offsetX;
         savedTranslateY.value = offsetY;
@@ -137,7 +141,8 @@ export default function PhotoViewerModal({ visible, uri, onClose }: PhotoViewerM
 
   const composed = Gesture.Simultaneous(
     pinchGesture,
-    Gesture.Exclusive(doubleTapGesture, singleTapGesture, panGesture)
+    panGesture,
+    Gesture.Exclusive(doubleTapGesture, singleTapGesture)
   );
 
   const animatedStyle = useAnimatedStyle(() => ({
