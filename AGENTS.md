@@ -11,6 +11,8 @@
 - 여행 기록 공유 (링크, SNS)
 - 여행 타임라인 및 갤러리 뷰
 
+**모바일 앱 작업 시 필독**: `apps/mobile/` 코드를 수정할 때는 [`docs/mobile/constitution.md`](docs/mobile/constitution.md)를 먼저 읽는다. 소스 파일별 명세 문서 매핑, 기능 추가 체크리스트, 테스트·명세 작성 규칙이 정의되어 있다.
+
 ---
 
 ## 명령어
@@ -243,6 +245,10 @@ EXPO_PUBLIC_PHOTO_CDN_URL=                 # Cloudflare Worker URL (이미지 CD
 | API | `docs/api/` | 웹 REST API 엔드포인트 명세 |
 | 웹 UI | `docs/ui/web.md` | 웹 화면/컴포넌트/훅 |
 | 모바일 UI | `docs/ui/mobile.md` | 모바일 화면/컴포넌트/훅/백엔드 연계 |
+| **모바일 개발 헌법** | **`docs/mobile/constitution.md`** | **모바일 소스 파일별 명세·테스트 규칙 (모바일 수정 시 필독)** |
+| 모바일 컴포넌트 명세 | `docs/mobile/component-specs.md` | `components/` 동작 요구사항 |
+| 모바일 화면 섹션 명세 | `docs/mobile/screen-section-specs.md` | `screens/` 서브컴포넌트 동작 요구사항 |
+| 모바일 스토어 명세 | `docs/mobile/store-specs.md` | Zustand 스토어·RootNavigator 동작 요구사항 |
 | DB & 인증 | `docs/db_and_auth.md` | Supabase 스키마, RLS, OAuth 설정 |
 | 성능 | `docs/performance_cloudfare.md` | Cloudflare Worker 캐싱 전략 |
 | 보안 | `docs/security.md` | 이미지 접근 제어 방안 |

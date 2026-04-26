@@ -4,6 +4,13 @@
 **실행**: `cd apps/mobile && npx expo run:ios`
 **백엔드**: CRUD는 Supabase JS SDK 직접 호출. Places / Calendar / AI 등 서버 비밀 키가 필요한 기능 및 복합 트랜잭션(`deleteTrip`)은 웹 앱 API (`apps/web/app/api/`)를 HTTP로 호출.
 
+**설계 명세 문서**:
+- [`docs/mobile/component-specs.md`](../mobile/component-specs.md) — `components/` 컴포넌트 동작 요구사항
+- [`docs/mobile/screen-section-specs.md`](../mobile/screen-section-specs.md) — `screens/` 서브컴포넌트·섹션 동작 요구사항
+- [`docs/mobile/store-specs.md`](../mobile/store-specs.md) — Zustand 스토어 및 `RootNavigator` 동작 요구사항
+
+새 컴포넌트·스토어·액션을 추가하거나 기존 동작을 변경할 때는 해당 명세 문서에 먼저 항목을 추가한 뒤 테스트와 구현을 진행한다.
+
 ---
 
 ## 1. 네비게이션 구조

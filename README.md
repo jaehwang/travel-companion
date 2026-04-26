@@ -164,11 +164,14 @@ npm run test:coverage                # 커버리지 리포트 포함 실행 (웹
 - `app/api/**/__tests__/` - API 라우트 테스트 (응답 형상 검증 포함)
 - `components/__tests__/` - React 컴포넌트 테스트
 
-테스트 파일 위치 (`apps/mobile/src/__tests__`):
-- `api.test.ts` - API 함수 테스트 (trips, checkins, places)
-- `useTrips.test.ts` - useTrips 훅 테스트
-- `useCheckins.test.ts` - useCheckins 훅 테스트
-- `utils.test.ts` - 날짜 포맷 유틸리티 테스트
+테스트 파일 위치 (`apps/mobile/src/`):
+- `__tests__/` — API 함수, 훅, 유틸리티 테스트
+- `components/__tests__/` — 공용 컴포넌트 테스트
+- `screens/*/__tests__/` — 화면 서브컴포넌트 테스트
+- `store/__tests__/` — Zustand 스토어 테스트
+- `navigation/__tests__/` — 네비게이터 테스트
+
+모바일 테스트 설계 원칙: 코드 수정 전 명세 문서를 먼저 작성하고 테스트를 작성한 뒤 구현한다. 자세한 규칙은 [`docs/mobile/constitution.md`](docs/mobile/constitution.md)를 참고한다.
 
 ### E2E 테스트 (Detox) — 모바일
 
@@ -241,6 +244,12 @@ E2E 테스트 파일 위치 (`apps/web/tests/e2e/`):
 **UI 문서** (`docs/ui/`):
 - [Web 앱 UI](docs/ui/web.md)
 - [Mobile 앱 UI](docs/ui/mobile.md)
+
+**모바일 설계 명세** (`docs/mobile/`):
+- [개발 헌법 (Constitution)](docs/mobile/constitution.md) — 소스 파일별 명세·테스트 규칙
+- [컴포넌트 명세](docs/mobile/component-specs.md)
+- [화면 서브컴포넌트 명세](docs/mobile/screen-section-specs.md)
+- [스토어 명세](docs/mobile/store-specs.md)
 
 ## 배포
 
