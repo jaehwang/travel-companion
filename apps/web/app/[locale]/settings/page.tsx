@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
 import { User } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
@@ -90,11 +91,13 @@ export default async function SettingsPage({ searchParams }: Props) {
           gap: 14,
         }}>
           {avatarUrl ? (
-            <img
+            <Image
               src={avatarUrl}
               alt={displayName}
+              width={48}
+              height={48}
               referrerPolicy="no-referrer"
-              style={{ width: 48, height: 48, borderRadius: '50%', flexShrink: 0 }}
+              style={{ borderRadius: '50%', flexShrink: 0 }}
             />
           ) : (
             <div style={{

@@ -1,6 +1,37 @@
 'use client';
 
 import { Camera, MapPin, X, Clock } from 'lucide-react';
+
+interface PhotoSectionProps {
+  isProcessingPhoto: boolean;
+  isUploadingPhoto: boolean;
+  photoPreviewUrl: string;
+  onClearPhoto: () => void;
+}
+
+function PhotoSection({ isProcessingPhoto, isUploadingPhoto, photoPreviewUrl, onClearPhoto }: PhotoSectionProps) {
+  if (isProcessingPhoto || isUploadingPhoto) {
+    return (
+      <div style={{ marginTop: 14, padding: '10px 14px', background: 'var(--tc-card-empty)', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ width: 16, height: 16, border: '2px solid #FF6B47', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <span style={{ fontSize: 13, color: 'var(--tc-warm-mid)' }}>
+          {isProcessingPhoto ? '사진 처리 중...' : '업로드 중...'}
+        </span>
+      </div>
+    );
+  }
+  if (!photoPreviewUrl) return null;
+  return (
+    <div style={{ marginTop: 14 }}>
+      <button onClick={onClearPhoto} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 9999, background: 'rgba(255,107,71,0.1)', color: '#FF6B47', fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer', marginBottom: 8 }}>
+        <Camera size={13} />사진 삭제<X size={11} />
+      </button>
+      {/* blob URL일 수 있으므로 next/image 사용 불가 */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={photoPreviewUrl} alt="사진" style={{ width: '100%', aspectRatio: '4/3', objectFit: 'cover', borderRadius: 14, display: 'block' }} />
+    </div>
+  );
+}
 import { CHECKIN_CATEGORY_LABELS } from '@travel-companion/shared';
 import type { CheckinCategory } from '@travel-companion/shared';
 import type { PhotoMetadata } from '@/lib/exif';
@@ -102,137 +133,33 @@ export default function CheckinFormMainPanel({
         }}
       />
 
-      {/* 사진 처리 중
-          사진 업로드는 두 단계로 나뉜다:
-          1. isProcessingPhoto: EXIF 메타데이터(GPS 포함) 추출 단계.
-             압축 전 원본 파일에서 읽어야 한다 — 압축 과정에서 EXIF 블록이 제거될 수 있기 때문.
-          2. isUploadingPhoto: 압축 완료 후 Supabase Storage에 업로드하는 단계.
-          두 단계를 구분하여 사용자에게 진행 상태를 명확히 전달한다. */}
-      {(isProcessingPhoto || isUploadingPhoto) && (
-        <div style={{
-          marginTop: 14,
-          padding: '10px 14px',
-          background: 'var(--tc-card-empty)',
-          borderRadius: 12,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-        }}>
-          <div style={{
-            width: 16, height: 16,
-            border: '2px solid #FF6B47',
-            borderTopColor: 'transparent',
-            borderRadius: '50%',
-            animation: 'spin 0.8s linear infinite',
-          }} />
-          <span style={{ fontSize: 13, color: 'var(--tc-warm-mid)' }}>
-            {isProcessingPhoto ? '사진 처리 중...' : '업로드 중...'}
-          </span>
-        </div>
-      )}
+      <PhotoSection
+        isProcessingPhoto={isProcessingPhoto}
+        isUploadingPhoto={isUploadingPhoto}
+        photoPreviewUrl={photoPreviewUrl}
+        onClearPhoto={onClearPhoto}
+      />
 
-      {/* 사진 미리보기 */}
-      {photoPreviewUrl && !isProcessingPhoto && !isUploadingPhoto && (
-        <div style={{ marginTop: 14 }}>
-          <button
-            onClick={onClearPhoto}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '5px 12px',
-              borderRadius: 9999,
-              background: 'rgba(255,107,71,0.1)',
-              color: '#FF6B47',
-              fontSize: 12,
-              fontWeight: 600,
-              border: 'none',
-              cursor: 'pointer',
-              marginBottom: 8,
-            }}
-          >
-            <Camera size={13} />
-            사진 삭제
-            <X size={11} />
-          </button>
-          <img
-            src={photoPreviewUrl}
-            alt="사진"
-            style={{ width: '100%', aspectRatio: '4/3', objectFit: 'cover', borderRadius: 14, display: 'block' }}
-          />
-        </div>
-      )}
-
-      {/* 선택된 정보 chips
-          각 chip은 탭하면 해당 값을 초기화한다(clear 콜백 호출).
-          위치 chip: place명이 있으면 표시, 없으면 GPS 추출 여부나 좌표로 폴백 */}
+      {/* 선택된 정보 chips */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
         {selectedLocation && (
-          <button
-            onClick={onClearLocation}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '6px 14px',
-              borderRadius: 9999,
-              background: 'rgba(255,107,71,0.1)',
-              color: '#FF6B47',
-              fontSize: 13,
-              fontWeight: 600,
-              border: 'none',
-              cursor: 'pointer',
-            }}
-          >
+          <button onClick={onClearLocation} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, background: 'rgba(255,107,71,0.1)', color: '#FF6B47', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer' }}>
             <MapPin size={13} />
             {place || (photoMetadata?.gps ? 'GPS 추출됨' : `${selectedLocation.latitude.toFixed(4)}, ${selectedLocation.longitude.toFixed(4)}`)}
             <X size={11} style={{ opacity: 0.7 }} />
           </button>
         )}
         {category && (
-          <button
-            onClick={onClearCategory}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '6px 14px',
-              borderRadius: 9999,
-              background: `${catColor}18`,
-              color: catColor,
-              fontSize: 13,
-              fontWeight: 600,
-              border: 'none',
-              cursor: 'pointer',
-            }}
-          >
+          <button onClick={onClearCategory} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, background: `${catColor}18`, color: catColor, fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer' }}>
             <CatIcon size={12} color={catColor} />
             {CHECKIN_CATEGORY_LABELS[category as CheckinCategory] || category}
             <X size={11} style={{ opacity: 0.7 }} />
           </button>
         )}
         {checkedInAt && (
-          <button
-            onClick={onClearCheckedInAt}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '6px 14px',
-              borderRadius: 9999,
-              background: 'rgba(139,92,246,0.1)',
-              color: '#8B5CF6',
-              fontSize: 13,
-              fontWeight: 600,
-              border: 'none',
-              cursor: 'pointer',
-            }}
-          >
+          <button onClick={onClearCheckedInAt} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, background: 'rgba(139,92,246,0.1)', color: '#8B5CF6', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer' }}>
             <Clock size={13} />
-            {new Intl.DateTimeFormat('ko-KR', {
-              month: 'long', day: 'numeric',
-              weekday: 'short', hour: '2-digit', minute: '2-digit',
-            }).format(new Date(checkedInAt))}
+            {new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(checkedInAt))}
             <X size={11} style={{ opacity: 0.7 }} />
           </button>
         )}

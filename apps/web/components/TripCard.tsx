@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Map, Star } from 'lucide-react';
 import { DropdownMenu } from '@/components/DropdownMenu';
@@ -18,108 +19,74 @@ interface TripCardProps {
 
 const formatTripDate = (dateStr?: string | null) => _formatTripDate(dateStr, { weekday: false });
 
-export default function TripCard({ trip, accent, style }: TripCardProps) {
-  const router = useRouter();
-  const [isPublic, setIsPublic] = useState(trip.is_public);
+function useTripCardActions(trip: Trip, isPublic: boolean, setIsPublic: (v: boolean) => void, currentTrip: Trip, setShowEditModal: (v: boolean) => void, setShowDeleteDialog: (v: boolean) => void, router: ReturnType<typeof useRouter>) {
   const [toggling, setToggling] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [currentTrip, setCurrentTrip] = useState(trip);
 
   const handleTogglePublic = async () => {
     if (toggling) return;
     setToggling(true);
     try {
-      const res = await fetch(`/api/trips/${trip.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_public: !isPublic }),
-      });
-      if (res.ok) {
-        setIsPublic(!isPublic);
-      }
-    } catch {
-      // 실패 시 무시
-    } finally {
-      setToggling(false);
-    }
+      const res = await fetch(`/api/trips/${trip.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ is_public: !isPublic }) });
+      if (res.ok) setIsPublic(!isPublic);
+    } catch { /* 실패 시 무시 */ } finally { setToggling(false); }
   };
 
   const handleCopyStoryLink = async () => {
     const url = `${window.location.origin}/story/${trip.id}`;
     let copied = false;
-
-    if (navigator.clipboard) {
-      try {
-        await navigator.clipboard.writeText(url);
-        copied = true;
-      } catch {
-        // 폴백으로 진행
-      }
-    }
-
+    if (navigator.clipboard) { try { await navigator.clipboard.writeText(url); copied = true; } catch { /* 폴백 */ } }
     if (!copied) {
       try {
         const textArea = document.createElement('textarea');
         textArea.value = url;
         textArea.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;';
         document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
+        textArea.focus(); textArea.select();
         copied = document.execCommand('copy');
         document.body.removeChild(textArea);
-      } catch {
-        // ignore
-      }
+      } catch { /* ignore */ }
     }
-
-    if (copied) {
-      alert('스토리 링크가 복사되었습니다.');
-    } else {
-      prompt('아래 링크를 복사하세요:', url);
-    }
+    if (copied) alert('스토리 링크가 복사되었습니다.');
+    else prompt('아래 링크를 복사하세요:', url);
   };
-
-  const handleEdit = () => setShowEditModal(true);
-
-  const handleDelete = () => setShowDeleteDialog(true);
 
   const executeDelete = async (moveCheckins: boolean) => {
     setShowDeleteDialog(false);
     try {
-      const url = moveCheckins
-        ? `/api/trips/${currentTrip.id}?moveCheckins=true`
-        : `/api/trips/${currentTrip.id}`;
+      const url = moveCheckins ? `/api/trips/${currentTrip.id}?moveCheckins=true` : `/api/trips/${currentTrip.id}`;
       const res = await fetch(url, { method: 'DELETE' });
       if (res.ok) router.refresh();
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
   };
 
   const handleUpdate = async (id: string, data: Partial<TripFormData>): Promise<Trip> => {
-    const res = await fetch(`/api/trips/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
+    const res = await fetch(`/api/trips/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
     if (!res.ok) throw new Error('수정에 실패했습니다.');
     const { trip: updated } = await res.json();
     return updated;
   };
 
+  const handleEdit = () => setShowEditModal(true);
+  const handleDelete = () => setShowDeleteDialog(true);
   const dropdownItems = [
-    {
-      label: isPublic ? '비공개로 전환' : '공개로 전환',
-      onClick: handleTogglePublic,
-    },
-    ...(isPublic ? [{
-      label: '스토리 링크 복사',
-      onClick: handleCopyStoryLink,
-    }] : []),
+    { label: isPublic ? '비공개로 전환' : '공개로 전환', onClick: handleTogglePublic },
+    ...(isPublic ? [{ label: '스토리 링크 복사', onClick: handleCopyStoryLink }] : []),
     { label: '수정', onClick: handleEdit },
     { label: '삭제', onClick: handleDelete, variant: 'danger' as const },
   ];
+  return { dropdownItems, executeDelete, handleUpdate };
+}
+
+export default function TripCard({ trip, accent, style }: TripCardProps) {
+  const router = useRouter();
+  const [isPublic, setIsPublic] = useState(trip.is_public);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [currentTrip, setCurrentTrip] = useState(trip);
+
+  const { dropdownItems, executeDelete, handleUpdate } = useTripCardActions(
+    trip, isPublic, setIsPublic, currentTrip, setShowEditModal, setShowDeleteDialog, router
+  );
 
   return (
     <div style={style}>
@@ -163,10 +130,12 @@ export default function TripCard({ trip, accent, style }: TripCardProps) {
           <div className="tc-card-photo-empty shrink-0" style={{ position: 'relative', paddingTop: '75%' }}>
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden' }}>
               {trip.cover_photo_url ? (
-                <img
+                <Image
                   src={trip.cover_photo_url}
                   alt={trip.title}
-                  className="w-full h-full object-cover block"
+                  fill
+                  unoptimized
+                  className="object-cover"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">

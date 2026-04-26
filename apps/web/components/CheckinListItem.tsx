@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { MapPin } from 'lucide-react';
 import type { Checkin } from '@travel-companion/shared';
 import { DropdownMenu } from '@/components/DropdownMenu';
@@ -69,11 +70,15 @@ export function CheckinListItem({ checkin, onEdit, onDelete }: CheckinListItemPr
 
           {/* 사진 */}
           {checkin.photo_url && (
-            <img
-              src={checkin.photo_url}
-              alt={checkin.title || 'Checkin photo'}
-              className="w-full aspect-[4/3] object-cover rounded-[10px] mb-2.5 block"
-            />
+            <div className="relative w-full aspect-[4/3] rounded-[10px] mb-2.5 overflow-hidden">
+              <Image
+                src={checkin.photo_url}
+                alt={checkin.title || 'Checkin photo'}
+                fill
+                unoptimized
+                className="object-cover"
+              />
+            </div>
           )}
 
           {/* 메모 */}

@@ -73,7 +73,7 @@ export default function FormHeader({
                 </Text>
               </TouchableOpacity>
             )}
-            style={{ flex: 1 }}
+            style={styles.tripSelector}
           />
         )}
       </View>
@@ -134,6 +134,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: '#6B7280',
+    flex: 1,
+  },
+  tripSelector: {
     flex: 1,
   },
   headerButtons: {

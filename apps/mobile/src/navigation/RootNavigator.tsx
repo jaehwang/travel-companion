@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
@@ -25,7 +25,7 @@ export default function RootNavigator() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF8F0' }}>
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#F97316" />
       </View>
     );
@@ -41,3 +41,12 @@ export default function RootNavigator() {
     </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFF8F0',
+  },
+});

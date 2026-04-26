@@ -11,7 +11,7 @@ interface PhotoUploadProps {
   onUploadError?: (error: string) => void;
 }
 
-export default function PhotoUpload({ onUploadComplete, onUploadError }: PhotoUploadProps) {
+function usePhotoUploadForm(onUploadComplete?: (photoUrl: string, metadata: PhotoMetadata) => void, onUploadError?: (error: string) => void) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [metadata, setMetadata] = useState<PhotoMetadata | null>(null);
@@ -20,112 +20,52 @@ export default function PhotoUpload({ onUploadComplete, onUploadError }: PhotoUp
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 파일 선택 핸들러
-  const handleFileSelect = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // 이미지 파일 확인
-    if (!file.type.startsWith('image/')) {
-      onUploadError?.('이미지 파일만 업로드 가능합니다.');
-      return;
-    }
-
-    setSelectedFile(file);
-    setIsProcessing(true);
-
-    // Blob URL로 미리보기 생성. resetForm()에서 revokeObjectURL로 반드시 해제해야
-    // 브라우저 메모리 누수를 막을 수 있다.
-    const preview = URL.createObjectURL(file);
-    setPreviewUrl(preview);
-
-    try {
-      const meta = await extractPhotoMetadata(file);
-      setMetadata(meta);
-    } catch (error) {
-      onUploadError?.('메타데이터 추출에 실패했습니다.');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  // Supabase Storage에 업로드
-  const handleUpload = async () => {
-    if (!selectedFile || !metadata) return;
-
-    setIsUploading(true);
-    setUploadProgress(0);
-
-    try {
-      // EXIF 추출은 handleFileSelect에서 이미 완료된 상태.
-      // 압축은 반드시 EXIF 추출 후에 수행해야 한다 — browser-image-compression이
-      // 재인코딩 과정에서 GPS 메타데이터를 제거하기 때문.
-      //
-      // 1MB / 1920px: 모바일 네트워크 부담과 화질의 균형점.
-      const options = {
-        maxSizeMB: 1,
-        maxWidthOrHeight: 1920,
-        useWebWorker: true,
-        initialQuality: 0.85,
-      };
-
-      setUploadProgress(30);
-
-      // 이미지 압축
-      const compressedFile = await imageCompression(selectedFile, options);
-
-      setUploadProgress(50);
-
-      // 파일명 생성 (타임스탬프 + 원본 파일명)
-      const timestamp = Date.now();
-      const fileName = `${timestamp}_${selectedFile.name}`;
-      const filePath = `photos/${fileName}`;
-
-      // Supabase Storage에 압축된 이미지 업로드
-      const { data, error } = await supabase.storage
-        .from('trip-photos')
-        .upload(filePath, compressedFile, {
-          cacheControl: '31536000',
-          upsert: false
-        });
-
-      if (error) {
-        throw error;
-      }
-
-      setUploadProgress(100);
-
-      const { data: publicData } = supabase.storage
-        .from('trip-photos')
-        .getPublicUrl(filePath);
-      const cdnUrl = process.env.NEXT_PUBLIC_PHOTO_CDN_URL;
-      const photoUrl = cdnUrl
-        ? publicData.publicUrl.replace(process.env.NEXT_PUBLIC_SUPABASE_URL!, cdnUrl)
-        : publicData.publicUrl;
-
-      // 업로드 완료 콜백
-      onUploadComplete?.(photoUrl, metadata);
-
-      // 상태 초기화
-      resetForm();
-    } catch (error: any) {
-      onUploadError?.(error.message || '업로드에 실패했습니다.');
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  // 폼 초기화. previewUrl은 createObjectURL로 생성한 Blob URL이므로 반드시 revoke.
   const resetForm = () => {
     setSelectedFile(null);
     if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setPreviewUrl('');
-    setMetadata(null);
-    setUploadProgress(0);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    setPreviewUrl(''); setMetadata(null); setUploadProgress(0);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
+
+  const handleFileSelect = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { onUploadError?.('이미지 파일만 업로드 가능합니다.'); return; }
+    setSelectedFile(file);
+    setIsProcessing(true);
+    // Blob URL로 미리보기 생성. resetForm()에서 revokeObjectURL로 반드시 해제해야 메모리 누수를 막을 수 있다.
+    setPreviewUrl(URL.createObjectURL(file));
+    try { setMetadata(await extractPhotoMetadata(file)); }
+    catch { onUploadError?.('메타데이터 추출에 실패했습니다.'); }
+    finally { setIsProcessing(false); }
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile || !metadata) return;
+    setIsUploading(true); setUploadProgress(0);
+    try {
+      // 압축은 EXIF 추출 후에 수행 — 재인코딩 과정에서 GPS 메타데이터가 제거될 수 있기 때문
+      const compressedFile = await imageCompression(selectedFile, { maxSizeMB: 1, maxWidthOrHeight: 1920, useWebWorker: true, initialQuality: 0.85 });
+      setUploadProgress(50);
+      const filePath = `photos/${Date.now()}_${selectedFile.name}`;
+      const { error } = await supabase.storage.from('trip-photos').upload(filePath, compressedFile, { cacheControl: '31536000', upsert: false });
+      if (error) throw error;
+      setUploadProgress(100);
+      const { data: publicData } = supabase.storage.from('trip-photos').getPublicUrl(filePath);
+      const cdnUrl = process.env.NEXT_PUBLIC_PHOTO_CDN_URL;
+      const photoUrl = cdnUrl ? publicData.publicUrl.replace(process.env.NEXT_PUBLIC_SUPABASE_URL!, cdnUrl) : publicData.publicUrl;
+      onUploadComplete?.(photoUrl, metadata);
+      resetForm();
+    } catch (error: any) {
+      onUploadError?.(error.message || '업로드에 실패했습니다.');
+    } finally { setIsUploading(false); }
+  };
+
+  return { selectedFile, previewUrl, metadata, isProcessing, isUploading, uploadProgress, fileInputRef, handleFileSelect, handleUpload, resetForm };
+}
+
+export default function PhotoUpload({ onUploadComplete, onUploadError }: PhotoUploadProps) {
+  const { selectedFile, previewUrl, metadata, isProcessing, isUploading, uploadProgress, fileInputRef, handleFileSelect, handleUpload, resetForm } = usePhotoUploadForm(onUploadComplete, onUploadError);
 
   return (
     <div className="w-full max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
@@ -150,6 +90,8 @@ export default function PhotoUpload({ onUploadComplete, onUploadError }: PhotoUp
       {previewUrl && (
         <div className="mb-6">
           <h3 className="text-lg font-semibold mb-2">미리보기</h3>
+          {/* blob URL이므로 next/image 사용 불가 */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={previewUrl}
             alt="Preview"

@@ -2,11 +2,8 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
-  FlatList,
   TouchableOpacity,
   StyleSheet,
-  RefreshControl,
-  ActivityIndicator,
   ActionSheetIOS,
   Alert,
   Platform,
@@ -25,6 +22,7 @@ import { useTrips } from '../hooks/useTrips';
 import TripCard from '../components/TripCard';
 import TripFormModal from '../components/TripFormModal';
 import QuickCheckinSheet from '../components/QuickCheckinSheet';
+import { HomeQuickCheckinCard, HomeTripList } from './home/HomeScreenSections';
 import type { TripsStackParamList, RootStackParamList } from '../navigation/AppNavigator';
 import type { Trip, TripFormData } from '@travel-companion/shared';
 import type { NearbyCheckin } from '../lib/api';
@@ -44,18 +42,9 @@ type NavigationProp = CompositeNavigationProp<
   StackNavigationProp<RootStackParamList>
 >;
 
-export default function HomeScreen() {
-  const navigation = useNavigation<NavigationProp>();
-const { trips, loading, error, reload, update, remove } = useTrips();
-  const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
+function useAvatarUrl() {
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
-  const [showQuickCheckin, setShowQuickCheckin] = useState(false);
-  const [lastCheckin, setLastCheckin] = useState<NearbyCheckin | null>(null);
-  const [checkinLoading, setCheckinLoading] = useState(true);
-  const locationPermissionGranted = useRef(false);
 
-  // Load user avatar
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user?.user_metadata?.avatar_url) {
@@ -64,7 +53,14 @@ const { trips, loading, error, reload, update, remove } = useTrips();
     });
   }, []);
 
-  // 홈 화면에 포커스될 때마다 최신 체크인 정보를 갱신한다.
+  return avatarUrl;
+}
+
+function useLastNearbyCheckin() {
+  const [lastCheckin, setLastCheckin] = useState<NearbyCheckin | null>(null);
+  const [checkinLoading, setCheckinLoading] = useState(true);
+  const locationPermissionGranted = useRef(false);
+
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
@@ -85,6 +81,113 @@ const { trips, loading, error, reload, update, remove } = useTrips();
       return () => { cancelled = true; };
     }, [])
   );
+
+  return { lastCheckin, setLastCheckin, checkinLoading };
+}
+
+async function copyTripLink(tripId: string) {
+  const url = `${API_URL}/story/${tripId}`;
+  await Clipboard.setStringAsync(url);
+  Alert.alert('링크 복사됨', '클립보드에 복사되었습니다.');
+}
+
+function confirmDeleteTrip(trip: Trip, remove: ReturnType<typeof useTrips>['remove']) {
+  Alert.alert(
+    `"${trip.title}" 삭제`,
+    '체크인도 함께 삭제할까요?',
+    [
+      {
+        text: '예, 체크인도 삭제',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await remove(trip.id, false);
+          } catch {
+            Alert.alert('오류', '삭제에 실패했습니다.');
+          }
+        },
+      },
+      {
+        text: '아니오, 미할당으로 보관',
+        onPress: async () => {
+          try {
+            await remove(trip.id, true);
+          } catch {
+            Alert.alert('오류', '삭제에 실패했습니다.');
+          }
+        },
+      },
+      { text: '취소', style: 'cancel' },
+    ],
+  );
+}
+
+function showTripMenu(params: {
+  trip: Trip;
+  onTogglePublic: (trip: Trip) => void;
+  onEdit: (trip: Trip) => void;
+  onDelete: (trip: Trip) => void;
+}) {
+  const { trip, onTogglePublic, onEdit, onDelete } = params;
+  const toggleLabel = trip.is_public ? '비공개로 전환' : '공개로 전환';
+  const baseActions = [
+    { text: toggleLabel, onPress: () => onTogglePublic(trip) },
+    { text: '수정', onPress: () => onEdit(trip) },
+    { text: '삭제', style: 'destructive' as const, onPress: () => onDelete(trip) },
+    { text: '취소', style: 'cancel' as const },
+  ];
+
+  if (trip.is_public) {
+    const options = [toggleLabel, '공개 여행 링크 복사', '수정', '삭제', '취소'];
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        { options, destructiveButtonIndex: 3, cancelButtonIndex: 4 },
+        (index) => {
+          if (index === 0) onTogglePublic(trip);
+          if (index === 1) {
+            copyTripLink(trip.id);
+          }
+          if (index === 2) onEdit(trip);
+          if (index === 3) onDelete(trip);
+        },
+      );
+      return;
+    }
+
+    Alert.alert(trip.title, undefined, [
+      baseActions[0],
+      { text: '공개 여행 링크 복사', onPress: () => { copyTripLink(trip.id); } },
+      baseActions[1],
+      baseActions[2],
+      baseActions[3],
+    ]);
+    return;
+  }
+
+  const options = [toggleLabel, '수정', '삭제', '취소'];
+  if (Platform.OS === 'ios') {
+    ActionSheetIOS.showActionSheetWithOptions(
+      { options, destructiveButtonIndex: 2, cancelButtonIndex: 3 },
+      (index) => {
+        if (index === 0) onTogglePublic(trip);
+        if (index === 1) onEdit(trip);
+        if (index === 2) onDelete(trip);
+      },
+    );
+    return;
+  }
+
+  Alert.alert(trip.title, undefined, baseActions);
+}
+
+export default function HomeScreen() {
+  const navigation = useNavigation<NavigationProp>();
+  const { trips, loading, error, reload, update, remove } = useTrips();
+  const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [showQuickCheckin, setShowQuickCheckin] = useState(false);
+  const avatarUrl = useAvatarUrl();
+  const { lastCheckin, setLastCheckin, checkinLoading } = useLastNearbyCheckin();
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -111,87 +214,12 @@ const { trips, loading, error, reload, update, remove } = useTrips();
   };
 
   const handleMenuPress = (trip: Trip) => {
-    const toggleLabel = trip.is_public ? '비공개로 전환' : '공개로 전환';
-    const copyLinkLabel = '공개 여행 링크 복사';
-
-    const handleCopyLink = async () => {
-      const url = `${API_URL}/story/${trip.id}`;
-      await Clipboard.setStringAsync(url);
-      Alert.alert('링크 복사됨', '클립보드에 복사되었습니다.');
-    };
-
-    if (trip.is_public) {
-      const options = [toggleLabel, copyLinkLabel, '수정', '삭제', '취소'];
-      if (Platform.OS === 'ios') {
-        ActionSheetIOS.showActionSheetWithOptions(
-          { options, destructiveButtonIndex: 3, cancelButtonIndex: 4 },
-          (index) => {
-            if (index === 0) handleTogglePublic(trip);
-            if (index === 1) handleCopyLink();
-            if (index === 2) setEditingTrip(trip);
-            if (index === 3) confirmDelete(trip);
-          },
-        );
-      } else {
-        Alert.alert(trip.title, undefined, [
-          { text: toggleLabel, onPress: () => handleTogglePublic(trip) },
-          { text: copyLinkLabel, onPress: handleCopyLink },
-          { text: '수정', onPress: () => setEditingTrip(trip) },
-          { text: '삭제', style: 'destructive', onPress: () => confirmDelete(trip) },
-          { text: '취소', style: 'cancel' },
-        ]);
-      }
-    } else {
-      const options = [toggleLabel, '수정', '삭제', '취소'];
-      if (Platform.OS === 'ios') {
-        ActionSheetIOS.showActionSheetWithOptions(
-          { options, destructiveButtonIndex: 2, cancelButtonIndex: 3 },
-          (index) => {
-            if (index === 0) handleTogglePublic(trip);
-            if (index === 1) setEditingTrip(trip);
-            if (index === 2) confirmDelete(trip);
-          },
-        );
-      } else {
-        Alert.alert(trip.title, undefined, [
-          { text: toggleLabel, onPress: () => handleTogglePublic(trip) },
-          { text: '수정', onPress: () => setEditingTrip(trip) },
-          { text: '삭제', style: 'destructive', onPress: () => confirmDelete(trip) },
-          { text: '취소', style: 'cancel' },
-        ]);
-      }
-    }
-  };
-
-  const confirmDelete = (trip: Trip) => {
-    Alert.alert(
-      `"${trip.title}" 삭제`,
-      '체크인도 함께 삭제할까요?',
-      [
-        {
-          text: '예, 체크인도 삭제',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await remove(trip.id, false);
-            } catch {
-              Alert.alert('오류', '삭제에 실패했습니다.');
-            }
-          },
-        },
-        {
-          text: '아니오, 미할당으로 보관',
-          onPress: async () => {
-            try {
-              await remove(trip.id, true);
-            } catch {
-              Alert.alert('오류', '삭제에 실패했습니다.');
-            }
-          },
-        },
-        { text: '취소', style: 'cancel' },
-      ],
-    );
+    showTripMenu({
+      trip,
+      onTogglePublic: handleTogglePublic,
+      onEdit: setEditingTrip,
+      onDelete: (targetTrip) => confirmDeleteTrip(targetTrip, remove),
+    });
   };
 
   const renderTrip = ({ item }: { item: Trip }) => (
@@ -201,6 +229,12 @@ const { trips, loading, error, reload, update, remove } = useTrips();
       onMenuPress={() => handleMenuPress(item)}
     />
   );
+
+  const quickCheckinStatusText = checkinLoading
+    ? '현재 위치 확인 중...'
+    : lastCheckin
+      ? `${lastCheckin.trip_title}: ${lastCheckin.title || lastCheckin.place || '(이름 없음)'} · ${formatRelativeTime(lastCheckin.checked_in_at)}`
+      : '자주 가는 곳을 빠르게 기록';
 
   return (
     <SafeAreaView style={styles.container} edges={['top']} testID="screen-home">
@@ -221,59 +255,21 @@ const { trips, loading, error, reload, update, remove } = useTrips();
         </TouchableOpacity>
       </View>
 
-      {/* 빠른 체크인 */}
-      <TouchableOpacity
-        style={styles.quickCheckinBtn}
+      <HomeQuickCheckinCard
+        statusText={quickCheckinStatusText}
+        isActive={!!lastCheckin}
         onPress={() => setShowQuickCheckin(true)}
-      >
-        <Ionicons name="flash-outline" size={22} color="#F97316" />
-        <View style={{ flex: 1 }}>
-          <Text style={styles.quickCheckinLabel}>자주 가는 곳에 체크인하기</Text>
-          <Text
-            style={[styles.quickCheckinStatus, lastCheckin ? { color: '#F97316' } : undefined]}
-            numberOfLines={1}
-          >
-            {checkinLoading
-              ? '현재 위치 확인 중...'
-              : lastCheckin
-                ? `${lastCheckin.trip_title}: ${lastCheckin.title || lastCheckin.place || '(이름 없음)'} · ${formatRelativeTime(lastCheckin.checked_in_at)}`
-                : '자주 가는 곳을 빠르게 기록'}
-          </Text>
-        </View>
-        <Text style={styles.quickCheckinArrow}>›</Text>
-      </TouchableOpacity>
+      />
 
-      {/* Trip List */}
-      {loading && !refreshing ? (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#F97316" />
-        </View>
-      ) : error ? (
-        <View style={styles.centerContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity onPress={reload} style={styles.retryButton}>
-            <Text style={styles.retryText}>다시 시도</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <FlatList
-          testID="list-trips"
-          data={trips}
-          keyExtractor={(item) => item.id}
-          renderItem={renderTrip}
-          contentContainerStyle={styles.listContent}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F97316" />
-          }
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Ionicons name="airplane-outline" size={64} color="#C4B49A" />
-              <Text style={styles.emptyTitle}>아직 여행이 없습니다</Text>
-              <Text style={styles.emptySubtitle}>아래 + 버튼을 눌러 첫 여행을 시작하세요</Text>
-            </View>
-          }
-        />
-      )}
+      <HomeTripList
+        trips={trips}
+        loading={loading}
+        refreshing={refreshing}
+        error={error}
+        onRefresh={onRefresh}
+        reload={reload}
+        renderTrip={renderTrip}
+      />
 
       {/* Edit Trip Modal */}
       <TripFormModal
@@ -329,80 +325,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F0EB',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-listContent: {
-    paddingTop: 8,
-    paddingBottom: 24,
-  },
-  centerContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 32,
-  },
-  errorText: {
-    fontSize: 14,
-    color: '#DC2626',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  retryButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 999,
-    backgroundColor: '#F97316',
-  },
-  retryText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 14,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    paddingTop: 80,
-    gap: 0,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#4B5563',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    color: '#9CA3AF',
-  },
-  quickCheckinBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 20,
-    marginBottom: 16,
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: '#FED7AA',
-    shadowColor: '#F97316',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 2,
-    gap: 12,
-  },
-  quickCheckinLabel: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#1F2937',
-    marginBottom: 2,
-  },
-  quickCheckinStatus: {
-    fontSize: 12,
-    color: '#9CA3AF',
-  },
-  quickCheckinArrow: {
-    fontSize: 20,
-    color: '#D1D5DB',
-    fontWeight: '300',
   },
 });

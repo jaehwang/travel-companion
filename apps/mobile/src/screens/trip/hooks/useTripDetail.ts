@@ -28,6 +28,59 @@ type TripRouteProp = RouteProp<TripsStackParamList, 'Trip'>;
 
 export { formatTripDate };
 
+function showTripOptions(
+  trip: Trip,
+  onEdit: () => void,
+  onTogglePublic: () => Promise<void>,
+  onCopyLink: () => Promise<void>,
+  onToggleFrequent: () => Promise<void>,
+) {
+  const publicLabel = trip.is_public ? '비공개로 전환' : '공개로 전환';
+  const frequentLabel = trip.is_frequent ? '자주 가는 곳에서 제거' : '자주 가는 곳 추가';
+
+  if (trip.is_public) {
+    const options = ['여행 수정', publicLabel, '공개 여행 링크 복사', frequentLabel, '취소'];
+    const cancelIndex = options.length - 1;
+    const handleSelect = async (index: number) => {
+      if (index === cancelIndex) return;
+      if (index === 0) onEdit();
+      else if (index === 1) await onTogglePublic();
+      else if (index === 2) await onCopyLink();
+      else if (index === 3) await onToggleFrequent();
+    };
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions({ options, cancelButtonIndex: cancelIndex }, handleSelect);
+    } else {
+      Alert.alert('여행 설정', undefined, [
+        { text: '여행 수정', onPress: () => handleSelect(0) },
+        { text: publicLabel, onPress: () => handleSelect(1) },
+        { text: '공개 여행 링크 복사', onPress: () => handleSelect(2) },
+        { text: frequentLabel, onPress: () => handleSelect(3) },
+        { text: '취소', style: 'cancel' },
+      ]);
+    }
+  } else {
+    const options = ['여행 수정', publicLabel, frequentLabel, '취소'];
+    const cancelIndex = options.length - 1;
+    const handleSelect = async (index: number) => {
+      if (index === cancelIndex) return;
+      if (index === 0) onEdit();
+      else if (index === 1) await onTogglePublic();
+      else if (index === 2) await onToggleFrequent();
+    };
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions({ options, cancelButtonIndex: cancelIndex }, handleSelect);
+    } else {
+      Alert.alert('여행 설정', undefined, [
+        { text: '여행 수정', onPress: () => handleSelect(0) },
+        { text: publicLabel, onPress: () => handleSelect(1) },
+        { text: frequentLabel, onPress: () => handleSelect(2) },
+        { text: '취소', style: 'cancel' },
+      ]);
+    }
+  }
+}
+
 export function useTripDetail() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<TripRouteProp>();
@@ -127,56 +180,17 @@ export function useTripDetail() {
   };
 
   const handleTripOptions = useCallback(() => {
-    const publicLabel = trip.is_public ? '비공개로 전환' : '공개로 전환';
-    const frequentLabel = trip.is_frequent ? '자주 가는 곳에서 제거' : '자주 가는 곳 추가';
-
-    const handleCopyLink = async () => {
-      const url = `${API_URL}/story/${trip.id}`;
-      await Clipboard.setStringAsync(url);
-      Alert.alert('링크 복사됨', '클립보드에 복사되었습니다.');
-    };
-
-    if (trip.is_public) {
-      const options = ['여행 수정', publicLabel, '공개 여행 링크 복사', frequentLabel, '취소'];
-      const cancelIndex = options.length - 1;
-      const handleSelect = async (index: number) => {
-        if (index === cancelIndex) return;
-        if (index === 0) setShowEditTripModal(true);
-        else if (index === 1) await updateTrip(trip.id, { is_public: !trip.is_public });
-        else if (index === 2) handleCopyLink();
-        else if (index === 3) await updateTrip(trip.id, { is_frequent: !trip.is_frequent });
-      };
-      if (Platform.OS === 'ios') {
-        ActionSheetIOS.showActionSheetWithOptions({ options, cancelButtonIndex: cancelIndex }, handleSelect);
-      } else {
-        Alert.alert('여행 설정', undefined, [
-          { text: '여행 수정', onPress: () => handleSelect(0) },
-          { text: publicLabel, onPress: () => handleSelect(1) },
-          { text: '공개 여행 링크 복사', onPress: () => handleSelect(2) },
-          { text: frequentLabel, onPress: () => handleSelect(3) },
-          { text: '취소', style: 'cancel' },
-        ]);
-      }
-    } else {
-      const options = ['여행 수정', publicLabel, frequentLabel, '취소'];
-      const cancelIndex = options.length - 1;
-      const handleSelect = async (index: number) => {
-        if (index === cancelIndex) return;
-        if (index === 0) setShowEditTripModal(true);
-        else if (index === 1) await updateTrip(trip.id, { is_public: !trip.is_public });
-        else if (index === 2) await updateTrip(trip.id, { is_frequent: !trip.is_frequent });
-      };
-      if (Platform.OS === 'ios') {
-        ActionSheetIOS.showActionSheetWithOptions({ options, cancelButtonIndex: cancelIndex }, handleSelect);
-      } else {
-        Alert.alert('여행 설정', undefined, [
-          { text: '여행 수정', onPress: () => handleSelect(0) },
-          { text: publicLabel, onPress: () => handleSelect(1) },
-          { text: frequentLabel, onPress: () => handleSelect(2) },
-          { text: '취소', style: 'cancel' },
-        ]);
-      }
-    }
+    showTripOptions(
+      trip,
+      () => setShowEditTripModal(true),
+      async () => { await updateTrip(trip.id, { is_public: !trip.is_public }); },
+      async () => {
+        const url = `${API_URL}/story/${trip.id}`;
+        await Clipboard.setStringAsync(url);
+        Alert.alert('링크 복사됨', '클립보드에 복사되었습니다.');
+      },
+      async () => { await updateTrip(trip.id, { is_frequent: !trip.is_frequent }); },
+    );
   }, [trip, updateTrip]);
 
   return {

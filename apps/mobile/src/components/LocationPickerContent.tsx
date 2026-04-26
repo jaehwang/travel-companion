@@ -15,21 +15,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { searchPlaces, getPlaceDetails } from '../lib/api';
 import type { PlacePrediction } from '../lib/api';
 
-interface LocationPickerContentProps {
+interface LocationPickerStateProps {
   initialLatitude?: number;
   initialLongitude?: number;
   onConfirm: (lat: number, lng: number, placeName?: string, placeId?: string) => void;
-  onClose: () => void;
 }
 
-export default function LocationPickerContent({
-  initialLatitude,
-  initialLongitude,
-  onConfirm,
-  onClose,
-}: LocationPickerContentProps) {
+function useLocationPickerState({ initialLatitude, initialLongitude, onConfirm }: LocationPickerStateProps) {
   const mapRef = useRef<MapView>(null);
-
   const [selectedLocation, setSelectedLocation] = useState<{ latitude: number; longitude: number } | null>(
     initialLatitude != null && initialLongitude != null
       ? { latitude: initialLatitude, longitude: initialLongitude }
@@ -44,7 +37,6 @@ export default function LocationPickerContent({
   const currentRegionRef = useRef({ latitudeDelta: 0.01, longitudeDelta: 0.01 });
   const poiClickedRef = useRef(false);
 
-  // 초기 위치가 없으면 현재 위치로 이동
   useEffect(() => {
     if (initialLatitude != null && initialLongitude != null) return;
     (async () => {
@@ -61,7 +53,6 @@ export default function LocationPickerContent({
     })();
   }, [initialLatitude, initialLongitude]);
 
-  // 장소 검색 debounce
   useEffect(() => {
     if (searchQuery.trim().length < 2) { setPredictions([]); return; }
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -88,9 +79,7 @@ export default function LocationPickerContent({
       setSearchQuery('');
       setPredictions([]);
       mapRef.current?.animateToRegion({ ...coords, latitudeDelta: 0.005, longitudeDelta: 0.005 }, 500);
-    } catch {
-      // ignore
-    } finally {
+    } catch { /* ignore */ } finally {
       setLoadingPlace(false);
     }
   };
@@ -122,9 +111,7 @@ export default function LocationPickerContent({
       setSelectedLocation(coords);
       setSelectedPlace(null);
       mapRef.current?.animateToRegion({ ...coords, latitudeDelta: 0.01, longitudeDelta: 0.01 }, 500);
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
   };
 
   const handleMapPress = (event: MapPressEvent) => {
@@ -145,9 +132,7 @@ export default function LocationPickerContent({
       const details = await getPlaceDetails(placeId);
       setSelectedLocation({ latitude: details.latitude, longitude: details.longitude });
       setSelectedPlace({ name: details.name || name, place_id: details.place_id || placeId });
-    } catch {
-      // 이벤트 데이터로 폴백
-    } finally {
+    } catch { /* 이벤트 데이터로 폴백 */ } finally {
       setLoadingPlace(false);
     }
   };
@@ -160,13 +145,36 @@ export default function LocationPickerContent({
 
   const handleConfirm = () => {
     if (!selectedLocation) return;
-    onConfirm(
-      selectedLocation.latitude,
-      selectedLocation.longitude,
-      selectedPlace?.name,
-      selectedPlace?.place_id,
-    );
+    onConfirm(selectedLocation.latitude, selectedLocation.longitude, selectedPlace?.name, selectedPlace?.place_id);
   };
+
+  return {
+    mapRef, selectedLocation, selectedPlace, searchQuery, setSearchQuery,
+    predictions, searching, loadingPlace, currentRegionRef,
+    handleSelectPrediction, handleZoomIn, handleZoomOut, handleGoToCurrentLocation,
+    handleMapPress, handlePoiClick, handleMarkerDragEnd, handleConfirm,
+  };
+}
+
+interface LocationPickerContentProps {
+  initialLatitude?: number;
+  initialLongitude?: number;
+  onConfirm: (lat: number, lng: number, placeName?: string, placeId?: string) => void;
+  onClose: () => void;
+}
+
+export default function LocationPickerContent({
+  initialLatitude,
+  initialLongitude,
+  onConfirm,
+  onClose,
+}: LocationPickerContentProps) {
+  const {
+    mapRef, selectedLocation, selectedPlace, searchQuery, setSearchQuery,
+    predictions, searching, loadingPlace, currentRegionRef,
+    handleSelectPrediction, handleZoomIn, handleZoomOut, handleGoToCurrentLocation,
+    handleMapPress, handlePoiClick, handleMarkerDragEnd, handleConfirm,
+  } = useLocationPickerState({ initialLatitude, initialLongitude, onConfirm });
 
   const defaultRegion = {
     latitude: initialLatitude ?? selectedLocation?.latitude ?? 37.5665,

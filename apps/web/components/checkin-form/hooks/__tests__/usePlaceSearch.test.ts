@@ -96,6 +96,28 @@ describe('usePlaceSearch', () => {
       expect(calledUrl).toContain('lng=127');
     });
 
+    it('location이 바뀌면 같은 검색어로도 최신 좌표를 사용해 다시 검색한다', async () => {
+      global.fetch = mockFetch({ predictions: mockPredictions });
+      const { result, rerender } = renderHook(
+        ({ location }) => usePlaceSearch({ ...defaultOptions, location }),
+        { initialProps: { location: { lat: 37.5, lng: 127.0 } } },
+      );
+
+      act(() => result.current.setSearchQuery('경복궁'));
+      act(() => { jest.runOnlyPendingTimers(); });
+
+      await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1));
+
+      rerender({ location: { lat: 35.1, lng: 129.0 } });
+      act(() => { jest.runOnlyPendingTimers(); });
+
+      await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(2));
+
+      const calledUrl = (global.fetch as jest.Mock).mock.calls[1][0] as string;
+      expect(calledUrl).toContain('lat=35.1');
+      expect(calledUrl).toContain('lng=129');
+    });
+
     it('isActive=false이면 API를 호출하지 않는다', async () => {
       global.fetch = mockFetch({ predictions: mockPredictions });
       const { result } = renderHook(() =>
@@ -106,6 +128,24 @@ describe('usePlaceSearch', () => {
       act(() => { jest.runAllTimers(); });
 
       expect(global.fetch).not.toHaveBeenCalled();
+    });
+
+    it('isActive가 false로 바뀌면 기존 predictions를 비운다', async () => {
+      global.fetch = mockFetch({ predictions: mockPredictions });
+      const { result, rerender } = renderHook(
+        ({ isActive }) => usePlaceSearch({ ...defaultOptions, isActive }),
+        { initialProps: { isActive: true } },
+      );
+
+      act(() => result.current.setSearchQuery('경복궁'));
+      act(() => { jest.runOnlyPendingTimers(); });
+
+      await waitFor(() => expect(result.current.predictions).toHaveLength(2));
+
+      rerender({ isActive: false });
+
+      await waitFor(() => expect(result.current.predictions).toEqual([]));
+      expect(global.fetch).toHaveBeenCalledTimes(1);
     });
 
     it('API 오류 응답 시 predictions는 빈 배열을 유지한다', async () => {

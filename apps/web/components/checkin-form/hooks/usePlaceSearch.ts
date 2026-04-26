@@ -28,6 +28,8 @@ export function usePlaceSearch({
   const [searchQuery, setSearchQuery] = useState('');
   const [predictions, setPredictions] = useState<PlacePrediction[]>([]);
   const [searchingPlaces, setSearchingPlaces] = useState(false);
+  const locationLat = location?.lat;
+  const locationLng = location?.lng;
 
   useEffect(() => {
     if (!isActive || !searchQuery || searchQuery.trim().length < 2) {
@@ -38,9 +40,9 @@ export function usePlaceSearch({
       setSearchingPlaces(true);
       try {
         const params = new URLSearchParams({ input: searchQuery });
-        if (location) {
-          params.set('lat', String(location.lat));
-          params.set('lng', String(location.lng));
+        if (locationLat !== undefined && locationLng !== undefined) {
+          params.set('lat', String(locationLat));
+          params.set('lng', String(locationLng));
         }
         const response = await fetch(`/api/places/autocomplete?${params.toString()}`);
         const data = await response.json();
@@ -53,7 +55,7 @@ export function usePlaceSearch({
       }
     }, 300);
     return () => clearTimeout(timer);
-  }, [searchQuery, isActive]);
+  }, [searchQuery, isActive, locationLat, locationLng]);
 
   const handleSelectPlace = async (prediction: PlacePrediction) => {
     setSearchingPlaces(true);

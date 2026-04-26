@@ -21,6 +21,126 @@ import CheckinMapMarker from '../components/map/CheckinMapMarker';
 import ClusterMarker from '../components/map/ClusterMarker';
 import CheckinMapBottomSheet from '../components/map/CheckinMapBottomSheet';
 
+interface MapHandlerDeps {
+  navigation: ReturnType<typeof useNavigation<any>>;
+  mapRef: React.RefObject<MapView>;
+  checkins: Checkin[];
+  region: Region;
+  trips: ReturnType<typeof useTripsStore<any>>;
+  supercluster: ReturnType<typeof useCheckinClusters>['supercluster'];
+  setRegion: (r: Region) => void;
+  setSelectedCheckins: (c: Checkin[] | null) => void;
+  setHeaderTitle: (t: string | null) => void;
+  setLoadedMarkerKeys: (fn: (prev: Set<string>) => Set<string>) => void;
+}
+
+function useMapBrowseHandlers({
+  navigation, mapRef, checkins, region, trips, supercluster,
+  setRegion, setSelectedCheckins, setHeaderTitle, setLoadedMarkerKeys,
+}: MapHandlerDeps) {
+  const buildHeaderTitle = useCallback((checkin: Checkin) => {
+    const date = new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: 'long' })
+      .format(new Date(checkin.checked_in_at));
+    const tripName = trips.find((t: any) => t.id === checkin.trip_id)?.title;
+    return tripName ? `${date} · ${tripName}` : date;
+  }, [trips]);
+
+  const initializeMap = useCallback(async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === 'granted') {
+        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        const locRegion: Region = {
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        };
+        setRegion(locRegion);
+        mapRef.current?.animateToRegion(locRegion, 500);
+        return;
+      }
+    } catch { /* 권한 거부 또는 타임아웃 */ }
+    if (checkins.length > 0) {
+      const initialRegion = buildInitialRegion(checkins);
+      setRegion(initialRegion);
+      mapRef.current?.fitToCoordinates(
+        checkins.map(c => ({ latitude: c.latitude, longitude: c.longitude })),
+        { edgePadding: { top: 60, right: 60, bottom: 60, left: 60 }, animated: true },
+      );
+    }
+  }, [checkins, mapRef, setRegion]);
+
+  const handleMapReady = useCallback(() => { initializeMap(); }, [initializeMap]);
+
+  const handleMyLocation = useCallback(async () => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') return;
+    const loc = await Location.getCurrentPositionAsync({});
+    mapRef.current?.animateToRegion({
+      latitude: loc.coords.latitude,
+      longitude: loc.coords.longitude,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01,
+    }, 500);
+  }, [mapRef]);
+
+  const handleMarkerPress = useCallback((checkin: Checkin) => {
+    setSelectedCheckins([checkin]);
+    setHeaderTitle(buildHeaderTitle(checkin));
+    mapRef.current?.animateToRegion({
+      latitude: checkin.latitude,
+      longitude: checkin.longitude,
+      latitudeDelta: region.latitudeDelta,
+      longitudeDelta: region.longitudeDelta,
+    }, 400);
+  }, [region, buildHeaderTitle, mapRef, setSelectedCheckins, setHeaderTitle]);
+
+  const handleClusterPress = useCallback((cluster: ClusterFeature) => {
+    const leaves = supercluster.getLeaves(cluster.properties.cluster_id, Infinity) as CheckinFeature[];
+    const clusterCheckins = leaves.map(l => l.properties.checkin);
+    setSelectedCheckins(clusterCheckins);
+    const latest = [...clusterCheckins].sort(
+      (a, b) => new Date(b.checked_in_at).getTime() - new Date(a.checked_in_at).getTime(),
+    )[0];
+    setHeaderTitle(buildHeaderTitle(latest));
+    mapRef.current?.fitToCoordinates(
+      clusterCheckins.map(c => ({ latitude: c.latitude, longitude: c.longitude })),
+      { edgePadding: { top: 80, right: 80, bottom: 80, left: 80 }, animated: true },
+    );
+  }, [supercluster, buildHeaderTitle, mapRef, setSelectedCheckins, setHeaderTitle]);
+
+  const handleMapPress = useCallback(() => {
+    setSelectedCheckins(null);
+    setHeaderTitle(null);
+  }, [setSelectedCheckins, setHeaderTitle]);
+
+  const handleSheetCollapse = useCallback(() => {
+    setSelectedCheckins(null);
+    setHeaderTitle(null);
+  }, [setSelectedCheckins, setHeaderTitle]);
+
+  const handleCheckinPress = useCallback((checkin: Checkin) => {
+    navigation.navigate('CheckinDetail', { checkin });
+  }, [navigation]);
+
+  const getClusterPhoto = useCallback((cluster: ClusterFeature): string | undefined => {
+    const leaves = supercluster.getLeaves(cluster.properties.cluster_id, Infinity) as CheckinFeature[];
+    return [...leaves]
+      .sort((a, b) => new Date(b.properties.checkin.checked_in_at).getTime() - new Date(a.properties.checkin.checked_in_at).getTime())
+      .find(f => f.properties.checkin.photo_url)?.properties.checkin.photo_url;
+  }, [supercluster]);
+
+  const handleMarkerImageLoad = useCallback((key: string) => {
+    setLoadedMarkerKeys((prev) => new Set(prev).add(key));
+  }, [setLoadedMarkerKeys]);
+
+  return {
+    handleMapReady, handleMyLocation, handleMarkerPress, handleClusterPress,
+    handleMapPress, handleSheetCollapse, handleCheckinPress, getClusterPhoto, handleMarkerImageLoad,
+  };
+}
+
 const CACHE_CLEAR_KEY = 'mapImageCacheLastCleared';
 const CACHE_CLEAR_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000; // 7일
 
@@ -72,22 +192,16 @@ export default function MapBrowseScreen() {
   const { checkins, loading } = useAllCheckins();
   const trips = useTripsStore((s) => s.trips);
   const mapRef = useRef<MapView>(null);
-  const mapReadyRef = useRef(false);
 
   const [region, setRegion] = useState<Region>(SEOUL);
   const [selectedCheckins, setSelectedCheckins] = useState<Checkin[] | null>(null);
   const [headerTitle, setHeaderTitle] = useState<string | null>(null);
   const [loadedMarkerKeys, setLoadedMarkerKeys] = useState<Set<string>>(new Set());
 
-  const handleMarkerImageLoad = useCallback((key: string) => {
-    setLoadedMarkerKeys((prev) => new Set(prev).add(key));
-  }, []);
-
   useEffect(() => { clearImageCacheIfNeeded(); }, []);
 
-  // 체크인 로드 완료 직후 region을 체크인 bounds로 동기화 (onRegionChangeComplete 전에 클러스터 계산이 가능하도록)
   const regionInitialized = useRef(false);
-  React.useEffect(() => {
+  useEffect(() => {
     if (!loading && !regionInitialized.current && checkins.length > 0) {
       regionInitialized.current = true;
       setRegion(buildInitialRegion(checkins));
@@ -117,114 +231,13 @@ export default function MapBrowseScreen() {
       .sort((a, b) => new Date(b.checked_in_at).getTime() - new Date(a.checked_in_at).getTime());
   }, [checkins, region]);
 
-  // 초기 지도 범위 설정 (현재 위치 우선, 실패 시 체크인 bounds)
-  const initializeMap = useCallback(async () => {
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status === 'granted') {
-        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-        const locRegion: Region = {
-          latitude: loc.coords.latitude,
-          longitude: loc.coords.longitude,
-          latitudeDelta: 0.05,
-          longitudeDelta: 0.05,
-        };
-        setRegion(locRegion);
-        mapRef.current?.animateToRegion(locRegion, 500);
-        return;
-      }
-    } catch {
-      // 권한 거부 또는 타임아웃
-    }
-    // 현재 위치 실패 시 체크인 bounds
-    if (checkins.length > 0) {
-      const initialRegion = buildInitialRegion(checkins);
-      setRegion(initialRegion);
-      mapRef.current?.fitToCoordinates(
-        checkins.map(c => ({ latitude: c.latitude, longitude: c.longitude })),
-        { edgePadding: { top: 60, right: 60, bottom: 60, left: 60 }, animated: true },
-      );
-    }
-  }, [checkins]);
-
-  const handleMapReady = useCallback(() => {
-    mapReadyRef.current = true;
-    initializeMap();
-  }, [initializeMap]);
-
-  const handleMyLocation = useCallback(async () => {
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') return;
-    const loc = await Location.getCurrentPositionAsync({});
-    mapRef.current?.animateToRegion({
-      latitude: loc.coords.latitude,
-      longitude: loc.coords.longitude,
-      latitudeDelta: 0.01,
-      longitudeDelta: 0.01,
-    }, 500);
-  }, []);
-
-  const buildHeaderTitle = useCallback((checkin: Checkin) => {
-    const date = new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: 'long' })
-      .format(new Date(checkin.checked_in_at));
-    const tripName = trips.find((t) => t.id === checkin.trip_id)?.title;
-    return tripName ? `${date} · ${tripName}` : date;
-  }, [trips]);
-
-  const handleMarkerPress = useCallback((checkin: Checkin) => {
-    setSelectedCheckins([checkin]);
-    setHeaderTitle(buildHeaderTitle(checkin));
-    mapRef.current?.animateToRegion({
-      latitude: checkin.latitude,
-      longitude: checkin.longitude,
-      latitudeDelta: region.latitudeDelta,
-      longitudeDelta: region.longitudeDelta,
-    }, 400);
-  }, [region, buildHeaderTitle]);
-
-  const handleClusterPress = useCallback((cluster: ClusterFeature) => {
-    const clusterId = cluster.properties.cluster_id;
-    const leaves = supercluster.getLeaves(clusterId, Infinity) as CheckinFeature[];
-    const clusterCheckins = leaves.map(l => l.properties.checkin);
-
-    setSelectedCheckins(clusterCheckins);
-
-    const latest = [...clusterCheckins].sort(
-      (a, b) => new Date(b.checked_in_at).getTime() - new Date(a.checked_in_at).getTime(),
-    )[0];
-    setHeaderTitle(buildHeaderTitle(latest));
-
-    mapRef.current?.fitToCoordinates(
-      clusterCheckins.map(c => ({ latitude: c.latitude, longitude: c.longitude })),
-      { edgePadding: { top: 80, right: 80, bottom: 80, left: 80 }, animated: true },
-    );
-  }, [supercluster, buildHeaderTitle]);
-
-  const handleMapPress = useCallback(() => {
-    setSelectedCheckins(null);
-    setHeaderTitle(null);
-  }, []);
-
-  const handleSheetCollapse = useCallback(() => {
-    setSelectedCheckins(null);
-    setHeaderTitle(null);
-  }, []);
-
-  const handleCheckinPress = useCallback((checkin: Checkin) => {
-    navigation.navigate('CheckinDetail', { checkin });
-  }, [navigation]);
-
-  // 클러스터 대표 사진 (가장 최근 체크인의 photo_url)
-  const getClusterPhoto = useCallback((cluster: ClusterFeature): string | undefined => {
-    const clusterId = cluster.properties.cluster_id;
-    const leaves = supercluster.getLeaves(clusterId, Infinity) as CheckinFeature[];
-    const sorted = [...leaves].sort(
-      (a, b) =>
-        new Date(b.properties.checkin.checked_in_at).getTime() -
-        new Date(a.properties.checkin.checked_in_at).getTime(),
-    );
-    return sorted.find((f) => f.properties.checkin.photo_url)?.properties.checkin.photo_url;
-  }, [supercluster]);
+  const {
+    handleMapReady, handleMyLocation, handleMarkerPress, handleClusterPress,
+    handleMapPress, handleSheetCollapse, handleCheckinPress, getClusterPhoto, handleMarkerImageLoad,
+  } = useMapBrowseHandlers({
+    navigation, mapRef, checkins, region, trips, supercluster,
+    setRegion, setSelectedCheckins, setHeaderTitle, setLoadedMarkerKeys,
+  });
 
   if (loading && checkins.length === 0) {
     return (

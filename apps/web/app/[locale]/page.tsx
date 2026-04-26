@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import Image from 'next/image';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { User, Map } from 'lucide-react';
@@ -43,9 +44,11 @@ export default async function Home() {
           </h1>
           <Link href="/settings" className="shrink-0">
             {user.user_metadata?.avatar_url ? (
-              <img
+              <Image
                 src={user.user_metadata.avatar_url}
                 alt={displayName}
+                width={40}
+                height={40}
                 referrerPolicy="no-referrer"
                 className="user-avatar"
               />

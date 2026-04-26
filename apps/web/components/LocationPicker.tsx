@@ -82,25 +82,13 @@ function MapPanner({ center }: { center: { lat: number; lng: number } | null }) 
 
 // ─── LocationPicker 본체 ──────────────────────────────────────────────────────
 
-export function LocationPicker({
-  initialLocation,
-  onLocationSelect,
-  onClose,
-}: LocationPickerProps) {
+function useLocationPickerState(initialLocation: LocationPickerProps['initialLocation'], onLocationSelect: LocationPickerProps['onLocationSelect']) {
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(
-    initialLocation
-      ? { lat: initialLocation.latitude, lng: initialLocation.longitude }
-      : null
+    initialLocation ? { lat: initialLocation.latitude, lng: initialLocation.longitude } : null
   );
   const [selectedPlace, setSelectedPlace] = useState<SelectedPlace | null>(null);
   const [loadingPlace, setLoadingPlace] = useState(false);
   const [panTo, setPanTo] = useState<{ lat: number; lng: number } | null>(null);
-
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-
-  const defaultCenter = initialLocation
-    ? { lat: initialLocation.latitude, lng: initialLocation.longitude }
-    : { lat: 37.5665, lng: 126.9780 };
 
   const placeSearch = usePlaceSearch({
     isActive: true,
@@ -112,18 +100,6 @@ export function LocationPicker({
     },
   });
 
-  /**
-   * 지도 클릭 핸들러
-   *
-   * Google Maps는 클릭 이벤트에서 두 가지 경우를 반환한다:
-   *   1. placeId가 있는 경우: 지도 위에 표시된 POI(관심 지점)를 클릭한 것.
-   *      /api/places/details를 호출해 장소 이름과 정확한 좌표를 가져온다.
-   *   2. placeId가 없는 경우: 빈 땅을 클릭한 것.
-   *      latLng에서 좌표를 직접 읽어 위치만 설정하고, 장소 정보는 null로 초기화한다.
-   *
-   * latLng.lat/lng은 함수일 수도 있고 숫자일 수도 있어 양쪽을 모두 처리한다.
-   * (vis.gl/react-google-maps 버전에 따라 다름)
-   */
   const handleMapClick = useCallback(async (e: any) => {
     const placeId = e.detail?.placeId;
     if (placeId) {
@@ -135,9 +111,7 @@ export function LocationPicker({
           setSelectedLocation({ lat: data.place.latitude, lng: data.place.longitude });
           setSelectedPlace({ name: data.place.name || '', place_id: placeId });
         }
-      } finally {
-        setLoadingPlace(false);
-      }
+      } finally { setLoadingPlace(false); }
     } else if (e.detail?.latLng) {
       const lat = typeof e.detail.latLng.lat === 'function' ? e.detail.latLng.lat() : e.detail.latLng.lat;
       const lng = typeof e.detail.latLng.lng === 'function' ? e.detail.latLng.lng() : e.detail.latLng.lng;
@@ -147,28 +121,25 @@ export function LocationPicker({
   }, []);
 
   const handleConfirm = () => {
-    if (selectedLocation) {
-      onLocationSelect(selectedLocation.lat, selectedLocation.lng, selectedPlace ?? undefined);
-    }
+    if (selectedLocation) onLocationSelect(selectedLocation.lat, selectedLocation.lng, selectedPlace ?? undefined);
   };
 
-  if (!apiKey || apiKey === 'your-google-maps-api-key') {
-    return (
-      <div className="bg-gray-100 rounded-lg p-8 text-center">
-        <p className="text-red-600 font-semibold mb-2">
-          ⚠️ Google Maps API 키가 설정되지 않았습니다
-        </p>
-      </div>
-    );
-  }
+  return { selectedLocation, setSelectedLocation, selectedPlace, setSelectedPlace, loadingPlace, panTo, placeSearch, handleMapClick, handleConfirm };
+}
 
-  /**
-   * createPortal로 document.body에 직접 붙인다.
-   * 이유: 파일 상단 주석 참조.
-   * - Google Maps transform context 우회
-   * - iOS Safari fixed 위치 문제 방지
-   * - mounted 체크 불필요: 버튼 클릭 후 렌더링되므로 항상 클라이언트 환경
-   */
+export function LocationPicker({ initialLocation, onLocationSelect, onClose }: LocationPickerProps) {
+  const { selectedLocation, setSelectedLocation, selectedPlace, setSelectedPlace, loadingPlace, panTo, placeSearch, handleMapClick, handleConfirm } = useLocationPickerState(initialLocation, onLocationSelect);
+
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
+  const defaultCenter = initialLocation
+    ? { lat: initialLocation.latitude, lng: initialLocation.longitude }
+    : { lat: 37.5665, lng: 126.9780 };
+
+  if (!apiKey || apiKey === 'your-google-maps-api-key')
+    return <div className="bg-gray-100 rounded-lg p-8 text-center"><p className="text-red-600 font-semibold mb-2">⚠️ Google Maps API 키가 설정되지 않았습니다</p></div>;
+
+  // createPortal로 document.body에 직접 붙인다 (Google Maps transform context 우회, iOS Safari fixed 위치 문제 방지)
   return createPortal(
     <div
       style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, backgroundColor: 'white' }}

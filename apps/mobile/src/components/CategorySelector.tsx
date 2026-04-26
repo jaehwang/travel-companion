@@ -17,6 +17,24 @@ interface CategorySelectorProps {
   onClose: () => void;
 }
 
+function getCategoryItemStyle(isSelected: boolean, color: string) {
+  return [
+    styles.item,
+    isSelected
+      ? { borderColor: color, backgroundColor: `${color}14` }
+      : styles.itemUnselected,
+  ];
+}
+
+function getCategoryLabelStyle(isSelected: boolean, color: string) {
+  return [
+    styles.label,
+    isSelected
+      ? { color, fontWeight: '800' as const }
+      : styles.labelUnselected,
+  ];
+}
+
 export default function CategorySelector({
   visible,
   selected,
@@ -45,22 +63,10 @@ export default function CategorySelector({
               <TouchableOpacity
                 key={value}
                 onPress={() => { onSelect(value); onClose(); }}
-                style={[
-                  styles.item,
-                  {
-                    borderColor: isSelected ? color : '#E8E0D4',
-                    backgroundColor: isSelected ? `${color}14` : '#FFFFFF',
-                  },
-                ]}
+                style={getCategoryItemStyle(isSelected, color)}
               >
                 <Ionicons name={iconName} size={28} color={isSelected ? color : '#6B7280'} />
-                <Text style={[
-                  styles.label,
-                  {
-                    color: isSelected ? color : '#6B7280',
-                    fontWeight: isSelected ? '800' : '500',
-                  },
-                ]}>
+                <Text style={getCategoryLabelStyle(isSelected, color)}>
                   {label}
                 </Text>
               </TouchableOpacity>
@@ -118,8 +124,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+  itemUnselected: {
+    borderColor: '#E8E0D4',
+    backgroundColor: '#FFFFFF',
+  },
   label: {
     fontSize: 12,
     letterSpacing: -0.1,
+  },
+  labelUnselected: {
+    color: '#6B7280',
+    fontWeight: '500',
   },
 });

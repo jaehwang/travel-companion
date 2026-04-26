@@ -92,6 +92,45 @@ export function setTripCheckinContext(ctx: TripCheckinContext) {
   _tripCheckinContext = ctx;
 }
 
+function buildCheckinFormParams(ctx: TripCheckinContext): RootStackParamList['CheckinForm'] {
+  if (!ctx) {
+    return {};
+  }
+
+  return {
+    tripId: ctx.tripId,
+    tripTitle: ctx.tripTitle,
+    initialLatitude: ctx.initialLatitude,
+    initialLongitude: ctx.initialLongitude,
+    initialPlace: ctx.initialPlace,
+    initialPlaceId: ctx.initialPlaceId,
+  };
+}
+
+function renderTripsTabIcon({ color, size }: { color: string; size: number }) {
+  return <Ionicons name="airplane-outline" size={size} color={color} />;
+}
+
+function renderCheckinsTabIcon({ color, size }: { color: string; size: number }) {
+  return <Ionicons name="location-outline" size={size} color={color} />;
+}
+
+function renderScheduleTabIcon({ color, size }: { color: string; size: number }) {
+  return <Ionicons name="calendar-outline" size={size} color={color} />;
+}
+
+function renderMapTabIcon({ color, size }: { color: string; size: number }) {
+  return <Ionicons name="map-outline" size={size} color={color} />;
+}
+
+function renderSearchTabIcon({ color, size }: { color: string; size: number }) {
+  return <Ionicons name="search-outline" size={size} color={color} />;
+}
+
+function renderMakeTabButton(props: BottomTabBarButtonProps) {
+  return <MakeTabButton {...props} />;
+}
+
 function MakeTabButton({ style }: BottomTabBarButtonProps) {
   const [showSheet, setShowSheet] = useState(false);
   const navigation = useNavigation<any>();
@@ -102,28 +141,23 @@ function MakeTabButton({ style }: BottomTabBarButtonProps) {
   };
 
   const handleCheckin = () => {
-    const ctx = _tripCheckinContext;
     setShowSheet(false);
-    setTimeout(() => navigation.navigate('CheckinForm', ctx ? {
-      tripId: ctx.tripId,
-      tripTitle: ctx.tripTitle,
-      initialLatitude: ctx.initialLatitude,
-      initialLongitude: ctx.initialLongitude,
-      initialPlace: ctx.initialPlace,
-      initialPlaceId: ctx.initialPlaceId,
-    } : {}), 50);
+    setTimeout(
+      () => navigation.navigate('CheckinForm', buildCheckinFormParams(_tripCheckinContext)),
+      50,
+    );
   };
 
   return (
     <>
       <TouchableOpacity
-        style={[style, { alignItems: 'center', justifyContent: 'center', gap: 2 }]}
+        style={[style, styles.makeTabButton]}
         onPress={() => setShowSheet(true)}
         activeOpacity={0.7}
         testID="btn-tab-make"
       >
         <Ionicons name="add-circle-outline" size={24} color="#9CA3AF" />
-        <Text style={{ fontSize: 10, color: '#9CA3AF' }}>만들기</Text>
+        <Text style={styles.makeTabLabel}>만들기</Text>
       </TouchableOpacity>
 
       <Modal
@@ -146,7 +180,7 @@ function MakeTabButton({ style }: BottomTabBarButtonProps) {
             <View style={sheetStyles.iconWrap}>
               <Ionicons name="location-outline" size={22} color="#F97316" />
             </View>
-            <View style={{ flex: 1 }}>
+            <View style={styles.sheetItemContent}>
               <Text style={sheetStyles.itemLabel}>체크인</Text>
               {_tripCheckinContext && (
                 <Text style={sheetStyles.itemSub}>{_tripCheckinContext.tripTitle}</Text>
@@ -208,6 +242,21 @@ const sheetStyles = StyleSheet.create({
   },
 });
 
+const styles = StyleSheet.create({
+  makeTabButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+  },
+  makeTabLabel: {
+    fontSize: 10,
+    color: '#9CA3AF',
+  },
+  sheetItemContent: {
+    flex: 1,
+  },
+});
+
 const TAB_ITEM_WIDTH = 64;
 const TAB_COUNT = 6;
 const TAB_BAR_SIDE_INSET = Math.max(
@@ -246,6 +295,64 @@ function MapStackNavigator() {
   );
 }
 
+function MainTabNavigator() {
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: '#FFFFFF',
+          borderTopColor: '#E8E0D4',
+          paddingLeft: TAB_BAR_SIDE_INSET,
+          paddingRight: TAB_BAR_SIDE_INSET,
+        },
+        tabBarItemStyle: {
+          flex: 0,
+          width: TAB_ITEM_WIDTH,
+        },
+        tabBarActiveTintColor: '#F97316',
+        tabBarInactiveTintColor: '#9CA3AF',
+      }}
+    >
+      <Tab.Screen
+        name="TripsTab"
+        component={TripsStackNavigator}
+        options={{ tabBarLabel: '여행', tabBarIcon: renderTripsTabIcon }}
+        listeners={({ navigation: tabNav }) => ({
+          tabPress: () => {
+            tabNav.navigate('TripsTab', { screen: 'Home' });
+          },
+        })}
+      />
+      <Tab.Screen
+        name="CheckinsTab"
+        component={CheckinsStackNavigator}
+        options={{ tabBarLabel: '체크인', tabBarIcon: renderCheckinsTabIcon }}
+      />
+      <Tab.Screen
+        name="ScheduleTab"
+        component={ScheduleScreen}
+        options={{ tabBarLabel: '일정', tabBarIcon: renderScheduleTabIcon }}
+      />
+      <Tab.Screen
+        name="MakeTab"
+        component={TripsStackNavigator}
+        options={{ tabBarLabel: '', tabBarButton: renderMakeTabButton }}
+      />
+      <Tab.Screen
+        name="MapTab"
+        component={MapStackNavigator}
+        options={{ tabBarLabel: '지도', tabBarIcon: renderMapTabIcon }}
+      />
+      <Tab.Screen
+        name="SearchTab"
+        component={SearchScreen}
+        options={{ tabBarLabel: '검색', tabBarIcon: renderSearchTabIcon }}
+      />
+    </Tab.Navigator>
+  );
+}
+
 function MainTabs() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const addTrip = useTripsStore((s) => s.addTrip);
@@ -267,87 +374,7 @@ function MainTabs() {
 
   return (
     <>
-      <Tab.Navigator
-        screenOptions={{
-          headerShown: false,
-          tabBarStyle: {
-            backgroundColor: '#FFFFFF',
-            borderTopColor: '#E8E0D4',
-            paddingLeft: TAB_BAR_SIDE_INSET,
-            paddingRight: TAB_BAR_SIDE_INSET,
-          },
-          tabBarItemStyle: {
-            flex: 0,
-            width: TAB_ITEM_WIDTH,
-          },
-          tabBarActiveTintColor: '#F97316',
-          tabBarInactiveTintColor: '#9CA3AF',
-        }}
-      >
-        <Tab.Screen
-          name="TripsTab"
-          component={TripsStackNavigator}
-          options={{
-            tabBarLabel: '여행',
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="airplane-outline" size={size} color={color} />
-            ),
-          }}
-          listeners={({ navigation: tabNav }) => ({
-            tabPress: () => {
-              tabNav.navigate('TripsTab', { screen: 'Home' });
-            },
-          })}
-        />
-        <Tab.Screen
-          name="CheckinsTab"
-          component={CheckinsStackNavigator}
-          options={{
-            tabBarLabel: '체크인',
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="location-outline" size={size} color={color} />
-            ),
-          }}
-        />
-        <Tab.Screen
-          name="ScheduleTab"
-          component={ScheduleScreen}
-          options={{
-            tabBarLabel: '일정',
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="calendar-outline" size={size} color={color} />
-            ),
-          }}
-        />
-        <Tab.Screen
-          name="MakeTab"
-          component={TripsStackNavigator}
-          options={{
-            tabBarLabel: '',
-            tabBarButton: (props) => <MakeTabButton {...props} />,
-          }}
-        />
-        <Tab.Screen
-          name="MapTab"
-          component={MapStackNavigator}
-          options={{
-            tabBarLabel: '지도',
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="map-outline" size={size} color={color} />
-            ),
-          }}
-        />
-        <Tab.Screen
-          name="SearchTab"
-          component={SearchScreen}
-          options={{
-            tabBarLabel: '검색',
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="search-outline" size={size} color={color} />
-            ),
-          }}
-        />
-      </Tab.Navigator>
+      <MainTabNavigator />
       <TripFormModal
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}

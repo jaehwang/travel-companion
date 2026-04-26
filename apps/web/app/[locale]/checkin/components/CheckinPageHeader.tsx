@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { APP_NAME } from '@/lib/config';
 import type { User } from '@supabase/supabase-js';
@@ -35,9 +36,11 @@ export default function CheckinPageHeader({
         {user && (
           <Link href="/settings" className="flex items-center shrink-0">
             {user.user_metadata?.avatar_url && (
-              <img
+              <Image
                 src={user.user_metadata.avatar_url}
                 alt={user.user_metadata.name || ''}
+                width={40}
+                height={40}
                 className="user-avatar"
                 referrerPolicy="no-referrer"
               />

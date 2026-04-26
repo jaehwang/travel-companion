@@ -27,6 +27,61 @@ function formatCheckinTime(dateStr: string): string {
   }).format(new Date(dateStr));
 }
 
+interface MapCheckinInfoCardProps {
+  checkin: Checkin;
+  index: number;
+  total: number;
+  onClose: () => void;
+  onPrev: () => void;
+  onNext: () => void;
+}
+
+function MapCheckinInfoCard({ checkin, index, total, onClose, onPrev, onNext }: MapCheckinInfoCardProps) {
+  const hasPrev = index > 0;
+  const hasNext = index < total - 1;
+  return (
+    <View style={styles.markerInfoCard}>
+      <TouchableOpacity style={styles.markerInfoClose} onPress={onClose}>
+        <Ionicons name="close" size={14} color="#FFFFFF" />
+      </TouchableOpacity>
+      {checkin.photo_url && (
+        <Image source={{ uri: checkin.photo_url }} style={styles.markerInfoPhoto} contentFit="cover" />
+      )}
+      {checkin.title && <Text style={styles.markerInfoTitle}>{checkin.title}</Text>}
+      <Text style={styles.markerInfoTime}>{formatCheckinTime(checkin.checked_in_at)}</Text>
+      {checkin.place && (
+        <View style={styles.markerInfoPlaceRow}>
+          <Ionicons name="location-outline" size={11} color="#4285F4" />
+          <Text style={styles.markerInfoPlace}> {checkin.place}</Text>
+        </View>
+      )}
+      <View style={styles.markerInfoNav}>
+        <TouchableOpacity
+          style={[styles.markerInfoNavBtn, !hasPrev && styles.markerInfoNavBtnDisabled]}
+          onPress={onPrev}
+          disabled={!hasPrev}
+        >
+          <View style={styles.markerInfoNavBtnInner}>
+            <Ionicons name="chevron-back" size={12} color={hasPrev ? '#FFFFFF' : '#9CA3AF'} />
+            <Text style={[styles.markerInfoNavBtnText, !hasPrev && styles.markerInfoNavBtnTextDisabled]}>이전</Text>
+          </View>
+        </TouchableOpacity>
+        <Text style={styles.markerInfoNavCount}>{index + 1} / {total}</Text>
+        <TouchableOpacity
+          style={[styles.markerInfoNavBtn, !hasNext && styles.markerInfoNavBtnDisabled]}
+          onPress={onNext}
+          disabled={!hasNext}
+        >
+          <View style={styles.markerInfoNavBtnInner}>
+            <Text style={[styles.markerInfoNavBtnText, !hasNext && styles.markerInfoNavBtnTextDisabled]}>다음</Text>
+            <Ionicons name="chevron-forward" size={12} color={hasNext ? '#FFFFFF' : '#9CA3AF'} />
+          </View>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
 interface TripMapProps {
   checkins: Checkin[];
   trip: Trip;
@@ -147,54 +202,15 @@ export default function TripMap({ checkins, trip }: TripMapProps) {
         </TouchableOpacity>
         {selectedCheckin && (() => {
           const selectedIndex = sortedCheckins.findIndex(c => c.id === selectedCheckinId);
-          const hasPrev = selectedIndex > 0;
-          const hasNext = selectedIndex < sortedCheckins.length - 1;
           return (
-            <View style={styles.markerInfoCard}>
-              <TouchableOpacity style={styles.markerInfoClose} onPress={() => setSelectedCheckinId(null)}>
-                <Ionicons name="close" size={14} color="#FFFFFF" />
-              </TouchableOpacity>
-              {selectedCheckin.photo_url && (
-                <Image
-                  source={{ uri: selectedCheckin.photo_url }}
-                  style={styles.markerInfoPhoto}
-                  contentFit="cover"
-                />
-              )}
-              {selectedCheckin.title && (
-                <Text style={styles.markerInfoTitle}>{selectedCheckin.title}</Text>
-              )}
-              <Text style={styles.markerInfoTime}>{formatCheckinTime(selectedCheckin.checked_in_at)}</Text>
-              {selectedCheckin.place && (
-                <View style={styles.markerInfoPlaceRow}>
-                  <Ionicons name="location-outline" size={11} color="#4285F4" />
-                  <Text style={styles.markerInfoPlace}> {selectedCheckin.place}</Text>
-                </View>
-              )}
-              <View style={styles.markerInfoNav}>
-                <TouchableOpacity
-                  style={[styles.markerInfoNavBtn, !hasPrev && styles.markerInfoNavBtnDisabled]}
-                  onPress={() => hasPrev && setSelectedCheckinId(sortedCheckins[selectedIndex - 1].id)}
-                  disabled={!hasPrev}
-                >
-                  <View style={styles.markerInfoNavBtnInner}>
-                    <Ionicons name="chevron-back" size={12} color={hasPrev ? '#FFFFFF' : '#9CA3AF'} />
-                    <Text style={[styles.markerInfoNavBtnText, !hasPrev && styles.markerInfoNavBtnTextDisabled]}>이전</Text>
-                  </View>
-                </TouchableOpacity>
-                <Text style={styles.markerInfoNavCount}>{selectedIndex + 1} / {sortedCheckins.length}</Text>
-                <TouchableOpacity
-                  style={[styles.markerInfoNavBtn, !hasNext && styles.markerInfoNavBtnDisabled]}
-                  onPress={() => hasNext && setSelectedCheckinId(sortedCheckins[selectedIndex + 1].id)}
-                  disabled={!hasNext}
-                >
-                  <View style={styles.markerInfoNavBtnInner}>
-                    <Text style={[styles.markerInfoNavBtnText, !hasNext && styles.markerInfoNavBtnTextDisabled]}>다음</Text>
-                    <Ionicons name="chevron-forward" size={12} color={hasNext ? '#FFFFFF' : '#9CA3AF'} />
-                  </View>
-                </TouchableOpacity>
-              </View>
-            </View>
+            <MapCheckinInfoCard
+              checkin={selectedCheckin}
+              index={selectedIndex}
+              total={sortedCheckins.length}
+              onClose={() => setSelectedCheckinId(null)}
+              onPrev={() => setSelectedCheckinId(sortedCheckins[selectedIndex - 1].id)}
+              onNext={() => setSelectedCheckinId(sortedCheckins[selectedIndex + 1].id)}
+            />
           );
         })()}
       </View>

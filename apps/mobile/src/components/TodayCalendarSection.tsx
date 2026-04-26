@@ -25,6 +25,126 @@ interface Props {
   tripEndDate?: string;
 }
 
+function TodayCalendarExpired() {
+  return (
+    <View style={styles.expiredContainer}>
+      <View style={styles.expiredRow}>
+        <Ionicons name="calendar-outline" size={14} color="#9CA3AF" />
+        <Text style={styles.expiredText}> 캘린더 접근 권한 만료</Text>
+      </View>
+    </View>
+  );
+}
+
+function TodayCalendarEventList({ events }: { events: CalendarEvent[] }) {
+  return (
+    <View style={styles.eventList}>
+      {events.map((event) => (
+        <View key={event.id} style={styles.eventRow}>
+          <Text style={styles.eventTime}>{formatEventWhen(event)}</Text>
+          <View style={styles.eventInfo}>
+            <Text style={styles.eventTitle} numberOfLines={1}>
+              {event.summary ?? '(제목 없음)'}
+            </Text>
+            {event.location && (
+              <TouchableOpacity
+                style={styles.eventLocationRow}
+                onPress={() =>
+                  Linking.openURL(
+                    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location!)}`,
+                  )
+                }
+              >
+                <Ionicons name="location-outline" size={11} color="#4285F4" />
+                <Text style={styles.eventLocation} numberOfLines={1}>
+                  {event.location}
+                </Text>
+              </TouchableOpacity>
+            )}
+            {event.place && (
+              <View style={styles.placeInfoRow}>
+                {event.place.open_now !== null && (
+                  <View
+                    style={[
+                      styles.placeBadge,
+                      event.place.open_now ? styles.placeBadgeOpen : styles.placeBadgeClosed,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.placeBadgeText,
+                        event.place.open_now ? styles.placeBadgeTextOpen : styles.placeBadgeTextClosed,
+                      ]}
+                    >
+                      {event.place.open_now ? '● 지금 영업 중' : '● 지금 영업 종료'}
+                    </Text>
+                  </View>
+                )}
+                {event.place.open_at_event !== null && (
+                  <View
+                    style={[
+                      styles.placeBadge,
+                      event.place.open_at_event ? styles.placeBadgeOpen : styles.placeBadgeClosed,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.placeBadgeText,
+                        event.place.open_at_event ? styles.placeBadgeTextOpen : styles.placeBadgeTextClosed,
+                      ]}
+                    >
+                      {event.place.open_at_event ? '● 방문 시 영업 중' : '● 방문 시 영업 종료'}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function TodayCalendarCard({
+  tripEndDate,
+  events,
+  advice,
+  adviceLoading,
+  open,
+  setOpen,
+}: {
+  tripEndDate?: string;
+  events: CalendarEvent[];
+  advice: string | null;
+  adviceLoading: boolean;
+  open: boolean;
+  setOpen: (open: boolean | ((open: boolean) => boolean)) => void;
+}) {
+  return (
+    <View style={styles.container}>
+      <TouchableOpacity onPress={() => setOpen((current) => !current)} style={styles.header} activeOpacity={0.7}>
+        <Ionicons name="calendar-outline" size={16} color="#4285F4" />
+        <View style={styles.headerText}>
+          <Text style={styles.title}>
+            {tripEndDate ? '여행 일정' : '오늘 일정'} {events.length}개
+          </Text>
+          {advice ? (
+            <Text style={styles.advice} numberOfLines={1}>
+              {advice}
+            </Text>
+          ) : adviceLoading ? (
+            <ActivityIndicator size="small" color="#9CA3AF" style={styles.adviceLoading} />
+          ) : null}
+        </View>
+        <Text style={[styles.chevron, open && styles.chevronOpen]}>⌄</Text>
+      </TouchableOpacity>
+
+      {open && <TodayCalendarEventList events={events} />}
+    </View>
+  );
+}
+
 export default function TodayCalendarSection({ tripEndDate }: Props) {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,81 +207,19 @@ export default function TodayCalendarSection({ tripEndDate }: Props) {
 
   if (loading) return null;
 
-  if (tokenExpired) {
-    return (
-      <View style={styles.expiredContainer}>
-        <View style={styles.expiredRow}>
-          <Ionicons name="calendar-outline" size={14} color="#9CA3AF" />
-          <Text style={styles.expiredText}> 캘린더 접근 권한 만료</Text>
-        </View>
-      </View>
-    );
-  }
+  if (tokenExpired) return <TodayCalendarExpired />;
 
   if (events.length === 0) return null;
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity onPress={() => setOpen(o => !o)} style={styles.header} activeOpacity={0.7}>
-        <Ionicons name="calendar-outline" size={16} color="#4285F4" />
-        <View style={styles.headerText}>
-          <Text style={styles.title}>
-            {tripEndDate ? '여행 일정' : '오늘 일정'} {events.length}개
-          </Text>
-          {advice ? (
-            <Text style={styles.advice} numberOfLines={1}>{advice}</Text>
-          ) : adviceLoading ? (
-            <ActivityIndicator size="small" color="#9CA3AF" style={{ alignSelf: 'flex-start', marginTop: 2 }} />
-          ) : null}
-        </View>
-        <Text style={[styles.chevron, open && styles.chevronOpen]}>⌄</Text>
-      </TouchableOpacity>
-
-      {open && (
-        <View style={styles.eventList}>
-          {events.map(event => (
-            <View key={event.id} style={styles.eventRow}>
-              <Text style={styles.eventTime}>{formatEventWhen(event)}</Text>
-              <View style={styles.eventInfo}>
-                <Text style={styles.eventTitle} numberOfLines={1}>{event.summary ?? '(제목 없음)'}</Text>
-                {event.location && (
-                  <TouchableOpacity
-                    style={styles.eventLocationRow}
-                    onPress={() => Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location!)}`)}
-                  >
-                    <Ionicons name="location-outline" size={11} color="#4285F4" />
-                    <Text
-                      style={styles.eventLocation}
-                      numberOfLines={1}
-                    >
-                      {event.location}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-                {event.place && (
-                  <View style={styles.placeInfoRow}>
-                    {event.place.open_now !== null && (
-                      <View style={[styles.placeBadge, event.place.open_now ? styles.placeBadgeOpen : styles.placeBadgeClosed]}>
-                        <Text style={[styles.placeBadgeText, event.place.open_now ? styles.placeBadgeTextOpen : styles.placeBadgeTextClosed]}>
-                          {event.place.open_now ? '● 지금 영업 중' : '● 지금 영업 종료'}
-                        </Text>
-                      </View>
-                    )}
-                    {event.place.open_at_event !== null && (
-                      <View style={[styles.placeBadge, event.place.open_at_event ? styles.placeBadgeOpen : styles.placeBadgeClosed]}>
-                        <Text style={[styles.placeBadgeText, event.place.open_at_event ? styles.placeBadgeTextOpen : styles.placeBadgeTextClosed]}>
-                          {event.place.open_at_event ? '● 방문 시 영업 중' : '● 방문 시 영업 종료'}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                )}
-              </View>
-            </View>
-          ))}
-        </View>
-      )}
-    </View>
+    <TodayCalendarCard
+      tripEndDate={tripEndDate}
+      events={events}
+      advice={advice}
+      adviceLoading={adviceLoading}
+      open={open}
+      setOpen={setOpen}
+    />
   );
 }
 
@@ -197,6 +255,10 @@ const styles = StyleSheet.create({
   advice: {
     fontSize: 12,
     color: '#8B7355',
+    marginTop: 2,
+  },
+  adviceLoading: {
+    alignSelf: 'flex-start',
     marginTop: 2,
   },
   chevron: {

@@ -12,6 +12,80 @@ import { CATEGORY_ICONS, CATEGORY_COLORS } from '../../../utils/categoryIcons';
 import { suggestTags } from '../../../lib/api';
 import type { RootStackParamList } from '../../../navigation/AppNavigator';
 
+function useAvatarUrl() {
+  const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user?.user_metadata?.avatar_url) setAvatarUrl(user.user_metadata.avatar_url);
+    });
+  }, []);
+  return avatarUrl;
+}
+
+function useTagSuggestions(title: string, place: string, category: string, message: string) {
+  const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
+  const [aiTagSuggestions, setAiTagSuggestions] = useState<string[]>([]);
+  const aiDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    loadTagSuggestions().then(setTagSuggestions).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current);
+    const hasInput = title.trim().length >= 2 || place.trim().length >= 2 || message.trim().length >= 2;
+    if (!hasInput) return;
+    aiDebounceRef.current = setTimeout(() => {
+      suggestTags({ title: title.trim(), place: place.trim(), category, message: message.trim() })
+        .then(setAiTagSuggestions)
+        .catch(() => {});
+    }, 500);
+    return () => { if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current); };
+  }, [title, place, category, message]);
+
+  return { tagSuggestions, aiTagSuggestions };
+}
+
+function useAutoLocation(
+  hasInitialLocation: React.MutableRefObject<boolean>,
+  setLatitude: (n: number) => void,
+  setLongitude: (n: number) => void,
+) {
+  useEffect(() => {
+    if (hasInitialLocation.current) return;
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') return;
+        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+        setLatitude(loc.coords.latitude);
+        setLongitude(loc.coords.longitude);
+      } catch { /* ignore */ }
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+}
+
+function useLocationPickerSync(
+  setLatitude: (n: number) => void,
+  setLongitude: (n: number) => void,
+  setPlace: (s: string) => void,
+  setPlaceId: (s: string) => void,
+) {
+  useFocusEffect(
+    useCallback(() => {
+      const result = consumeLocationPickerResult();
+      if (result) {
+        setLatitude(result.latitude);
+        setLongitude(result.longitude);
+        setPlace(result.placeName ?? '');
+        setPlaceId(result.placeId ?? '');
+      }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+  );
+}
+
 async function loadTagSuggestions(): Promise<string[]> {
   const { data } = await supabase
     .from('checkins')
@@ -50,9 +124,6 @@ export function useCheckinForm() {
   const [message, setMessage] = useState(editingCheckin?.message ?? '');
   const [category, setCategory] = useState(editingCheckin?.category ?? '');
   const [tags, setTags] = useState<string[]>(editingCheckin?.tags ?? []);
-  const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
-  const [aiTagSuggestions, setAiTagSuggestions] = useState<string[]>([]);
-  const aiDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [latitude, setLatitude] = useState<number | undefined>(editingCheckin?.latitude ?? initialLatitude);
   const [longitude, setLongitude] = useState<number | undefined>(editingCheckin?.longitude ?? initialLongitude);
   const [place, setPlace] = useState(editingCheckin?.place ?? initialPlace ?? '');
@@ -66,65 +137,11 @@ export function useCheckinForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
 
-  useFocusEffect(
-    useCallback(() => {
-      const result = consumeLocationPickerResult();
-      if (result) {
-        setLatitude(result.latitude);
-        setLongitude(result.longitude);
-        setPlace(result.placeName ?? '');
-        setPlaceId(result.placeId ?? '');
-      }
-    }, [])
-  );
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user?.user_metadata?.avatar_url) {
-        setAvatarUrl(user.user_metadata.avatar_url);
-      }
-    });
-  }, []);
-
-  useEffect(() => {
-    loadTagSuggestions().then(setTagSuggestions).catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current);
-
-    const hasInput = title.trim().length >= 2 || place.trim().length >= 2 || message.trim().length >= 2;
-    if (!hasInput) return;
-
-    aiDebounceRef.current = setTimeout(() => {
-      suggestTags({ title: title.trim(), place: place.trim(), category, message: message.trim() })
-        .then(setAiTagSuggestions)
-        .catch(() => {});
-    }, 500);
-
-    return () => {
-      if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current);
-    };
-  }, [title, place, category, message]);
-
-  useEffect(() => {
-    if (hasInitialLocationRef.current) return;
-    (async () => {
-      try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') return;
-        const loc = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.High,
-        });
-        setLatitude(loc.coords.latitude);
-        setLongitude(loc.coords.longitude);
-      } catch {
-        // ignore
-      }
-    })();
-  }, []);
+  const avatarUrl = useAvatarUrl();
+  const { tagSuggestions, aiTagSuggestions } = useTagSuggestions(title, place, category, message);
+  useAutoLocation(hasInitialLocationRef, setLatitude, setLongitude);
+  useLocationPickerSync(setLatitude, setLongitude, setPlace, setPlaceId);
 
   const { showPicker: showPhotoPicker } = usePhotoPicker({
     onPhotoPicked: (result) => {
@@ -221,48 +238,14 @@ export function useCheckinForm() {
   const catIconName = CATEGORY_ICONS[category] ?? 'pricetag-outline';
 
   return {
-    navigation,
-    paramTripId,
-    tripTitle,
-    isEditMode,
-    trips,
-    selectedTripId,
-    setSelectedTripId,
-    title,
-    setTitle,
-    message,
-    setMessage,
-    category,
-    setCategory,
-    tags,
-    tagSuggestions,
-    aiTagSuggestions,
-    handleAddTag,
-    handleRemoveTag,
-    latitude,
-    setLatitude,
-    longitude,
-    setLongitude,
-    place,
-    setPlace,
-    setPlaceId,
-    photoPreview,
-    checkedInAt,
-    setCheckedInAt,
-    showTimePicker,
-    setShowTimePicker,
-    showCategorySelector,
-    setShowCategorySelector,
-    isSubmitting,
-    isProcessingPhoto,
-    error,
-    avatarUrl,
-    showPhotoPicker,
-    canSubmit,
-    handleSubmit,
-    handleLocationPicker,
-    handleClearPhoto,
-    catColor,
-    catIconName,
+    navigation, paramTripId, tripTitle, isEditMode,
+    trips, selectedTripId, setSelectedTripId,
+    title, setTitle, message, setMessage, category, setCategory,
+    tags, tagSuggestions, aiTagSuggestions, handleAddTag, handleRemoveTag,
+    latitude, setLatitude, longitude, setLongitude, place, setPlace, setPlaceId,
+    photoPreview, checkedInAt, setCheckedInAt,
+    showTimePicker, setShowTimePicker, showCategorySelector, setShowCategorySelector,
+    isSubmitting, isProcessingPhoto, error, avatarUrl, showPhotoPicker, canSubmit,
+    handleSubmit, handleLocationPicker, handleClearPhoto, catColor, catIconName,
   };
 }

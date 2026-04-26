@@ -47,6 +47,51 @@ function getNextEvent(events: CalendarEvent[]): CalendarEvent | null {
   return upcoming[0] ?? null;
 }
 
+function useCalendarData(tripEndDate?: string) {
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [advice, setAdvice] = useState<string | null>(null);
+  const [adviceLoading, setAdviceLoading] = useState(false);
+  const [tokenExpired, setTokenExpired] = useState(false);
+
+  useEffect(() => {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const end = tripEndDate
+      ? new Date(new Date(tripEndDate).getFullYear(), new Date(tripEndDate).getMonth(), new Date(tripEndDate).getDate() + 1)
+      : new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    setEvents([]); setAdvice(null);
+    fetch(`/api/calendar?timeMin=${start.toISOString()}&timeMax=${end.toISOString()}&maxResults=10`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.error === 'TOKEN_EXPIRED') setTokenExpired(true);
+        else if (!data.error) setEvents(data.items ?? []);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [tripEndDate]);
+
+  useEffect(() => {
+    if (events.length === 0) return;
+    const adviceEvents = getAdviceEvents(events);
+    if (adviceEvents.length === 0) { setAdvice(null); return; }
+    setAdviceLoading(true);
+    const now = Date.now();
+    const fetchAdvice = (userLat?: number, userLng?: number) => {
+      const payload = adviceEvents.map(e => ({ summary: e.summary ?? '일정', location: e.location, minutesUntil: Math.round((eventStartMs(e) - now) / 60000), isAllDay: !e.start.dateTime }));
+      fetch('/api/calendar/advice', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ events: payload, userLat, userLng }) })
+        .then(res => res.json())
+        .then(data => { if (data.advice) setAdvice(data.advice); })
+        .catch(() => {})
+        .finally(() => setAdviceLoading(false));
+    };
+    if (navigator.geolocation) navigator.geolocation.getCurrentPosition(pos => fetchAdvice(pos.coords.latitude, pos.coords.longitude), () => fetchAdvice());
+    else fetchAdvice();
+  }, [events]);
+
+  return { events, loading, advice, adviceLoading, tokenExpired };
+}
+
 // 조언 대상: 아직 안 끝난 timed 일정 + 내일 이후 종일 일정
 function getAdviceEvents(events: CalendarEvent[]): CalendarEvent[] {
   const now = Date.now();
@@ -64,78 +109,8 @@ function getAdviceEvents(events: CalendarEvent[]): CalendarEvent[] {
 }
 
 export default function TodayCalendar({ tripEndDate }: { tripEndDate?: string }) {
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
-  const [advice, setAdvice] = useState<string | null>(null);
-  const [adviceLoading, setAdviceLoading] = useState(false);
-  const [tokenExpired, setTokenExpired] = useState(false);
-
-  useEffect(() => {
-    const now = new Date();
-    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    // 여행 종료일이 있으면 그 날 끝까지, 없으면 오늘 하루
-    const end = tripEndDate
-      ? new Date(new Date(tripEndDate).getFullYear(), new Date(tripEndDate).getMonth(), new Date(tripEndDate).getDate() + 1)
-      : new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-
-    setEvents([]);
-    setAdvice(null);
-    setOpen(false);
-
-    fetch(`/api/calendar?timeMin=${start.toISOString()}&timeMax=${end.toISOString()}&maxResults=10`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.error === 'TOKEN_EXPIRED') {
-          setTokenExpired(true);
-        } else if (!data.error) {
-          setEvents(data.items ?? []);
-        }
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [tripEndDate]);
-
-  // AI 조언
-  useEffect(() => {
-    if (events.length === 0) return;
-    const adviceEvents = getAdviceEvents(events);
-    if (adviceEvents.length === 0) {
-      setAdvice(null);
-      return;
-    }
-
-    setAdviceLoading(true);
-    const now = Date.now();
-
-    const fetchAdvice = (userLat?: number, userLng?: number) => {
-      const payload = adviceEvents.map(e => ({
-        summary: e.summary ?? '일정',
-        location: e.location,
-        minutesUntil: Math.round((eventStartMs(e) - now) / 60000),
-        isAllDay: !e.start.dateTime,
-      }));
-
-      fetch('/api/calendar/advice', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ events: payload, userLat, userLng }),
-      })
-        .then(res => res.json())
-        .then(data => { if (data.advice) setAdvice(data.advice); })
-        .catch(() => {})
-        .finally(() => setAdviceLoading(false));
-    };
-
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        pos => fetchAdvice(pos.coords.latitude, pos.coords.longitude),
-        () => fetchAdvice()
-      );
-    } else {
-      fetchAdvice();
-    }
-  }, [events]);
+  const { events, loading, advice, adviceLoading, tokenExpired } = useCalendarData(tripEndDate);
 
   if (loading) return null;
 

@@ -7,6 +7,36 @@ import { formatTripDate } from '@travel-companion/shared';
 import { DropdownMenu } from '@/components/DropdownMenu';
 import { APP_NAME } from '@/lib/config';
 
+interface TripDrawerItemProps {
+  trip: Trip;
+  isSelected: boolean;
+  onSelect: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}
+
+function TripDrawerItem({ trip, isSelected, onSelect, onEdit, onDelete }: TripDrawerItemProps) {
+  const label = formatTripDate(trip.start_date) ?? formatTripDate(trip.first_checkin_date);
+  return (
+    <div style={{ borderBottom: '1px solid var(--tc-dot)', background: isSelected ? 'rgba(255,107,71,0.07)' : 'transparent' }}>
+      <div style={{ display: 'flex', alignItems: 'center', padding: '12px 12px 4px 20px' }}>
+        {isSelected && <div style={{ width: 4, height: 20, background: '#FF6B47', borderRadius: 2, marginRight: 10, flexShrink: 0 }} />}
+        <button onClick={onSelect} style={{ flex: 1, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: 0, fontSize: 15, fontWeight: isSelected ? 800 : 500, color: isSelected ? '#FF6B47' : 'var(--tc-warm-dark)', letterSpacing: '-0.01em', display: 'flex', alignItems: 'center', gap: 6 }}>
+          {trip.is_frequent && <Star size={13} color="#F59E0B" fill="#F59E0B" style={{ flexShrink: 0 }} />}
+          {trip.title}
+        </button>
+        <DropdownMenu align="right" items={[{ label: '수정', onClick: onEdit }, { label: '삭제', onClick: onDelete, variant: 'danger' }]} />
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', padding: '2px 20px 12px', paddingLeft: isSelected ? 34 : 20 }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+          {label && <span style={{ fontSize: 11, color: 'var(--tc-warm-faint)' }}>{label}</span>}
+          {trip.place && <span style={{ fontSize: 11, color: 'var(--tc-warm-faint)', display: 'flex', alignItems: 'center', gap: 3 }}><MapPin size={12} />{trip.place}</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface SideDrawerProps {
   trips: Trip[];
   selectedTripId: string;
@@ -102,79 +132,16 @@ export default function SideDrawer({
               여행이 없습니다
             </p>
           ) : (
-            trips.map((trip) => {
-              const isSelected = trip.id === selectedTripId;
-              const label = formatTripDate(trip.start_date) ?? formatTripDate(trip.first_checkin_date);
-              return (
-                <div
-                  key={trip.id}
-                  style={{
-                    borderBottom: '1px solid var(--tc-dot)',
-                    background: isSelected ? 'rgba(255,107,71,0.07)' : 'transparent',
-                  }}
-                >
-                  {/* 여행 선택 버튼 + 더보기 */}
-                  <div style={{ display: 'flex', alignItems: 'center', padding: '12px 12px 4px 20px' }}>
-                    {isSelected && (
-                      <div style={{
-                        width: 4,
-                        height: 20,
-                        background: '#FF6B47',
-                        borderRadius: 2,
-                        marginRight: 10,
-                        flexShrink: 0,
-                      }} />
-                    )}
-                    <button
-                      onClick={() => { onSelectTrip(trip.id); onClose(); }}
-                      style={{
-                        flex: 1,
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        padding: 0,
-                        fontSize: 15,
-                        fontWeight: isSelected ? 800 : 500,
-                        color: isSelected ? '#FF6B47' : 'var(--tc-warm-dark)',
-                        letterSpacing: '-0.01em',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 6,
-                      }}
-                    >
-                      {trip.is_frequent && (
-                        <Star size={13} color="#F59E0B" fill="#F59E0B" style={{ flexShrink: 0 }} />
-                      )}
-                      {trip.title}
-                    </button>
-                    <DropdownMenu
-                      align="right"
-                      items={[
-                        { label: '수정', onClick: () => { onClose(); onEditTrip(trip); } },
-                        { label: '삭제', onClick: () => { onDeleteTrip(trip.id); onClose(); }, variant: 'danger' },
-                      ]}
-                    />
-                  </div>
-
-                  {/* 날짜 + 장소 */}
-                  <div style={{ display: 'flex', alignItems: 'center', padding: '2px 20px 12px', paddingLeft: isSelected ? 34 : 20 }}>
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                      {label && (
-                        <span style={{ fontSize: 11, color: 'var(--tc-warm-faint)' }}>
-                          {label}
-                        </span>
-                      )}
-                      {trip.place && (
-                        <span style={{ fontSize: 11, color: 'var(--tc-warm-faint)', display: 'flex', alignItems: 'center', gap: 3 }}>
-                          <MapPin size={12} />{trip.place}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })
+            trips.map((trip) => (
+              <TripDrawerItem
+                key={trip.id}
+                trip={trip}
+                isSelected={trip.id === selectedTripId}
+                onSelect={() => { onSelectTrip(trip.id); onClose(); }}
+                onEdit={() => { onClose(); onEditTrip(trip); }}
+                onDelete={() => { onDeleteTrip(trip.id); onClose(); }}
+              />
+            ))
           )}
         </div>
       </div>

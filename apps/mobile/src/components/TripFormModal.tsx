@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,13 +10,12 @@ import {
   ActivityIndicator,
   Platform,
   KeyboardAvoidingView,
-  Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import type { Trip, TripFormData } from '@travel-companion/shared';
-import { toISODateString, formatDateDisplay } from '@travel-companion/shared';
 import LocationPickerContent from './LocationPickerContent';
+import { useTripForm } from './hooks/useTripForm';
+import { TripPlaceSection, TripToggleSection, TripDateSection } from './TripFormSections';
 
 interface TripFormModalProps {
   visible: boolean;
@@ -26,96 +25,21 @@ interface TripFormModalProps {
   initialTrip?: Trip;
 }
 
-const formatDate = (date: Date | null): string => {
-  if (!date) return '';
-  return toISODateString(date);
-};
-
-const parseDate = (dateStr?: string | null): Date | null => {
-  if (!dateStr) return null;
-  // YYYY-MM-DD 형식 파싱 (타임존 영향 없이 로컬 날짜로)
-  const parts = dateStr.substring(0, 10).split('-').map(Number);
-  if (parts.length < 3 || parts.some(isNaN)) return null;
-  const [y, m, d] = parts;
-  const date = new Date(y, m - 1, d);
-  return isNaN(date.getTime()) ? null : date;
-};
 
 export default function TripFormModal({ visible, onClose, onSubmit, mode = 'create', initialTrip }: TripFormModalProps) {
-  const [title, setTitle] = useState(initialTrip?.title ?? '');
-  const [description, setDescription] = useState(initialTrip?.description ?? '');
-  const [startDate, setStartDate] = useState<Date | null>(parseDate(initialTrip?.start_date));
-  const [endDate, setEndDate] = useState<Date | null>(parseDate(initialTrip?.end_date));
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
-  const [isPublic, setIsPublic] = useState(initialTrip?.is_public ?? false);
-  const [isFrequent, setIsFrequent] = useState(initialTrip?.is_frequent ?? false);
-  const [place, setPlace] = useState(initialTrip?.place ?? '');
-  const [placeId, setPlaceId] = useState(initialTrip?.place_id ?? '');
-  const [placeLat, setPlaceLat] = useState<number | undefined>(initialTrip?.latitude ?? undefined);
-  const [placeLng, setPlaceLng] = useState<number | undefined>(initialTrip?.longitude ?? undefined);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  // initialTrip 변경 시 폼 초기화 (edit 모드에서 다른 여행 수정 시)
-  useEffect(() => {
-    if (visible) {
-      setTitle(initialTrip?.title ?? '');
-      setDescription(initialTrip?.description ?? '');
-      setStartDate(parseDate(initialTrip?.start_date));
-      setEndDate(parseDate(initialTrip?.end_date));
-      setIsPublic(initialTrip?.is_public ?? false);
-      setIsFrequent(initialTrip?.is_frequent ?? false);
-      setPlace(initialTrip?.place ?? '');
-      setPlaceId(initialTrip?.place_id ?? '');
-      setPlaceLat(initialTrip?.latitude ?? undefined);
-      setPlaceLng(initialTrip?.longitude ?? undefined);
-      setError(null);
-    }
-  }, [visible, initialTrip]);
-
-  const reset = () => {
-    setTitle(''); setDescription('');
-    setStartDate(null); setEndDate(null);
-    setIsPublic(false); setIsFrequent(false);
-    setPlace(''); setPlaceId(''); setPlaceLat(undefined); setPlaceLng(undefined);
-    setError(null);
-  };
-
-  const handleClose = () => { reset(); onClose(); };
-
-  const handleClearPlace = () => {
-    setPlace(''); setPlaceId(''); setPlaceLat(undefined); setPlaceLng(undefined);
-  };
-
-  const handleSubmit = async () => {
-    if (!title.trim()) { setError('여행 이름을 입력해주세요.'); return; }
-    setSubmitting(true);
-    setError(null);
-    try {
-      await onSubmit({
-        title: title.trim(),
-        description: description.trim() || undefined,
-        start_date: formatDate(startDate) || undefined,
-        end_date: formatDate(endDate) || undefined,
-        is_public: isPublic,
-        is_frequent: isFrequent,
-        place: place.trim() || null,
-        place_id: placeId || null,
-        latitude: placeLat ?? null,
-        longitude: placeLng ?? null,
-      });
-      reset();
-      onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '저장에 실패했습니다.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const canSubmit = !!title.trim() && !submitting;
+  const {
+    title, setTitle, description, setDescription,
+    startDate, setStartDate, endDate, setEndDate,
+    isPublic, setIsPublic, isFrequent, setIsFrequent,
+    place, setPlace, setPlaceId,
+    placeLat, setPlaceLat, placeLng, setPlaceLng,
+    submitting, error, canSubmit,
+    handleClose, handleClearPlace, handleSubmit,
+  } = useTripForm(visible, initialTrip, onSubmit, onClose);
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
@@ -124,11 +48,11 @@ export default function TripFormModal({ visible, onClose, onSubmit, mode = 'crea
         <LocationPickerContent
           initialLatitude={placeLat}
           initialLongitude={placeLng}
-          onConfirm={(lat, lng, placeName, placeId) => {
+          onConfirm={(lat, lng, placeName, selectedPlaceId) => {
             setPlaceLat(lat);
             setPlaceLng(lng);
             setPlace(placeName || `${lat.toFixed(5)}, ${lng.toFixed(5)}`);
-            setPlaceId(placeId || '');
+            setPlaceId(selectedPlaceId || '');
             setShowLocationPicker(false);
           }}
           onClose={() => setShowLocationPicker(false)}
@@ -198,126 +122,43 @@ export default function TripFormModal({ visible, onClose, onSubmit, mode = 'crea
               />
 
               {/* 날짜 섹션 */}
-              <View style={styles.dateSection}>
-                <TouchableOpacity
-                  onPress={() => { setShowStartPicker(!showStartPicker); setShowEndPicker(false); }}
-                  style={styles.dateCard}
-                >
-                  <View style={styles.dateLabelRow}>
-                    <Ionicons name="calendar-outline" size={11} color="#FF6B47" />
-                    <Text style={styles.dateLabel}>시작일</Text>
-                  </View>
-                  <Text style={[styles.dateValue, !startDate && styles.datePlaceholder]}>
-                    {formatDateDisplay(startDate)}
-                  </Text>
-                </TouchableOpacity>
-                {showStartPicker && (
-                  <View style={styles.pickerContainer}>
-                    <DateTimePicker
-                      value={startDate || new Date()}
-                      mode="date"
-                      display="spinner"
-                      onChange={(_, date) => {
-                        if (Platform.OS === 'android') setShowStartPicker(false);
-                        if (date) setStartDate(date);
-                      }}
-                    />
-                    <TouchableOpacity
-                      onPress={() => setShowStartPicker(false)}
-                      style={styles.pickerDoneButton}
-                    >
-                      <Text style={styles.pickerDoneText}>완료</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </View>
-
-              <View style={styles.dateSection}>
-                <TouchableOpacity
-                  onPress={() => { setShowEndPicker(!showEndPicker); setShowStartPicker(false); }}
-                  style={styles.dateCard}
-                >
-                  <View style={styles.dateLabelRow}>
-                    <Ionicons name="flag-outline" size={11} color="#F59E0B" />
-                    <Text style={[styles.dateLabel, { color: '#F59E0B' }]}>종료일</Text>
-                  </View>
-                  <Text style={[styles.dateValue, !endDate && styles.datePlaceholder]}>
-                    {formatDateDisplay(endDate)}
-                  </Text>
-                </TouchableOpacity>
-                {showEndPicker && (
-                  <View style={styles.pickerContainer}>
-                    <DateTimePicker
-                      value={endDate || new Date()}
-                      mode="date"
-                      display="spinner"
-                      onChange={(_, date) => {
-                        if (Platform.OS === 'android') setShowEndPicker(false);
-                        if (date) setEndDate(date);
-                      }}
-                    />
-                    <TouchableOpacity
-                      onPress={() => setShowEndPicker(false)}
-                      style={styles.pickerDoneButton}
-                    >
-                      <Text style={styles.pickerDoneText}>완료</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </View>
+              <TripDateSection
+                label="시작일"
+                iconName="calendar-outline"
+                iconColor="#FF6B47"
+                labelStyle={styles.dateLabel}
+                date={startDate}
+                showPicker={showStartPicker}
+                onToggle={() => { setShowStartPicker(!showStartPicker); setShowEndPicker(false); }}
+                onDateChange={(d) => { if (d) setStartDate(d); }}
+                onDone={() => setShowStartPicker(false)}
+              />
+              <TripDateSection
+                label="종료일"
+                iconName="flag-outline"
+                iconColor="#F59E0B"
+                labelStyle={styles.endDateLabel}
+                date={endDate}
+                showPicker={showEndPicker}
+                onToggle={() => { setShowEndPicker(!showEndPicker); setShowStartPicker(false); }}
+                onDateChange={(d) => { if (d) setEndDate(d); }}
+                onDone={() => setShowEndPicker(false)}
+              />
 
               {/* 장소 섹션 */}
-              <View style={styles.placeSection}>
-                <Text style={styles.sectionLabel}>대표 장소</Text>
-                {place ? (
-                  <View style={styles.placeCard}>
-                    <Ionicons name="location-outline" size={18} color="#FF6B47" />
-                    <Text style={styles.placeText}>{place}</Text>
-                    <TouchableOpacity onPress={handleClearPlace} style={styles.placeClearButton}>
-                      <Ionicons name="close" size={12} color="#9CA3AF" />
-                    </TouchableOpacity>
-                  </View>
-                ) : (
-                  <TouchableOpacity
-                    onPress={() => setShowLocationPicker(true)}
-                    style={styles.placeAddButton}
-                  >
-                    <Ionicons name="location-outline" size={18} color="#FF6B47" />
-                    <Text style={styles.placeAddText}>장소 추가</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
+              <TripPlaceSection
+                place={place}
+                onClear={handleClearPlace}
+                onAdd={() => setShowLocationPicker(true)}
+              />
 
-              {/* 공개 토글 */}
-              <View style={styles.publicRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.publicLabel}>공개 여행</Text>
-                  <Text style={styles.publicDesc}>링크로 공유할 수 있어요</Text>
-                </View>
-                <Switch
-                  value={isPublic}
-                  onValueChange={setIsPublic}
-                  trackColor={{ false: '#E8E0D4', true: '#FF6B47' }}
-                  thumbColor="#FFFFFF"
-                />
-              </View>
-
-              {/* 자주 가는 곳 토글 */}
-              <View style={styles.publicRow}>
-                <View style={{ flex: 1 }}>
-                  <View style={styles.publicLabelRow}>
-                    <Ionicons name="star" size={14} color="#F59E0B" />
-                    <Text style={styles.publicLabel}>자주 가는 곳</Text>
-                  </View>
-                  <Text style={styles.publicDesc}>빠른 체크인 목록에 표시됩니다</Text>
-                </View>
-                <Switch
-                  value={isFrequent}
-                  onValueChange={setIsFrequent}
-                  trackColor={{ false: '#E8E0D4', true: '#F59E0B' }}
-                  thumbColor="#FFFFFF"
-                />
-              </View>
+              {/* 공개/자주 가는 곳 토글 */}
+              <TripToggleSection
+                isPublic={isPublic}
+                setIsPublic={setIsPublic}
+                isFrequent={isFrequent}
+                setIsFrequent={setIsFrequent}
+              />
 
               {error && (
                 <View style={styles.errorBox}>
@@ -426,144 +267,8 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     minHeight: 80,
   },
-  dateSection: {
-    marginBottom: 12,
-  },
-  pickerContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    marginTop: 4,
-    overflow: 'hidden',
-    shadowColor: '#2D2416',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  pickerDoneButton: {
-    alignItems: 'flex-end',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#E8E0D4',
-  },
-  pickerDoneText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#FF6B47',
-  },
-  dateCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 16,
-    shadowColor: '#2D2416',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  dateLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    marginBottom: 6,
-  },
-  dateLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#FF6B47',
-    letterSpacing: 0.6,
-  },
-  dateValue: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  datePlaceholder: {
-    color: '#C4B49A',
-  },
-  placeSection: {
-    marginTop: 8,
-    marginBottom: 12,
-  },
-  sectionLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#9CA3AF',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-    marginBottom: 8,
-  },
-  placeCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 16,
-    shadowColor: '#2D2416',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  placeText: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  placeClearButton: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#F3F0EB',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  placeAddButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 16,
-    borderWidth: 1.5,
-    borderColor: '#E8E0D4',
-    borderStyle: 'dashed',
-  },
-  placeAddText: {
-    fontSize: 14,
-    color: '#C4B49A',
-  },
-  publicRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 20,
-    shadowColor: '#2D2416',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  publicLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 2,
-  },
-  publicLabel: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  publicDesc: {
-    fontSize: 12,
-    color: '#C4B49A',
-  },
+  dateLabel: { fontSize: 11, fontWeight: '700', color: '#FF6B47', letterSpacing: 0.6 },
+  endDateLabel: { fontSize: 11, fontWeight: '700', color: '#F59E0B', letterSpacing: 0.6 },
   errorBox: {
     padding: 14,
     backgroundColor: '#FFF5F5',

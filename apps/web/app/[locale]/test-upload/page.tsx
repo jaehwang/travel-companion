@@ -1,44 +1,30 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import PhotoUpload from '@/components/PhotoUpload';
 import Map, { type MapPhoto } from '@/components/Map';
 import type { PhotoMetadata } from '@/lib/exif';
 
-export default function TestUploadPage() {
-  const [uploadedPhotos, setUploadedPhotos] = useState<Array<{
-    url: string;
-    metadata: PhotoMetadata;
-    uploadedAt: Date;
-  }>>([]);
+type UploadedPhoto = { url: string; metadata: PhotoMetadata; uploadedAt: Date };
+
+function useTestUploadState() {
+  const [uploadedPhotos, setUploadedPhotos] = useState<UploadedPhoto[]>([]);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [isMapExpanded, setIsMapExpanded] = useState(false);
 
   useEffect(() => {
     if (!isMapExpanded) return;
-
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
+    return () => { document.body.style.overflow = previousOverflow; };
   }, [isMapExpanded]);
 
   const handleUploadComplete = (photoUrl: string, metadata: PhotoMetadata) => {
-    setUploadedPhotos(prev => [
-      {
-        url: photoUrl,
-        metadata,
-        uploadedAt: new Date(),
-      },
-      ...prev
-    ]);
+    setUploadedPhotos(prev => [{ url: photoUrl, metadata, uploadedAt: new Date() }, ...prev]);
     setSuccess(`✅ 업로드 완료! URL: ${photoUrl}`);
     setError('');
-
-    // 3초 후 성공 메시지 제거
     setTimeout(() => setSuccess(''), 3000);
   };
 
@@ -47,7 +33,6 @@ export default function TestUploadPage() {
     setSuccess('');
   };
 
-  // GPS 정보가 있는 사진만 지도에 표시
   const mapPhotos: MapPhoto[] = uploadedPhotos
     .filter(photo => photo.metadata.gps)
     .map((photo, index) => ({
@@ -59,6 +44,36 @@ export default function TestUploadPage() {
       takenAt: photo.uploadedAt.toLocaleString('ko-KR'),
     }));
 
+  return { uploadedPhotos, error, success, isMapExpanded, setIsMapExpanded, mapPhotos, handleUploadComplete, handleUploadError };
+}
+
+function UploadedPhotoCard({ photo, index }: { photo: UploadedPhoto; index: number }) {
+  return (
+    <article className="flex flex-col gap-4 rounded-xl border border-gray-100 p-4 shadow-sm transition hover:shadow-md sm:flex-row">
+      <div className="relative w-full overflow-hidden rounded-lg bg-gray-50 sm:w-32 sm:flex-shrink-0 h-40 sm:h-32">
+        <Image src={photo.url} alt={`Uploaded ${index + 1}`} fill unoptimized className="object-cover" />
+      </div>
+      <div className="flex flex-1 flex-col gap-3 text-sm text-gray-700">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
+          <p>업로드: {photo.uploadedAt.toLocaleString('ko-KR')}</p>
+          {photo.metadata.takenAt && <p>촬영: {photo.metadata.takenAt.toLocaleString('ko-KR')}</p>}
+        </div>
+        {photo.metadata.gps ? (
+          <div className="rounded-lg bg-green-50 p-3 text-sm">
+            <p className="font-semibold text-green-800">✅ GPS 정보</p>
+            <p className="text-gray-700">📍 {photo.metadata.gps.latitude.toFixed(6)}, {photo.metadata.gps.longitude.toFixed(6)}</p>
+            {photo.metadata.gps.altitude && <p className="text-gray-700">⛰️ {photo.metadata.gps.altitude.toFixed(1)}m</p>}
+          </div>
+        ) : (
+          <div className="rounded-lg bg-gray-50 p-3 text-sm text-gray-600">GPS 정보 없음</div>
+        )}
+      </div>
+    </article>
+  );
+}
+
+export default function TestUploadPage() {
+  const { uploadedPhotos, error, success, isMapExpanded, setIsMapExpanded, mapPhotos, handleUploadComplete, handleUploadError } = useTestUploadState();
   const hasUploads = uploadedPhotos.length > 0;
   const hasGpsPhotos = mapPhotos.length > 0;
 
@@ -106,70 +121,7 @@ export default function TestUploadPage() {
 
               <div className="mt-4 space-y-4">
                 {uploadedPhotos.map((photo, index) => (
-                  <article
-                    key={index}
-                    className="flex flex-col gap-4 rounded-xl border border-gray-100 p-4 shadow-sm transition hover:shadow-md sm:flex-row"
-                  >
-                    <div className="w-full overflow-hidden rounded-lg bg-gray-50 sm:w-32 sm:flex-shrink-0">
-                      <img
-                        src={photo.url}
-                        alt={`Uploaded ${index + 1}`}
-                        className="h-40 w-full object-cover sm:h-32"
-                      />
-                    </div>
-
-                    <div className="flex flex-1 flex-col gap-3 text-sm text-gray-700">
-                      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
-                        <p>업로드: {photo.uploadedAt.toLocaleString('ko-KR')}</p>
-                        {photo.metadata.takenAt && (
-                          <p>촬영: {photo.metadata.takenAt.toLocaleString('ko-KR')}</p>
-                        )}
-                      </div>
-
-                      {photo.metadata.gps ? (
-                        <div className="rounded-lg bg-green-50 p-3 text-sm">
-                          <p className="font-semibold text-green-800">✅ GPS 정보</p>
-                          <p className="text-gray-700">
-                            📍 {photo.metadata.gps.latitude.toFixed(6)}, {photo.metadata.gps.longitude.toFixed(6)}
-                          </p>
-                          {photo.metadata.gps.altitude && (
-                            <p className="text-gray-700">⛰️ {photo.metadata.gps.altitude.toFixed(1)}m</p>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="rounded-lg bg-gray-50 p-3 text-sm text-gray-600">
-                          GPS 정보 없음
-                        </div>
-                      )}
-
-                      <div className="flex flex-wrap gap-3 text-xs text-gray-600">
-                        {photo.metadata.width && photo.metadata.height && (
-                          <span className="rounded-full bg-slate-100 px-3 py-1">
-                            📐 {photo.metadata.width}×{photo.metadata.height}px
-                          </span>
-                        )}
-                        {photo.metadata.fileSize && (
-                          <span className="rounded-full bg-slate-100 px-3 py-1">
-                            💾 {(photo.metadata.fileSize / 1024 / 1024).toFixed(2)}MB
-                          </span>
-                        )}
-                        {photo.metadata.cameraMake && (
-                          <span className="rounded-full bg-slate-100 px-3 py-1">
-                            📷 {photo.metadata.cameraMake} {photo.metadata.cameraModel}
-                          </span>
-                        )}
-                      </div>
-
-                      <a
-                        href={photo.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="break-all text-xs font-medium text-blue-600 hover:underline"
-                      >
-                        {photo.url}
-                      </a>
-                    </div>
-                  </article>
+                  <UploadedPhotoCard key={index} photo={photo} index={index} />
                 ))}
               </div>
             </section>

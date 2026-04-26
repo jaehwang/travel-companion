@@ -23,7 +23,7 @@ export default function PhotoSection({ photoPreview, isProcessingPhoto, onClearP
   return (
     <View style={styles.photoContainer}>
       <TouchableOpacity onPress={onClearPhoto} style={styles.clearChip}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+        <View style={styles.clearChipContent}>
           <Ionicons name="camera-outline" size={14} color="#FF6B47" />
           <Text style={styles.clearChipText}>사진 삭제</Text>
           <Ionicons name="close" size={12} color="#FF6B47" />
@@ -58,6 +58,11 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: 'rgba(255,107,71,0.1)',
     marginBottom: 8,
+  },
+  clearChipContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
   },
   clearChipText: {
     fontSize: 12,

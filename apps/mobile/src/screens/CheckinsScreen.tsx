@@ -7,14 +7,9 @@ import {
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
-  Dimensions,
-  Alert,
-  Linking,
-  Modal,
   ScrollView,
-  Pressable,
+  Alert,
 } from 'react-native';
-import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { CompositeNavigationProp } from '@react-navigation/native';
@@ -24,9 +19,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAllCheckins } from '../hooks/useAllCheckins';
 import { useTrips } from '../hooks/useTrips';
 import { useCheckinsStore } from '../store/checkinsStore';
-import { CATEGORY_META } from '../utils/categoryIcons';
 import type { CheckinsStackParamList, MainTabParamList, RootStackParamList } from '../navigation/AppNavigator';
 import type { Checkin, Trip } from '@travel-companion/shared';
+import { CheckinGridCard, CARD_WIDTH } from './checkins/CheckinGridCard';
+import { MoveCheckinModal } from './checkins/MoveCheckinModal';
 
 type NavigationProp = CompositeNavigationProp<
   StackNavigationProp<CheckinsStackParamList, 'Checkins'>,
@@ -35,10 +31,6 @@ type NavigationProp = CompositeNavigationProp<
     StackNavigationProp<RootStackParamList>
   >
 >;
-
-// 카드 너비: 좌우 패딩 16씩 + 카드 사이 간격 8
-const SCREEN_WIDTH = Dimensions.get('window').width;
-const CARD_WIDTH = (SCREEN_WIDTH - 16 * 2 - 8) / 2;
 
 type CheckinPair = [Checkin, Checkin | null];
 
@@ -49,135 +41,24 @@ interface Section {
 
 type Filter = 'normal' | 'frequent';
 
-const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
-
-function formatDateTime(dateStr: string): string {
-  const d = new Date(dateStr);
-  const month = d.getMonth() + 1;
-  const day = d.getDate();
-  const dow = DAY_LABELS[d.getDay()];
-  const time = new Intl.DateTimeFormat('ko-KR', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  }).format(d);
-  return `${month}/${day}(${dow}) ${time}`;
+interface CheckinsDataProps {
+  filter: Filter;
+  selectedTag: string | null;
+  checkins: ReturnType<typeof import('../hooks/useAllCheckins').useAllCheckins>['checkins'];
+  trips: Trip[];
+  setRefreshing: (v: boolean) => void;
+  navigation: NavigationProp;
+  updateCheckin: (id: string, data: Partial<any>) => Promise<void>;
+  removeCheckin: (id: string) => Promise<void>;
+  reload: () => Promise<void>;
+  moveModalCheckin: Checkin | null;
+  setMoveModalCheckin: (c: Checkin | null) => void;
 }
 
-function formatMonthSection(dateStr: string): string {
-  const d = new Date(dateStr);
-  return `${d.getFullYear()}년 ${d.getMonth() + 1}월`;
-}
-
-function getMonthKey(dateStr: string): string {
-  const d = new Date(dateStr);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-}
-
-interface CheckinGridCardProps {
-  checkin: Checkin;
-  tripMap: Map<string, Trip>;
-  onPress: (checkin: Checkin, trip: Trip | undefined) => void;
-  onLongPress: (checkin: Checkin) => void;
-  onEdit: (checkin: Checkin) => void;
-  onDelete: (checkinId: string) => void;
-}
-
-function CheckinGridCard({ checkin, tripMap, onPress, onLongPress, onEdit, onDelete }: CheckinGridCardProps) {
-  const trip = tripMap.get(checkin.trip_id);
-  const isUnassigned = trip === undefined;
-  const meta = CATEGORY_META[checkin.category ?? 'other'] ?? CATEGORY_META.other;
-
-  const handleMenuPress = () => {
-    Alert.alert('', '', [
-      { text: '수정', onPress: () => onEdit(checkin) },
-      {
-        text: '삭제', style: 'destructive', onPress: () => {
-          Alert.alert('삭제 확인', '이 체크인을 삭제하시겠습니까?', [
-            { text: '취소', style: 'cancel' },
-            { text: '삭제', style: 'destructive', onPress: () => onDelete(checkin.id) },
-          ]);
-        },
-      },
-      { text: '취소', style: 'cancel' },
-    ]);
-  };
-
-  return (
-    <TouchableOpacity
-      testID={isUnassigned ? 'checkin-card-unassigned' : `checkin-card-${checkin.id}`}
-      style={styles.card}
-      onPress={() => onPress(checkin, trip)}
-      onLongPress={() => onLongPress(checkin)}
-      activeOpacity={0.75}
-    >
-      {isUnassigned && (
-        <View testID="badge-unassigned" style={styles.unassignedBadge}>
-          <Text style={styles.unassignedBadgeText}>미할당</Text>
-        </View>
-      )}
-      <TouchableOpacity style={styles.menuButton} onPress={handleMenuPress} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
-        <Text style={styles.menuButtonText}>⋮</Text>
-      </TouchableOpacity>
-      {checkin.photo_url ? (
-        <Image source={{ uri: checkin.photo_url }} style={styles.cardPhoto} contentFit="cover" />
-      ) : (
-        <View style={[styles.cardPhotoPlaceholder, { backgroundColor: `${meta.color}15` }]}>
-          <Ionicons name={meta.icon} size={28} color={meta.color} />
-        </View>
-      )}
-
-      <View style={styles.cardBody}>
-        <Text style={styles.cardTitle} numberOfLines={2}>
-          {checkin.title || '이름 없는 장소'}
-        </Text>
-        {trip && (
-          <Text style={styles.cardTrip} numberOfLines={1}>{trip.title}</Text>
-        )}
-        <TouchableOpacity
-          onPress={() => {
-            const url = checkin.place_id
-              ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(checkin.place || '')}&query_place_id=${checkin.place_id}`
-              : `https://www.google.com/maps?q=${checkin.latitude},${checkin.longitude}`;
-            Linking.openURL(url);
-          }}
-          activeOpacity={0.6}
-        >
-          <Text style={styles.cardPlace} numberOfLines={1}>
-            <Ionicons name="location-outline" size={10} color="#C4B49A" />
-            {' '}{checkin.place || '지도에서 보기'}
-          </Text>
-        </TouchableOpacity>
-        <Text style={styles.cardDate} numberOfLines={1}>{formatDateTime(checkin.checked_in_at)}</Text>
-        {checkin.tags?.length > 0 && (
-          <View style={styles.cardTagsRow}>
-            {checkin.tags.slice(0, 2).map(tag => (
-              <View key={tag} style={styles.cardTagChip}>
-                <Text style={styles.cardTagChipText}>#{tag}</Text>
-              </View>
-            ))}
-            {checkin.tags.length > 2 && (
-              <Text style={styles.cardTagMore}>+{checkin.tags.length - 2}</Text>
-            )}
-          </View>
-        )}
-      </View>
-    </TouchableOpacity>
-  );
-}
-
-export default function CheckinsScreen() {
-  const navigation = useNavigation<NavigationProp>();
-  const [filter, setFilter] = useState<Filter>('normal');
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
-  const [moveModalCheckin, setMoveModalCheckin] = useState<Checkin | null>(null);
-
-  const { checkins, loading, error, reload } = useAllCheckins();
-  const { trips } = useTrips();
-  const updateCheckin = useCheckinsStore((s: any) => s.updateCheckin);
-  const removeCheckin = useCheckinsStore((s: any) => s.removeCheckin);
-
+function useCheckinsData({
+  filter, selectedTag, checkins, trips, setRefreshing,
+  navigation, updateCheckin, removeCheckin, reload, moveModalCheckin, setMoveModalCheckin,
+}: CheckinsDataProps) {
   const tripMap = useMemo(() => {
     const map = new Map<string, Trip>();
     trips.forEach(t => map.set(t.id, t));
@@ -203,7 +84,6 @@ export default function CheckinsScreen() {
         .filter(c => !selectedTag || c.tags?.includes(selectedTag))
         .sort((a, b) => new Date(b.checked_in_at).getTime() - new Date(a.checked_in_at).getTime());
     }
-    // 일반: non-frequent 여행 + tripMap에 없는 미할당 체크인
     const normalTripIds = new Set(trips.filter(t => !t.is_frequent).map(t => t.id));
     return checkins
       .filter(c => normalTripIds.has(c.trip_id) || !tripMap.has(c.trip_id))
@@ -212,14 +92,13 @@ export default function CheckinsScreen() {
   }, [checkins, trips, tripMap, filter, selectedTag]);
 
   const sections = useMemo((): Section[] => {
-    const monthMap = new Map<string, Checkin[]>();
+    const monthMap = new Map<string, import('@travel-companion/shared').Checkin[]>();
     filteredCheckins.forEach(c => {
       const key = getMonthKey(c.checked_in_at);
       const arr = monthMap.get(key) ?? [];
       arr.push(c);
       monthMap.set(key, arr);
     });
-
     return Array.from(monthMap.entries()).map(([, items]) => ({
       title: formatMonthSection(items[0].checked_in_at),
       data: items.reduce<CheckinPair[]>((acc, item, i) => {
@@ -229,32 +108,22 @@ export default function CheckinsScreen() {
     }));
   }, [filteredCheckins]);
 
+  const assignableTrips = useMemo(() => trips.filter((t) => !(t as any).is_default), [trips]);
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await reload();
     setRefreshing(false);
-  }, [reload]);
+  }, [reload, setRefreshing]);
 
-  const handleCheckinPress = useCallback((checkin: Checkin, trip: Trip | undefined) => {
+  const handleCheckinPress = useCallback((checkin: import('@travel-companion/shared').Checkin, trip: Trip | undefined) => {
     if (!trip) return;
-    navigation.navigate('TripsTab', {
-      screen: 'Trip',
-      params: { trip, scrollToCheckinId: checkin.id },
-    });
+    navigation.navigate('TripsTab', { screen: 'Trip', params: { trip, scrollToCheckinId: checkin.id } });
   }, [navigation]);
 
-  const assignableTrips = useMemo(
-    () => trips.filter((t) => !(t as any).is_default),
-    [trips]
-  );
-
-  const handleCheckinEdit = useCallback((checkin: Checkin) => {
+  const handleCheckinEdit = useCallback((checkin: import('@travel-companion/shared').Checkin) => {
     const trip = tripMap.get(checkin.trip_id);
-    navigation.navigate('CheckinForm', {
-      tripId: checkin.trip_id,
-      tripTitle: trip?.title,
-      checkin,
-    });
+    navigation.navigate('CheckinForm', { tripId: checkin.trip_id, tripTitle: trip?.title, checkin });
   }, [navigation, tripMap]);
 
   const handleCheckinDelete = useCallback(async (checkinId: string) => {
@@ -265,16 +134,12 @@ export default function CheckinsScreen() {
     }
   }, [removeCheckin]);
 
-  const handleCheckinLongPress = useCallback((checkin: Checkin) => {
-    setMoveModalCheckin(checkin);
-  }, []);
-
   const handleMoveToTrip = useCallback(async (tripId: string) => {
     if (!moveModalCheckin) return;
     setMoveModalCheckin(null);
     await updateCheckin(moveModalCheckin.id, { trip_id: tripId });
     reload();
-  }, [moveModalCheckin, updateCheckin, reload]);
+  }, [moveModalCheckin, updateCheckin, reload, setMoveModalCheckin]);
 
   const renderSectionHeader = useCallback(({ section }: { section: Section }) => (
     <View style={styles.sectionHeader}>
@@ -286,58 +151,60 @@ export default function CheckinsScreen() {
     const [left, right] = item;
     return (
       <View style={styles.row}>
-        <CheckinGridCard checkin={left} tripMap={tripMap} onPress={handleCheckinPress} onLongPress={handleCheckinLongPress} onEdit={handleCheckinEdit} onDelete={handleCheckinDelete} />
+        <CheckinGridCard checkin={left} tripMap={tripMap} onPress={handleCheckinPress} onLongPress={setMoveModalCheckin} onEdit={handleCheckinEdit} onDelete={handleCheckinDelete} />
         {right ? (
-          <CheckinGridCard checkin={right} tripMap={tripMap} onPress={handleCheckinPress} onLongPress={handleCheckinLongPress} onEdit={handleCheckinEdit} onDelete={handleCheckinDelete} />
+          <CheckinGridCard checkin={right} tripMap={tripMap} onPress={handleCheckinPress} onLongPress={setMoveModalCheckin} onEdit={handleCheckinEdit} onDelete={handleCheckinDelete} />
         ) : (
           <View style={styles.cardPlaceholder} />
         )}
       </View>
     );
-  }, [tripMap, handleCheckinPress, handleCheckinLongPress, handleCheckinEdit, handleCheckinDelete]);
+  }, [tripMap, handleCheckinPress, setMoveModalCheckin, handleCheckinEdit, handleCheckinDelete]);
+
+  return {
+    popularTags, sections, assignableTrips,
+    onRefresh, handleMoveToTrip, renderSectionHeader, renderItem,
+  };
+}
+
+function formatMonthSection(dateStr: string): string {
+  const d = new Date(dateStr);
+  return `${d.getFullYear()}년 ${d.getMonth() + 1}월`;
+}
+
+function getMonthKey(dateStr: string): string {
+  const d = new Date(dateStr);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+export default function CheckinsScreen() {
+  const navigation = useNavigation<NavigationProp>();
+  const [filter, setFilter] = useState<Filter>('normal');
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [moveModalCheckin, setMoveModalCheckin] = useState<Checkin | null>(null);
+
+  const { checkins, loading, error, reload } = useAllCheckins();
+  const { trips } = useTrips();
+  const updateCheckin = useCheckinsStore((s: any) => s.updateCheckin);
+  const removeCheckin = useCheckinsStore((s: any) => s.removeCheckin);
+
+  const {
+    popularTags, sections, assignableTrips,
+    onRefresh, handleMoveToTrip, renderSectionHeader, renderItem,
+  } = useCheckinsData({
+    filter, selectedTag, checkins, trips, setRefreshing,
+    navigation, updateCheckin, removeCheckin, reload, moveModalCheckin, setMoveModalCheckin,
+  });
 
   return (
     <SafeAreaView testID="screen-checkins" style={styles.container} edges={['top']}>
-      <Modal
+      <MoveCheckinModal
         visible={moveModalCheckin !== null}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setMoveModalCheckin(null)}
-      >
-        <Pressable style={styles.modalOverlay} onPress={() => setMoveModalCheckin(null)}>
-          <Pressable style={styles.modalSheet} onPress={() => {}}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>여행으로 이동</Text>
-              <TouchableOpacity
-                testID="move-modal-close"
-                onPress={() => setMoveModalCheckin(null)}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Ionicons name="close" size={22} color="#6B7280" />
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.modalList} bounces={false}>
-              {assignableTrips.map((t) => (
-                <TouchableOpacity
-                  key={t.id}
-                  testID={`move-modal-trip-${t.id}`}
-                  style={styles.modalItem}
-                  onPress={() => handleMoveToTrip(t.id)}
-                >
-                  <Text style={styles.modalItemText} numberOfLines={1}>{t.title}</Text>
-                  {t.is_frequent && (
-                    <Text style={styles.modalItemFrequentBadge} numberOfLines={1}>자주 가는 곳</Text>
-                  )}
-                  <Ionicons name="chevron-forward" size={16} color="#C4B49A" />
-                </TouchableOpacity>
-              ))}
-              {assignableTrips.length === 0 && (
-                <Text style={styles.modalEmptyText}>이동할 수 있는 여행이 없습니다</Text>
-              )}
-            </ScrollView>
-          </Pressable>
-        </Pressable>
-      </Modal>
+        assignableTrips={assignableTrips}
+        onClose={() => setMoveModalCheckin(null)}
+        onMoveToTrip={handleMoveToTrip}
+      />
       <View style={styles.header}>
         <Text style={styles.headerTitle}>체크인</Text>
       </View>
@@ -509,111 +376,11 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 8,
   },
-  card: {
-    width: CARD_WIDTH,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
-  },
   cardPlaceholder: {
     width: CARD_WIDTH,
   },
-  cardPhoto: {
-    width: CARD_WIDTH,
-    height: CARD_WIDTH,
-  },
-  cardPhotoPlaceholder: {
-    width: CARD_WIDTH,
-    height: CARD_WIDTH,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardBody: {
-    padding: 10,
-    gap: 2,
-  },
-  cardTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#1F2937',
-    lineHeight: 18,
-  },
-  cardTrip: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#F97316',
-    marginTop: 2,
-  },
-  cardPlace: {
-    fontSize: 11,
-    color: '#C4B49A',
-    marginTop: 2,
-  },
-  cardDate: {
-    fontSize: 10,
-    color: '#C4B49A',
-    marginTop: 2,
-  },
-  cardTagsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 4,
-    marginTop: 5,
-  },
-  cardTagChip: {
-    backgroundColor: '#F3F0EB',
-    borderRadius: 999,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  cardTagChipText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#8B7355',
-  },
-  cardTagMore: {
-    fontSize: 10,
-    color: '#C4B49A',
-    alignSelf: 'center',
-  },
   listContent: {
     paddingBottom: 24,
-  },
-  unassignedBadge: {
-    position: 'absolute',
-    top: 6,
-    left: 6,
-    zIndex: 2,
-    backgroundColor: '#F97316',
-    borderRadius: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  unassignedBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  menuButton: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    zIndex: 2,
-    backgroundColor: 'rgba(0,0,0,0.30)',
-    borderRadius: 12,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-  },
-  menuButtonText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    lineHeight: 15,
   },
   centerContainer: {
     flex: 1,
@@ -652,64 +419,6 @@ const styles = StyleSheet.create({
   },
   emptySubtext: {
     fontSize: 13,
-    color: '#9CA3AF',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalSheet: {
-    width: SCREEN_WIDTH - 48,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    overflow: 'hidden',
-    maxHeight: 400,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5E7EB',
-  },
-  modalTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  modalList: {
-    flexGrow: 0,
-  },
-  modalItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#F3F4F6',
-  },
-  modalItemText: {
-    fontSize: 15,
-    color: '#1F2937',
-    flex: 1,
-    marginRight: 8,
-  },
-  modalItemFrequentBadge: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#F97316',
-    marginRight: 6,
-    flexShrink: 1,
-  },
-  modalEmptyText: {
-    padding: 24,
-    textAlign: 'center',
-    fontSize: 14,
     color: '#9CA3AF',
   },
 });

@@ -70,9 +70,9 @@ jest.mock('../../store/tripsStore', () => ({
 }));
 
 jest.mock('react-native-maps', () => {
-  const React = require('react');
+  const ReactModule = require('react');
   const { View } = require('react-native');
-  const MockMapView = React.forwardRef(({ children }: any, _ref: any) => <View>{children}</View>);
+  const MockMapView = ReactModule.forwardRef(({ children }: any, _ref: any) => <View>{children}</View>);
   MockMapView.displayName = 'MapView';
   return {
     __esModule: true,

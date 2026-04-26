@@ -14,7 +14,7 @@ export default function CheckinFormScreen() {
   return (
     <SafeAreaView testID="screen-checkin-form" style={styles.container} edges={['top']}>
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        style={styles.content}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <FormHeader
@@ -97,5 +97,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFF8F0',
+  },
+  content: {
+    flex: 1,
   },
 });

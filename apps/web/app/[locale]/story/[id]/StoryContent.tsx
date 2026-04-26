@@ -1,7 +1,44 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { MapPin, Map as MapIcon } from 'lucide-react';
+function StoryCheckinCard({ checkin, isClient }: { checkin: Checkin; isClient: boolean }) {
+  const meta = CATEGORY_META[checkin.category ?? 'other'] ?? CATEGORY_META.other;
+  const mapsUrl = checkin.place_id
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(checkin.place || '')}&query_place_id=${checkin.place_id}`
+    : `https://www.google.com/maps?q=${checkin.latitude},${checkin.longitude}`;
+  return (
+    <div className="tc-checkin-card">
+      <div className="flex">
+        <div className="w-[5px] shrink-0" style={{ background: meta.color }} />
+        <div className="flex-1 p-[14px] pb-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold tracking-[0.02em] flex items-center gap-1" style={{ color: meta.color }}>
+              <meta.icon size={12} color={meta.color} />{meta.label}
+            </span>
+            <span className="text-[11px] text-tc-warm-faint">{isClient ? formatTime(checkin.checked_in_at) : ''}</span>
+          </div>
+          <h3 className="text-base font-black text-tc-warm-dark mb-2.5 leading-[1.3] tracking-[-0.01em]">
+            {checkin.title || '이름 없는 장소'}
+          </h3>
+          {checkin.photo_url && (
+            <div className="relative w-full aspect-[4/3] rounded-[10px] mb-2.5 overflow-hidden">
+              <Image src={checkin.photo_url} alt={checkin.title || 'Checkin photo'} fill unoptimized className="object-cover" />
+            </div>
+          )}
+          {checkin.message && <p className="text-sm text-tc-warm-mid whitespace-pre-wrap leading-[1.65] mb-3">{checkin.message}</p>}
+          <div className="flex items-center mt-1">
+            <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-tc-warm-faint no-underline flex items-center gap-[3px] hover:text-tc-warm-mid transition-colors">
+              <MapPin size={11} color="#C4B49A" style={{ flexShrink: 0 }} />
+              <span>{checkin.place || '지도에서 보기'}</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 import Map, { MapPhoto } from '@/components/Map';
 import type { Trip, Checkin } from '@travel-companion/shared';
 import { formatTripDate } from '@travel-companion/shared';
@@ -73,21 +110,13 @@ export default function StoryContent({ trip, checkins }: StoryContentProps) {
   }
 
   const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // 폴백: 텍스트 선택 방식
-      const textArea = document.createElement('textarea');
-      textArea.value = window.location.href;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+    try { await navigator.clipboard.writeText(window.location.href); }
+    catch {
+      const t = document.createElement('textarea');
+      t.value = window.location.href;
+      document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t);
     }
+    setCopied(true); setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -144,69 +173,9 @@ export default function StoryContent({ trip, checkins }: StoryContentProps) {
 
                   {/* 체크인 카드 그리드 */}
                   <div className="flex flex-col gap-[10px]">
-                    {group.items.map((checkin) => {
-                      const meta = CATEGORY_META[checkin.category ?? 'other'] ?? CATEGORY_META.other;
-                      const mapsUrl = checkin.place_id
-                        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(checkin.place || '')}&query_place_id=${checkin.place_id}`
-                        : `https://www.google.com/maps?q=${checkin.latitude},${checkin.longitude}`;
-
-                      return (
-                        <div key={checkin.id} className="tc-checkin-card">
-                          <div className="flex">
-                            {/* 카테고리 액센트 좌측 스트립 */}
-                            <div className="w-[5px] shrink-0" style={{ background: meta.color }} />
-
-                            {/* 본문 */}
-                            <div className="flex-1 p-[14px] pb-3">
-                              {/* 상단 메타 */}
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-bold tracking-[0.02em] flex items-center gap-1" style={{ color: meta.color }}>
-                                  <meta.icon size={12} color={meta.color} />
-                                  {meta.label}
-                                </span>
-                                <span className="text-[11px] text-tc-warm-faint">
-                                  {isClient ? formatTime(checkin.checked_in_at) : ''}
-                                </span>
-                              </div>
-
-                              {/* 제목 */}
-                              <h3 className="text-base font-black text-tc-warm-dark mb-2.5 leading-[1.3] tracking-[-0.01em]">
-                                {checkin.title || '이름 없는 장소'}
-                              </h3>
-
-                              {/* 사진 */}
-                              {checkin.photo_url && (
-                                <img
-                                  src={checkin.photo_url}
-                                  alt={checkin.title || 'Checkin photo'}
-                                  className="w-full aspect-[4/3] object-cover rounded-[10px] mb-2.5 block"
-                                />
-                              )}
-
-                              {/* 메모 */}
-                              {checkin.message && (
-                                <p className="text-sm text-tc-warm-mid whitespace-pre-wrap leading-[1.65] mb-3">
-                                  {checkin.message}
-                                </p>
-                              )}
-
-                              {/* 장소 링크 */}
-                              <div className="flex items-center mt-1">
-                                <a
-                                  href={mapsUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-xs text-tc-warm-faint no-underline flex items-center gap-[3px] hover:text-tc-warm-mid transition-colors"
-                                >
-                                  <MapPin size={11} color="#C4B49A" style={{ flexShrink: 0 }} />
-                                  <span>{checkin.place || '지도에서 보기'}</span>
-                                </a>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                    {group.items.map((checkin) => (
+                      <StoryCheckinCard key={checkin.id} checkin={checkin} isClient={isClient} />
+                    ))}
                   </div>
                 </div>
               ))}

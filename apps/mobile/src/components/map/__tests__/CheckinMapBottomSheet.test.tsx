@@ -5,7 +5,6 @@ import type { Checkin } from '@travel-companion/shared';
 
 // @gorhom/bottom-sheet를 단순 View로 모킹
 jest.mock('@gorhom/bottom-sheet', () => {
-  const React = require('react');
   const { View, ScrollView } = require('react-native');
   return {
     __esModule: true,

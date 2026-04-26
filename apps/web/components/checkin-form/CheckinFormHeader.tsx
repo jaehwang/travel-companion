@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Plane } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -38,10 +39,12 @@ export default function CheckinFormHeader({
       {/* 아바타 + 여행명 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
         {userAvatarUrl ? (
-          <img
+          <Image
             src={userAvatarUrl}
             alt=""
-            style={{ width: 30, height: 30, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '2px solid var(--tc-dot)' }}
+            width={30}
+            height={30}
+            style={{ borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '2px solid var(--tc-dot)' }}
             referrerPolicy="no-referrer"
           />
         ) : (

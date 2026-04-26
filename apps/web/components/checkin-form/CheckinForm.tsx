@@ -98,19 +98,7 @@ interface CheckinFormProps {
 
 // ─── 컴포넌트 ─────────────────────────────────────────────────────────────────
 
-export default function CheckinForm({
-  tripId,
-  tripName,
-  userAvatarUrl,
-  editingCheckin,
-  initialPlace,
-  initialPlaceId,
-  initialLatitude,
-  initialLongitude,
-  onSuccess,
-  onCancel,
-  onOpenLocationPicker,
-}: CheckinFormProps) {
+export default function CheckinForm({ tripId, tripName, userAvatarUrl, editingCheckin, initialPlace, initialPlaceId, initialLatitude, initialLongitude, onSuccess, onCancel, onOpenLocationPicker }: CheckinFormProps) {
   const [activePanel, setActivePanel] = useState<Panel>('main');
   const [title, setTitle] = useState('');
   const [place, setPlace] = useState('');
@@ -122,8 +110,6 @@ export default function CheckinForm({
   const [error, setError] = useState<string | null>(null);
 
   const loc = useLocationSource();
-
-  // 소프트 키보드가 올라올 때 툴바 위치를 조정하기 위해 키보드 높이를 감지
   const toolbarBottom = useKeyboardHeight();
 
   const photo = usePhotoUpload({
@@ -132,132 +118,65 @@ export default function CheckinForm({
   });
 
   const placeSearch = usePlaceSearch({
-    // place-search 패널이 활성일 때만 검색 API를 호출하도록 활성화 플래그 전달
     isActive: activePanel === 'place-search',
-    location: loc.location
-      ? { lat: loc.location.latitude, lng: loc.location.longitude }
-      : undefined,
-    onPlaceSelected: (lat, lng, name, pid) => {
-      loc.setManualLocation(lat, lng);
-      setPlace(name);
-      setPlaceId(pid);
-      setError(null);
-      setActivePanel('main');
-      placeSearch.reset();
-    },
+    location: loc.location ? { lat: loc.location.latitude, lng: loc.location.longitude } : undefined,
+    onPlaceSelected: (lat, lng, name, pid) => { loc.setManualLocation(lat, lng); setPlace(name); setPlaceId(pid); setError(null); setActivePanel('main'); placeSearch.reset(); },
     onError: setError,
   });
 
-  /** editingCheckin이 있으면 수정 모드, 없으면 신규 생성 모드 */
   const isEditMode = !!editingCheckin;
-  const canSubmit =
-    !!loc.location &&
-    !!title.trim() &&
-    !isSubmitting &&
-    !photo.isProcessingPhoto &&
-    !photo.isUploadingPhoto;
+  const canSubmit = !!loc.location && !!title.trim() && !isSubmitting && !photo.isProcessingPhoto && !photo.isUploadingPhoto;
 
   // ─── 초기화 ───────────────────────────────────────────────────────────────
 
-  /**
-   * editingCheckin이 바뀔 때마다 폼 전체를 초기화한다.
-   *
-   * 수정 모드: editingCheckin의 값으로 채운다.
-   * 신규 모드: 빈 값으로 초기화하되, 여행 대표 장소/좌표(initial*)가 있으면 미리 채운다.
-   *   여행 대표 장소를 초기값으로 채우는 이유: 같은 여행의 체크인은 대부분 동일한
-   *   지역에 있으므로 매번 장소를 다시 입력하는 번거로움을 줄이기 위함이다.
-   */
+  // editingCheckin이 바뀔 때마다 폼 전체를 초기화한다.
   useEffect(() => {
     if (editingCheckin) {
-      setTitle(editingCheckin.title || '');
-      setPlace(editingCheckin.place || '');
-      setPlaceId(editingCheckin.place_id || '');
-      setCategory(editingCheckin.category || '');
-      setMessage(editingCheckin.message || '');
+      setTitle(editingCheckin.title || ''); setPlace(editingCheckin.place || ''); setPlaceId(editingCheckin.place_id || '');
+      setCategory(editingCheckin.category || ''); setMessage(editingCheckin.message || '');
       loc.initLocation(editingCheckin.latitude, editingCheckin.longitude);
-      setCheckedInAt(
-        editingCheckin.checked_in_at ? toDateTimeLocalValue(editingCheckin.checked_in_at) : ''
-      );
+      setCheckedInAt(editingCheckin.checked_in_at ? toDateTimeLocalValue(editingCheckin.checked_in_at) : '');
       photo.reset(editingCheckin.photo_url || undefined);
     } else {
-      setTitle('');
-      setPlace(initialPlace || '');
-      setPlaceId(initialPlaceId || '');
-      setCategory('');
-      setMessage('');
-      if (initialLatitude != null && initialLongitude != null) {
-        loc.initLocation(initialLatitude, initialLongitude);
-      } else {
-        loc.resetLocation();
-      }
-      setCheckedInAt('');
-      photo.reset();
+      setTitle(''); setPlace(initialPlace || ''); setPlaceId(initialPlaceId || '');
+      setCategory(''); setMessage('');
+      if (initialLatitude != null && initialLongitude != null) loc.initLocation(initialLatitude, initialLongitude);
+      else loc.resetLocation();
+      setCheckedInAt(''); photo.reset();
     }
-    setActivePanel('main');
-    placeSearch.reset();
-    setError(null);
+    setActivePanel('main'); placeSearch.reset(); setError(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingCheckin]);
 
-  // ─── 제출 ─────────────────────────────────────────────────────────────────
-
   const handleSubmit = async () => {
-    if (!loc.location) {
-      setError('위치를 선택해주세요.');
-      return;
-    }
-    if (!title.trim()) {
-      setError('제목을 입력해주세요.');
-      return;
-    }
-
-    setIsSubmitting(true);
-    setError(null);
-
+    if (!loc.location) { setError('위치를 선택해주세요.'); return; }
+    if (!title.trim()) { setError('제목을 입력해주세요.'); return; }
+    setIsSubmitting(true); setError(null);
     try {
-      // 수정: PATCH /api/checkins/:id, 신규: POST /api/checkins
       const url = isEditMode ? `/api/checkins/${editingCheckin!.id}` : '/api/checkins';
       const method = isEditMode ? 'PATCH' : 'POST';
-      const body: Record<string, unknown> = {
-        title: title.trim(),
-        place: place.trim() || null,
-        place_id: placeId || null,
-        message: message.trim() || undefined,
-        category: category || undefined,
-        latitude: loc.location!.latitude,
-        longitude: loc.location!.longitude,
-        photo_url: photo.photoUrl || undefined,
-        photo_metadata: photo.photoMetadata || undefined,
-      };
-      // trip_id는 신규 생성 시에만 전송. 수정 시 trip_id 변경은 지원하지 않는다.
+      const body: Record<string, unknown> = { title: title.trim(), place: place.trim() || null, place_id: placeId || null, message: message.trim() || undefined, category: category || undefined, latitude: loc.location!.latitude, longitude: loc.location!.longitude, photo_url: photo.photoUrl || undefined, photo_metadata: photo.photoMetadata || undefined };
       if (!isEditMode) body.trip_id = tripId;
       if (checkedInAt) body.checked_in_at = new Date(checkedInAt).toISOString();
-
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
+      const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const data = await response.json();
-      if (!response.ok)
-        throw new Error(
-          data.error || (isEditMode ? 'Failed to update checkin' : 'Failed to create checkin')
-        );
-
+      if (!response.ok) throw new Error(data.error || (isEditMode ? 'Failed to update checkin' : 'Failed to create checkin'));
       onSuccess?.(data.checkin);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '체크인 저장에 실패했습니다.');
-    } finally {
-      setIsSubmitting(false);
-    }
+    } catch (err) { setError(err instanceof Error ? err.message : '체크인 저장에 실패했습니다.'); }
+    finally { setIsSubmitting(false); }
   };
 
-  // ─── 렌더링 ───────────────────────────────────────────────────────────────
+  const handleOpenLocationPicker = onOpenLocationPicker
+    ? () => onOpenLocationPicker(loc.location, (lat, lng, place) => {
+        loc.setManualLocation(lat, lng);
+        setPlace(place?.name ?? '');
+        setPlaceId(place?.place_id ?? '');
+        setError(null);
+      })
+    : undefined;
 
-  const content = (
-    <div
-      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, backgroundColor: 'var(--tc-bg)', display: 'flex', flexDirection: 'column' }}
-    >
+  return createPortal(
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, backgroundColor: 'var(--tc-bg)', display: 'flex', flexDirection: 'column' }}>
       <CheckinFormHeader
         userAvatarUrl={userAvatarUrl}
         tripName={tripName}
@@ -305,27 +224,14 @@ export default function CheckinForm({
           predictions={placeSearch.predictions}
           searchingPlaces={placeSearch.searchingPlaces}
           onSelectPlace={placeSearch.handleSelectPlace}
-          onBack={() => {
-            setActivePanel('main');
-            placeSearch.reset();
-          }}
+          onBack={() => { setActivePanel('main'); placeSearch.reset(); }}
         />
       )}
-
       {activePanel === 'category' && (
-        <CheckinFormCategoryPanel
-          category={category}
-          onSelectCategory={setCategory}
-          onClose={() => setActivePanel('main')}
-        />
+        <CheckinFormCategoryPanel category={category} onSelectCategory={setCategory} onClose={() => setActivePanel('main')} />
       )}
-
       {activePanel === 'time' && (
-        <CheckinFormTimePanel
-          checkedInAt={checkedInAt}
-          onCheckedInAtChange={setCheckedInAt}
-          onClose={() => setActivePanel('main')}
-        />
+        <CheckinFormTimePanel checkedInAt={checkedInAt} onCheckedInAtChange={setCheckedInAt} onClose={() => setActivePanel('main')} />
       )}
 
       {activePanel === 'main' && (
@@ -337,33 +243,12 @@ export default function CheckinForm({
           checkedInAt={checkedInAt}
           toolbarBottom={toolbarBottom}
           onFileChange={photo.handleFileSelect}
-          /**
-           * 위치 버튼 클릭 시 onOpenLocationPicker 콜백을 통해 부모에게 LocationPicker 열기를 요청한다.
-           * onSelect 클로저 안에서 이 컴포넌트의 location/place 상태를 업데이트한다.
-           * onOpenLocationPicker가 undefined이면 위치 버튼 자체가 비활성화된다.
-           */
-          onOpenLocationPicker={
-            onOpenLocationPicker
-              ? () =>
-                  onOpenLocationPicker(loc.location, (lat, lng, place) => {
-                    loc.setManualLocation(lat, lng);
-                    setPlace(place?.name ?? '');
-                    setPlaceId(place?.place_id ?? '');
-                    setError(null);
-                  })
-              : undefined
-          }
+          onOpenLocationPicker={handleOpenLocationPicker}
           onOpenCategory={() => setActivePanel('category')}
           onOpenTime={() => setActivePanel('time')}
         />
       )}
-    </div>
+    </div>,
+    document.body
   );
-
-  /**
-   * createPortal로 document.body에 직접 붙인다.
-   * CheckinForm 자체도 Google Maps context 바깥에서 안전하게 렌더링되어야 하기 때문이다.
-   * (LocationPicker와 같은 이유: transform stacking context 우회)
-   */
-  return createPortal(content, document.body);
 }

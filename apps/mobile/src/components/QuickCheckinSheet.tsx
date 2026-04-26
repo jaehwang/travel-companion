@@ -29,6 +29,27 @@ function formatDistance(meters: number): string {
   return `${(meters / 1000).toFixed(1)}km`;
 }
 
+function groupNearbyCheckins(checkins: NearbyCheckin[]) {
+  return checkins.reduce<{ tripId: string; tripTitle: string; items: NearbyCheckin[] }[]>(
+    (acc, checkin) => {
+      const existingGroup = acc.find((group) => group.tripId === checkin.trip_id);
+
+      if (existingGroup) {
+        existingGroup.items.push(checkin);
+      } else {
+        acc.push({
+          tripId: checkin.trip_id,
+          tripTitle: checkin.trip_title,
+          items: [checkin],
+        });
+      }
+
+      return acc;
+    },
+    [],
+  );
+}
+
 export default function QuickCheckinSheet({ visible, onClose, onCheckedIn }: QuickCheckinSheetProps) {
   const [checkins, setCheckins] = useState<NearbyCheckin[]>([]);
   const [loading, setLoading] = useState(false);
@@ -110,13 +131,7 @@ export default function QuickCheckinSheet({ visible, onClose, onCheckedIn }: Qui
           </View>
         ) : (() => {
           // 여행별 그룹핑 (API 정렬: checked_in_at DESC → 그룹 내 첫 번째 = 마지막 체크인)
-          const groups = checkins.reduce<{ tripId: string; tripTitle: string; items: NearbyCheckin[] }[]>(
-            (acc, c) => {
-              const g = acc.find(g => g.tripId === c.trip_id);
-              if (g) { g.items.push(c); } else { acc.push({ tripId: c.trip_id, tripTitle: c.trip_title, items: [c] }); }
-              return acc;
-            }, []
-          );
+          const groups = groupNearbyCheckins(checkins);
           return (
             <FlatList
               data={groups}
@@ -152,7 +167,7 @@ export default function QuickCheckinSheet({ visible, onClose, onCheckedIn }: Qui
                             <ActivityIndicator size="small" color="#F97316" />
                           ) : (
                             <View style={[styles.checkBtn, isCurrent && styles.checkBtnCurrent]}>
-                              <Text style={[styles.checkBtnText, isCurrent && { color: '#FFFFFF' }]}>
+                              <Text style={[styles.checkBtnText, isCurrent && styles.checkBtnTextCurrent]}>
                                 {isCurrent ? '여기!' : '체크인'}
                               </Text>
                             </View>
@@ -328,5 +343,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: '#374151',
+  },
+  checkBtnTextCurrent: {
+    color: '#FFFFFF',
   },
 });

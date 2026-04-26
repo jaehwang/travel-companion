@@ -16,6 +16,14 @@ interface InfoChipsProps {
   onClearTime: () => void;
 }
 
+function getCategoryChipStyle(catColor: string) {
+  return [styles.chip, { backgroundColor: `${catColor}18` }];
+}
+
+function getCategoryTextStyle(catColor: string) {
+  return [styles.chipText, { color: catColor }];
+}
+
 export default function InfoChips({
   latitude,
   longitude,
@@ -36,28 +44,28 @@ export default function InfoChips({
           <Text style={styles.chipText}>
             {place || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`}
           </Text>
-          <Ionicons name="close" size={11} color="#FF6B47" style={{ opacity: 0.7 }} />
+          <Ionicons name="close" size={11} color="#FF6B47" style={styles.closeIcon} />
         </TouchableOpacity>
       )}
       {category ? (
-        <TouchableOpacity onPress={onClearCategory} style={[styles.chip, { backgroundColor: `${catColor}18` }]}>
+        <TouchableOpacity onPress={onClearCategory} style={getCategoryChipStyle(catColor)}>
           <Ionicons name={catIconName as any} size={13} color={catColor} />
-          <Text style={[styles.chipText, { color: catColor }]}>
+          <Text style={getCategoryTextStyle(catColor)}>
             {CHECKIN_CATEGORY_LABELS[category as keyof typeof CHECKIN_CATEGORY_LABELS] || category}
           </Text>
-          <Ionicons name="close" size={11} color={catColor} style={{ opacity: 0.7 }} />
+          <Ionicons name="close" size={11} color={catColor} style={styles.closeIcon} />
         </TouchableOpacity>
       ) : null}
       {checkedInAt && (
-        <TouchableOpacity onPress={onClearTime} style={[styles.chip, { backgroundColor: 'rgba(139,92,246,0.1)' }]}>
+        <TouchableOpacity onPress={onClearTime} style={styles.timeChip}>
           <Ionicons name="time-outline" size={13} color="#8B5CF6" />
-          <Text style={[styles.chipText, { color: '#8B5CF6' }]}>
+          <Text style={styles.timeChipText}>
             {new Intl.DateTimeFormat('ko-KR', {
               month: 'long', day: 'numeric', weekday: 'short',
               hour: '2-digit', minute: '2-digit',
             }).format(checkedInAt)}
           </Text>
-          <Ionicons name="close" size={11} color="#8B5CF6" style={{ opacity: 0.7 }} />
+          <Ionicons name="close" size={11} color="#8B5CF6" style={styles.closeIcon} />
         </TouchableOpacity>
       )}
     </View>
@@ -84,5 +92,22 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: '#FF6B47',
+  },
+  closeIcon: {
+    opacity: 0.7,
+  },
+  timeChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: 'rgba(139,92,246,0.1)',
+  },
+  timeChipText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#8B5CF6',
   },
 });
