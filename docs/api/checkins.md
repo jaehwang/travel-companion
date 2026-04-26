@@ -160,3 +160,27 @@ GET /api/checkins/nearby?lat=37.5665&lng=126.9780&radius=1000
 - `distance`: 현재 위치로부터의 거리 (미터, Haversine 공식)
 - 결과는 `checked_in_at` 기준 내림차순 정렬 (가장 최근 체크인 우선)
 - `trip_title`: 체크인이 속한 여행의 제목 (JOIN 포함)
+
+---
+
+## POST /api/checkins/suggest-category
+
+체크인의 제목·메모·태그를 분석하여 적합한 카테고리를 AI로 추천한다.
+
+**인증**: 필요
+
+**Request Body**
+| 필드 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| `title` | `string` | — | 체크인 제목 |
+| `message` | `string` | — | 체크인 메모 |
+| `tags` | `string[]` | — | 해시태그 목록 |
+
+세 필드 모두 비어있으면 `400` 반환.
+
+**Response**
+```json
+{ "category": "restaurant" }
+```
+
+`category`는 카테고리 목록(`restaurant`, `cafe`, `attraction`, ..., `other`) 중 하나.

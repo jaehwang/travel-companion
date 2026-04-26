@@ -6,6 +6,7 @@ import TimePickerSection from './sections/TimePickerSection';
 import FormHeader from './sections/FormHeader';
 import FormBody from './sections/FormBody';
 import CategorySelector from '../../components/CategorySelector';
+import CategorySuggestionBanner from './sections/CategorySuggestionBanner';
 import { useCheckinForm } from './hooks/useCheckinForm';
 
 export default function CheckinFormScreen() {
@@ -61,6 +62,14 @@ export default function CheckinFormScreen() {
           onRemoveTag={form.handleRemoveTag}
           error={form.error}
         />
+
+        {form.categorySuggestion && (
+          <CategorySuggestionBanner
+            category={form.categorySuggestion}
+            onAccept={form.acceptCategorySuggestion}
+            onDismiss={form.dismissCategorySuggestion}
+          />
+        )}
 
         <CheckinFormToolbar
           hasPhoto={!!form.photoPreview}

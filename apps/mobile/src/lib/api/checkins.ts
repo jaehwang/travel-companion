@@ -1,5 +1,6 @@
 import { supabase } from '../supabase';
 import { getUser } from './supabase-client';
+import { apiFetch } from './rest-client';
 import type { Checkin, CheckinInsert, Trip } from '@travel-companion/shared';
 
 async function getOrCreateDefaultTrip(userId: string): Promise<Trip> {
@@ -116,5 +117,21 @@ export async function deleteCheckin(id: string): Promise<void> {
       const storagePath = checkin.photo_url.slice(idx + marker.length);
       await supabase.storage.from('trip-photos').remove([storagePath]);
     }
+  }
+}
+
+export async function suggestCategory(
+  title?: string,
+  message?: string,
+  tags?: string[],
+): Promise<string | null> {
+  try {
+    const data = await apiFetch<{ category: string }>('/api/checkins/suggest-category', {
+      method: 'POST',
+      body: JSON.stringify({ title, message, tags }),
+    });
+    return data.category ?? null;
+  } catch {
+    return null;
   }
 }

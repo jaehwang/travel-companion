@@ -9,7 +9,7 @@ import { usePhotoPicker } from '../../../components/PhotoPickerButton';
 import { consumeLocationPickerResult } from '../../../lib/locationPickerStore';
 import { useTrips } from '../../../hooks/useTrips';
 import { CATEGORY_ICONS, CATEGORY_COLORS } from '../../../utils/categoryIcons';
-import { suggestTags } from '../../../lib/api';
+import { suggestTags, suggestCategory } from '../../../lib/api';
 import type { RootStackParamList } from '../../../navigation/AppNavigator';
 
 function useAvatarUrl() {
@@ -20,6 +20,37 @@ function useAvatarUrl() {
     });
   }, []);
   return avatarUrl;
+}
+
+function useCategorySuggestion(
+  title: string,
+  message: string,
+  tags: string[],
+  category: string,
+) {
+  const [suggestion, setSuggestion] = useState<string | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (category) {
+      setSuggestion(null);
+      return;
+    }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    const hasInput = title.trim().length >= 2 || message.trim().length >= 2 || tags.length >= 1;
+    if (!hasInput) {
+      setSuggestion(null);
+      return;
+    }
+    debounceRef.current = setTimeout(() => {
+      suggestCategory(title.trim(), message.trim(), tags)
+        .then(cat => { if (cat) setSuggestion(cat); })
+        .catch(() => {});
+    }, 1500);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [title, message, tags, category]);
+
+  return { suggestion, setSuggestion };
 }
 
 function useTagSuggestions(title: string, place: string, category: string, message: string) {
@@ -140,6 +171,8 @@ export function useCheckinForm() {
 
   const avatarUrl = useAvatarUrl();
   const { tagSuggestions, aiTagSuggestions } = useTagSuggestions(title, place, category, message);
+  const { suggestion: categorySuggestion, setSuggestion: setCategorySuggestion } =
+    useCategorySuggestion(title, message, tags, category);
   useAutoLocation(hasInitialLocationRef, setLatitude, setLongitude);
   useLocationPickerSync(setLatitude, setLongitude, setPlace, setPlaceId);
 
@@ -234,6 +267,15 @@ export function useCheckinForm() {
     setTags(prev => prev.filter(t => t !== tag));
   }, []);
 
+  const acceptCategorySuggestion = useCallback(() => {
+    if (categorySuggestion) setCategory(categorySuggestion);
+    setCategorySuggestion(null);
+  }, [categorySuggestion, setCategorySuggestion]);
+
+  const dismissCategorySuggestion = useCallback(() => {
+    setCategorySuggestion(null);
+  }, [setCategorySuggestion]);
+
   const catColor = CATEGORY_COLORS[category] ?? '#C4A882';
   const catIconName = CATEGORY_ICONS[category] ?? 'pricetag-outline';
 
@@ -247,5 +289,6 @@ export function useCheckinForm() {
     showTimePicker, setShowTimePicker, showCategorySelector, setShowCategorySelector,
     isSubmitting, isProcessingPhoto, error, avatarUrl, showPhotoPicker, canSubmit,
     handleSubmit, handleLocationPicker, handleClearPhoto, catColor, catIconName,
+    categorySuggestion, acceptCategorySuggestion, dismissCategorySuggestion,
   };
 }

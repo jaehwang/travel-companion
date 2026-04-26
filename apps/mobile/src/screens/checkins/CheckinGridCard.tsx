@@ -84,6 +84,10 @@ export function CheckinGridCard({ checkin, tripMap, onPress, onLongPress, onEdit
         </View>
       )}
       <View style={styles.cardBody}>
+        <View style={[styles.categoryBadge, { backgroundColor: `${meta.color}15` }]}>
+          <Ionicons name={meta.icon} size={10} color={meta.color} />
+          <Text style={[styles.categoryBadgeText, { color: meta.color }]}>{meta.label}</Text>
+        </View>
         <Text style={styles.cardTitle} numberOfLines={2}>
           {checkin.title || '이름 없는 장소'}
         </Text>
@@ -140,6 +144,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cardBody: { padding: 10, gap: 2 },
+  categoryBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginBottom: 2,
+  },
+  categoryBadgeText: { fontSize: 10, fontWeight: '700' },
   cardTitle: { fontSize: 13, fontWeight: '700', color: '#1F2937', lineHeight: 18 },
   cardTrip: { fontSize: 11, fontWeight: '600', color: '#F97316', marginTop: 2 },
   cardPlace: { fontSize: 11, color: '#C4B49A', marginTop: 2 },

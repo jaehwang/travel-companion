@@ -1,6 +1,6 @@
 export { API_URL } from './rest-client';
 export { fetchTrips, createTrip, updateTrip, deleteTrip, fetchTripTagline, generateTagline } from './trips';
-export { fetchCheckins, fetchAllCheckins, createCheckin, updateCheckin, deleteCheckin } from './checkins';
+export { fetchCheckins, fetchAllCheckins, createCheckin, updateCheckin, deleteCheckin, suggestCategory } from './checkins';
 export { fetchNearbyCheckins } from './nearby';
 export type { NearbyCheckin } from './nearby';
 export { uploadPhoto } from './storage';

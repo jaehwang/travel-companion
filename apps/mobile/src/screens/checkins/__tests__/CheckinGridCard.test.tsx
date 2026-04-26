@@ -72,6 +72,11 @@ describe('CheckinGridCard', () => {
     expect(screen.getByText('이름 없는 장소')).toBeTruthy();
   });
 
+  it('카테고리 아이콘과 한글 레이블을 표시한다', () => {
+    render(<CheckinGridCard checkin={makeCheckin({ category: 'cafe' })} {...defaultProps} />);
+    expect(screen.getByText('카페')).toBeTruthy();
+  });
+
   it('tripMap에 여행이 있으면 여행 제목을 표시한다', () => {
     render(<CheckinGridCard checkin={makeCheckin()} {...defaultProps} />);
     expect(screen.getByText('서울 여행')).toBeTruthy();
