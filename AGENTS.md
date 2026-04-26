@@ -115,7 +115,8 @@ Expo React Native (iOS). CRUD는 Supabase JS SDK 직접 호출, Places / Calenda
 - 한국어/영어 커밋 메시지 혼용 가능
 - Feature branch 사용, 주요 기능 완성 시 커밋
 - main 브랜치 push → Vercel 자동 배포
-- **커밋 전 반드시**: `npm run build` → `npm test` (모두 통과 후 커밋)
+- **커밋 전 반드시**: `npm run lint` → `npm run build` → `npm test` (모두 통과 후 커밋)
+  - `npm run lint` 결과에 error 또는 warning이 하나라도 있으면 커밋하지 않는다
 - **dev 서버 실행 중 `npm run build` 금지** (`.next` 충돌 발생)
 - AI 에이전트가 작성한 커밋에는 사용한 도구의 co-author 라인을 추가한다.
 
